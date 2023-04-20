@@ -36,7 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		221D5F0229EBD708006E60AB /* ImageIOKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageIOKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		221D5F0229EBD708006E60AB /* ImageIOKitExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageIOKitExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		221D5F0529EBD708006E60AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		221D5F0729EBD708006E60AB /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		221D5F0929EBD708006E60AB /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -79,7 +79,7 @@
 		221D5EF929EBD708006E60AB = {
 			isa = PBXGroup;
 			children = (
-				221D5F0429EBD708006E60AB /* ImageIOKit */,
+				221D5F0429EBD708006E60AB /* ImageIOKitExample */,
 				221D5F1B29EBD709006E60AB /* ImageIOKitTests */,
 				221D5F2529EBD709006E60AB /* ImageIOKitUITests */,
 				221D5F0329EBD708006E60AB /* Products */,
@@ -89,14 +89,14 @@
 		221D5F0329EBD708006E60AB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				221D5F0229EBD708006E60AB /* ImageIOKit.app */,
+				221D5F0229EBD708006E60AB /* ImageIOKitExample.app */,
 				221D5F1829EBD709006E60AB /* ImageIOKitTests.xctest */,
 				221D5F2229EBD709006E60AB /* ImageIOKitUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		221D5F0429EBD708006E60AB /* ImageIOKit */ = {
+		221D5F0429EBD708006E60AB /* ImageIOKitExample */ = {
 			isa = PBXGroup;
 			children = (
 				221D5F0529EBD708006E60AB /* AppDelegate.swift */,
@@ -107,7 +107,7 @@
 				221D5F1029EBD709006E60AB /* LaunchScreen.storyboard */,
 				221D5F1329EBD709006E60AB /* Info.plist */,
 			);
-			path = ImageIOKit;
+			path = ImageIOKitExample;
 			sourceTree = "<group>";
 		};
 		221D5F1B29EBD709006E60AB /* ImageIOKitTests */ = {
@@ -130,9 +130,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		221D5F0129EBD708006E60AB /* ImageIOKit */ = {
+		221D5F0129EBD708006E60AB /* ImageIOKitExample */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 221D5F2C29EBD709006E60AB /* Build configuration list for PBXNativeTarget "ImageIOKit" */;
+			buildConfigurationList = 221D5F2C29EBD709006E60AB /* Build configuration list for PBXNativeTarget "ImageIOKitExample" */;
 			buildPhases = (
 				221D5EFE29EBD708006E60AB /* Sources */,
 				221D5EFF29EBD708006E60AB /* Frameworks */,
@@ -142,9 +142,9 @@
 			);
 			dependencies = (
 			);
-			name = ImageIOKit;
+			name = ImageIOKitExample;
 			productName = ImageIOKit;
-			productReference = 221D5F0229EBD708006E60AB /* ImageIOKit.app */;
+			productReference = 221D5F0229EBD708006E60AB /* ImageIOKitExample.app */;
 			productType = "com.apple.product-type.application";
 		};
 		221D5F1729EBD709006E60AB /* ImageIOKitTests */ = {
@@ -219,7 +219,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				221D5F0129EBD708006E60AB /* ImageIOKit */,
+				221D5F0129EBD708006E60AB /* ImageIOKitExample */,
 				221D5F1729EBD709006E60AB /* ImageIOKitTests */,
 				221D5F2129EBD709006E60AB /* ImageIOKitUITests */,
 			);
@@ -286,12 +286,12 @@
 /* Begin PBXTargetDependency section */
 		221D5F1A29EBD709006E60AB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 221D5F0129EBD708006E60AB /* ImageIOKit */;
+			target = 221D5F0129EBD708006E60AB /* ImageIOKitExample */;
 			targetProxy = 221D5F1929EBD709006E60AB /* PBXContainerItemProxy */;
 		};
 		221D5F2429EBD709006E60AB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 221D5F0129EBD708006E60AB /* ImageIOKit */;
+			target = 221D5F0129EBD708006E60AB /* ImageIOKitExample */;
 			targetProxy = 221D5F2329EBD709006E60AB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -439,12 +439,13 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6LF3GMKZAB;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ImageIOKit/Info.plist;
+				INFOPLIST_FILE = ImageIOKitExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -467,12 +468,13 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6LF3GMKZAB;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ImageIOKit/Info.plist;
+				INFOPLIST_FILE = ImageIOKitExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -574,7 +576,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		221D5F2C29EBD709006E60AB /* Build configuration list for PBXNativeTarget "ImageIOKit" */ = {
+		221D5F2C29EBD709006E60AB /* Build configuration list for PBXNativeTarget "ImageIOKitExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				221D5F2D29EBD709006E60AB /* Debug */,
