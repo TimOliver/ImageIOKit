@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import ImageIOKit
+@testable import ImageIOKitExample
 
 final class ImageIOKitTests: XCTestCase {
 
