@@ -31,18 +31,15 @@ public final class ImageSource {
 
     // MARK: - Init
 
-    /// Create a new image source instance with the provided data
+    /// Create a new image source instance with the provided data.
     /// - Parameter data: An opaque data object representing a compressed image file.
     init?(data: Data) {
-        guard isValidFileFormat(data: data) else { return nil }
         self.data = data
     }
 
     /// Create a new image source instance with a path to an image file
     /// - Parameter data: A local file path to an image file.
     init?(url: URL) {
-        guard let data = try? Data(contentsOf: url, options: [.alwaysMapped]),
-              isValidFileFormat(data: data) else { return nil }
         self.url = url
     }
 
@@ -52,12 +49,24 @@ public final class ImageSource {
     /// - Parameter data: A data object representing compressed image file data
     private func isValidFileFormat(data: Data) -> Bool {
         // Fetch the first byte from memory
-        guard let firstByte = data.withUnsafeBytes({ $0.first}) else { return false }
+        guard let firstByte = data.withUnsafeBytes({ $0.first }) else { return false }
 
-        // See if any of our supported file magic numbers start with that byte
+        // See if any of our supported file magic numbers start with that byte, and short circuit if none do.
         let possibleFileFormats = ImageFileFormat.allCases.filter { $0.magicNumber.first == firstByte }
         guard !possibleFileFormats.isEmpty else { return false}
 
-        return true
+        // Loop through the possible formats and compare each byte to guarantee a match
+        if possibleFileFormats.first(where: { format in
+            let magicNumberLength = format.magicNumber.count
+            let magicNumber = data.prefix(format.magicNumber.count)
+            for index in 0..<magicNumberLength {
+                let byte = format.magicNumber[index]
+                if byte == 0x00 { continue } // Treat 0 values as wildcards
+                if byte != magicNumber[index] { return false }
+            }
+            return true
+        }) != nil { return true }
+
+        return false
     }
 }
