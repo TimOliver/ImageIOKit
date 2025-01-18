@@ -21,4 +21,16 @@ final class ImageIOKitTests: XCTestCase {
         }
     }
 
+    func testPerformanceOfSearchFlow() {
+        self.measure {
+            for format in ImageSampleData.Format.allCases {
+                autoreleasepool {
+                    let imageURL = ImageSampleData.urlForTestImage(with: format)
+                    let imageSource = ImageSource(url: imageURL)
+                    XCTAssertNotNil(imageSource)
+                }
+            }
+        }
+     }
+
 }
