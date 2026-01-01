@@ -24,6 +24,12 @@ final class ImageSourceTests: XCTestCase {
                 let imageURL = ImageSampleData.urlForTestImage(with: format)
                 let imageSource = ImageSource(url: imageURL)
                 XCTAssertNotNil(imageSource)
+
+                guard let size = imageSource?.imageSize else {
+                    XCTFail("Failed to load size from image")
+                    return
+                }
+                XCTAssertNotEqual(size, .zero)
             }
         }
     }
