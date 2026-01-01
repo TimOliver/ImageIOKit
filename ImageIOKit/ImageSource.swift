@@ -31,7 +31,7 @@ public final class ImageSource {
     public private(set) var isLoaded: Bool = false
 
     /// The pixel dimensions of this image. (Nil until the image is loaded)
-    public private(set) var size: CGSize?
+    public private(set) var imageSize: CGSize?
 
     // MARK: - Private Properties
 
@@ -85,7 +85,7 @@ public final class ImageSource {
               let props = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
               let width = props[kCGImagePropertyPixelWidth] as? CGFloat,
               let height = props[kCGImagePropertyPixelHeight] as? CGFloat else { return false }
-        self.size = CGSize(width: width, height: height)
+        self.imageSize = CGSize(width: width, height: height)
 
         // Everything passed, so the image is now sucessfully loaded
         self.imageSource = imageSource
