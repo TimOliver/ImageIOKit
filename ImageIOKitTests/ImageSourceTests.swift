@@ -8,11 +8,13 @@
 import XCTest
 @testable import ImageIOKitExample
 
-final class ImageIOKitTests: XCTestCase {
+/// Tests related to the ImageSource class
+final class ImageSourceTests: XCTestCase {
 
     /// Test to ensure proper failure if invalid data is provided
     func testCreatingImageSourceWithBadDataFails() {
         XCTAssertNil(ImageSource(data: Data()))
+        XCTAssertNil(ImageSource(url: URL(fileURLWithPath: "")))
     }
 
     /// Test loading each format we support
