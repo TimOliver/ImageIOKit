@@ -12,7 +12,6 @@ import XCTest
 final class ImageFileFormatTests: XCTestCase {
 
     // Test to make sure the valid file extension test fails when
-
     public func testImageFormatFileInvalidExtensions() {
         let textURL = URL(fileURLWithPath: "hello.txt")
         XCTAssertFalse(ImageFileFormat.isValidFileName(at: textURL))
@@ -28,6 +27,21 @@ final class ImageFileFormatTests: XCTestCase {
             let url = ImageSampleData.urlForTestImage(with: format)
             XCTAssertTrue(ImageFileFormat.isValidFileName(at: url))
         }
+    }
+
+    // Test invalid datat to cofnirm the header validation code fails correctly.
+    public func testImageFormatFileHeadersWithInvalidData() {
+        guard let textData = "Hello world!".data(using: .utf8) else {
+            XCTFail("Unable to generate test data")
+            return
+        }
+        XCTAssertFalse(ImageFileFormat.isValidFileFormat(data: textData))
+
+        guard let shortData = "XD".data(using: .utf8) else {
+            XCTFail("Unable to generate test data")
+            return
+        }
+        XCTAssertFalse(ImageFileFormat.isValidFileFormat(data: shortData))
     }
 
     // Test to make sure all sample image files are recognized
