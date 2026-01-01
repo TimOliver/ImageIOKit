@@ -47,41 +47,51 @@ extension ImageSourceTests {
 
     func testLoadingJPEGImageMemoryHighMark() {
         let imageSource = makeImageSource(for: .jpeg)
-        measure(metrics: [XCTMemoryMetric()]) {
-            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
-            XCTAssertNotNil(image)
+        autoreleasepool {
+            measure(metrics: [XCTMemoryMetric()]) {
+                let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+                XCTAssertNotNil(image)
+            }
         }
     }
 
     func testLoadingPNGImageMemoryHighMark() {
         let imageSource = makeImageSource(for: .png)
-        measure(metrics: [XCTMemoryMetric()]) {
-            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
-            XCTAssertNotNil(image)
+        autoreleasepool {
+            measure(metrics: [XCTMemoryMetric()]) {
+                let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+                XCTAssertNotNil(image)
+            }
         }
     }
 
     func testLoadingWebPImageMemoryHighMark() {
         let imageSource = makeImageSource(for: .webp)
-        measure(metrics: [XCTMemoryMetric()]) {
-            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
-            XCTAssertNotNil(image)
+        autoreleasepool {
+            measure(metrics: [XCTMemoryMetric()]) {
+                let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+                XCTAssertNotNil(image)
+            }
         }
     }
 
     func testLoadingAVIFImageMemoryHighMark() {
         let imageSource = makeImageSource(for: .avif)
-        measure(metrics: [XCTMemoryMetric()]) {
-            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
-            XCTAssertNotNil(image)
+        autoreleasepool {
+            measure(metrics: [XCTMemoryMetric()]) {
+                let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+                XCTAssertNotNil(image)
+            }
         }
     }
 
     func testLoadingJXLImageMemoryHighMark() {
         let imageSource = makeImageSource(for: .jpegXL)
-        measure(metrics: [XCTMemoryMetric()]) {
-            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
-            XCTAssertNotNil(image)
+        autoreleasepool {
+            measure(metrics: [XCTMemoryMetric()]) {
+                let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+                XCTAssertNotNil(image)
+            }
         }
     }
 }
