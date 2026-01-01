@@ -24,12 +24,14 @@ public final class ImageSource {
     public private(set) var url: URL?
 
     /// The compressed image's data, if this object was created from an in-memory image.
-    /// If a file URL was specified, this property returns a memory-mapped pointer to the on-disk data.
     public private(set) var data: Data?
 
     /// For images sources that didn't have their headers loaded upon init,
     /// this property can be used to check this state to manually load the headers or not.
     public private(set) var isLoaded: Bool = false
+
+    /// The pixel dimensions of this image. (Nil until the image is loaded)
+    public private(set) var size: CGSize?
 
     // MARK: - Private Properties
 
@@ -41,74 +43,53 @@ public final class ImageSource {
 
     /// Create a new image source instance with the provided data.
     /// - Parameter data: An opaque data object representing a compressed image file.
-    /// - Parameter loadImmediately: Loads the header data for the image in this initializer.
-    ///                              This can be manually deferred until calling `loadImageData` if required.
+    /// - Parameter loadImmediately: Loads the header data, making the image metadata available immediately.
+    ///                              This can be manually deferred until calling `loadImageData` in performance sensitive circumstances.
     /// - Return: Returns a new image source instance.
     ///           If `loadImmediately` is true, and the image data is invalid, `nil` is returned instead.
     init?(data: Data, loadImmediately: Bool = true) {
         self.data = data
-        if loadImmediately, !load() { return nil }
+        if loadImmediately, !loadImageData() { return nil }
     }
 
     /// Create a new image source instance with a path to an image file
-    /// - Parameter data: A local file path to an image file.
-    /// - Parameter loadImmediately: Loads the header data for the image in this initializer.
-    ///                              This can be manually deferred until calling `loadImageData` if required.
+    /// - Parameter url: A local file path to an image file.
+    /// - Parameter loadImmediately: Loads the header data, making the image metadata available immediately.
+    ///                              This can be manually deferred until calling `loadImageData` in performance sensitive circumstances.
     /// - Return: Returns a new image source instance.
     ///           If `loadImmediately` is true, and the image data is invalid, `nil` is returned instead.
     init?(url: URL, loadImmediately: Bool = true) {
         self.url = url
-        if loadImmediately, !load() { return nil }
+        if loadImmediately, !loadImageData() { return nil }
     }
 
     /// Loads the header data for the provided image file and configures this object to start reading information from it.
-    /// This is called automatically normally when `loadImmediately` is `true`, but this can be manually deferred if desired in order to maximize performance.
+    /// This is called automatically normally when `loadImmediately` is `true`, but this can be manually deferred in order to control potential IO blocking operations.
     /// - Returns: `true` if the image header was successfully read, or `false` if it failed.
-    public func load() -> Bool {
+    public func loadImageData() -> Bool {
         guard !isLoaded else { return true }
 
-        // Since we need to read the first few bytes anyway,
-        // for files, populate the data property with a memory-mapped pointer
+        // Based on whether we were provided with a url or data, attempt to load with ImageIO
+        let imageSource: CGImageSource?
         if let url = self.url {
-            self.data = try? Data(contentsOf: url, options: .alwaysMapped)
+            imageSource = CGImageSourceCreateWithURL(url as CFURL, nil)
+        } else if let data = self.data {
+            imageSource = CGImageSourceCreateWithData(data as CFData, nil)
+        } else {
+            fatalError("ImageSource: A load was attempted without a valid image data or URL object.")
         }
 
-        // Perform the main magic number check
-        guard let data = self.data,
-              isValidFileFormat(data: data) else { return false }
+        // `CGImageSourceCreate` will still produce a non-nil value even if the image data was invalid.
+        // So we must verify if we have actual image data in there or not. We'll do this by querying for the image size.
+        guard let imageSource,
+              let props = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
+              let width = props[kCGImagePropertyPixelWidth] as? CGFloat,
+              let height = props[kCGImagePropertyPixelHeight] as? CGFloat else { return false }
+        self.size = CGSize(width: width, height: height)
 
-        // Now that we've confirmed it's a valid file, load it into ImageIO.
-        // Down the line, we'll add more codecs here.
-        if let url = self.url {
-            self.imageSource = CGImageSourceCreateWithURL(url as CFURL, nil)
-        } else  {
-            self.imageSource = CGImageSourceCreateWithData(data as CFData, nil)
-        }
-        if self.imageSource == nil { return false }
-
+        // Everything passed, so the image is now sucessfully loaded
+        self.imageSource = imageSource
         isLoaded = true
         return true
-    }
-
-    // MARK: - Private
-
-    /// Checks the header of the file to see if it is a file format supported by this framework.
-    /// - Parameter data: A data object representing compressed image file data
-    private func isValidFileFormat(data: Data) -> Bool {
-        // Loop through the possible formats and compare each byte to guarantee a match
-        if ImageFileFormat.allCases.first(where: { format in
-            for magicNumber in format.magicNumbers {
-                let magicNumberLength = magicNumber.count
-                let buffer = data.prefix(magicNumber.count)
-                for index in 0..<magicNumberLength {
-                    let byte = magicNumber[index]
-                    if byte == 0x00 { continue } // Treat 0 values as wildcards
-                    if byte != buffer[index] { return false }
-                }
-            }
-            return true
-        }) != nil { return true }
-
-        return false
     }
 }
