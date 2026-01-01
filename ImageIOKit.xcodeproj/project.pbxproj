@@ -18,6 +18,7 @@
 		222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
 		2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543C2F066F5100A76F85 /* ImageColorModel.swift */; };
+		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* ImageDestination.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -232,6 +233,7 @@
 			files = (
 				221D5F1229EBD709006E60AB /* LaunchScreen.storyboard in Resources */,
 				221D5F0F29EBD709006E60AB /* Assets.xcassets in Resources */,
+				2257603B2F069111004F10C1 /* ApplePark.avif in Resources */,
 				221D5F0D29EBD708006E60AB /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

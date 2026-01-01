@@ -130,7 +130,6 @@ public final class ImageSource {
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceShouldCache: true,
-            kCGImageSourceSubsampleFactor: 2.0,
             kCGImageSourceThumbnailMaxPixelSize: max(newSize.width, newSize.height)
         ] as CFDictionary
 
