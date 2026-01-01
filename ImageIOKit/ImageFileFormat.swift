@@ -44,4 +44,58 @@ public enum ImageFileFormat: CaseIterable {
                                              0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A]]
         }
     }
+
+    /// Whether this file format is currently supported by ImageIO on this device's OS version
+    public var isSupportedByOSVersion: Bool {
+        let version = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
+        switch self {
+        case .jpeg, .png: return true
+        case .heic: return version >= 11
+        case .webp: return version >= 14
+        case .avif, .jpegXL: return version >= 17
+        }
+    }
+}
+
+// MARK: - Format Validation
+
+extension ImageFileFormat {
+
+    /// Checks the file extension of the provided file path and
+    /// returns true if it is a recognized supported file format.
+    /// - Parameter url: The absolute/relative url to an image file on disk.
+    /// - Returns: Whether the file path extension is a supported format or not
+    public static func isValidFileName(at url: URL) -> Bool {
+        isValidFileName(url.lastPathComponent)
+    }
+
+    /// Checks the file extension of the provided file name and
+    /// returns true if it is a recognized supported file format.
+    /// - Parameter fileName: The name of an image file.
+    /// - Returns: Whether the file path extension is a supported format or not
+    public static func isValidFileName(_ fileName: String) -> Bool {
+        guard let fileExtension = fileName.split(separator: ".").last?.lowercased() else { return false }
+        return allCases.contains { $0.fileExtensions.contains(fileExtension) }
+    }
+
+    /// Checks the header of the file to see if it is a file format supported by this framework.
+    /// - Parameter data: A data object representing compressed image file data
+    public static func isValidFileFormat(data: Data) -> Bool {
+        // Loop through the possible formats and compare each byte to guarantee a match
+        if ImageFileFormat.allCases.first(where: { format in
+            for magicNumber in format.magicNumbers {
+                let magicNumberLength = magicNumber.count
+                let buffer = data.prefix(magicNumber.count)
+                for index in 0..<magicNumberLength {
+                    let byte = magicNumber[index]
+                    if byte == 0x00 { continue } // Treat 0 values as wildcards
+                    if byte != buffer[index] { return false }
+                }
+            }
+            return true
+        }) != nil { return true }
+
+        return false
+    }
+
 }
