@@ -95,21 +95,16 @@ public final class ImageSource {
     /// Checks the header of the file to see if it is a file format supported by this framework.
     /// - Parameter data: A data object representing compressed image file data
     private func isValidFileFormat(data: Data) -> Bool {
-        // Fetch the first byte from memory
-        guard let firstByte = data.withUnsafeBytes({ $0.first }) else { return false }
-
-        // See if any of our supported file magic numbers start with that byte, and short circuit if none do.
-        let possibleFileFormats = ImageFileFormat.allCases.filter { $0.magicNumber.first == firstByte }
-        guard !possibleFileFormats.isEmpty else { return false}
-
         // Loop through the possible formats and compare each byte to guarantee a match
-        if possibleFileFormats.first(where: { format in
-            let magicNumberLength = format.magicNumber.count
-            let magicNumber = data.prefix(format.magicNumber.count)
-            for index in 0..<magicNumberLength {
-                let byte = format.magicNumber[index]
-                if byte == 0x00 { continue } // Treat 0 values as wildcards
-                if byte != magicNumber[index] { return false }
+        if ImageFileFormat.allCases.first(where: { format in
+            for magicNumber in format.magicNumbers {
+                let magicNumberLength = magicNumber.count
+                let buffer = data.prefix(magicNumber.count)
+                for index in 0..<magicNumberLength {
+                    let byte = magicNumber[index]
+                    if byte == 0x00 { continue } // Treat 0 values as wildcards
+                    if byte != buffer[index] { return false }
+                }
             }
             return true
         }) != nil { return true }
