@@ -16,6 +16,7 @@
 		221D5F1D29EBD709006E60AB /* ImageSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */; };
 		222654382F062FCD00A76F85 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
+		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* ImageDestination.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -49,6 +50,7 @@
 		221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSourceTests.swift; sourceTree = "<group>"; };
 		222654362F062FCD00A76F85 /* ApplePark.avif */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.avif; sourceTree = "<group>"; };
 		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
+		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
 		22DB61042D3A078A007AFCF3 /* ImageDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestination.swift; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
@@ -114,8 +116,9 @@
 			isa = PBXGroup;
 			children = (
 				22DB610C2D3A5155007AFCF3 /* SampleImages */,
-				221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */,
 				22DB61112D3A51B9007AFCF3 /* ImageSampleData.swift */,
+				221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */,
+				2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */,
 			);
 			path = ImageIOKitTests;
 			sourceTree = "<group>";
@@ -263,6 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */,
 				221D5F1D29EBD709006E60AB /* ImageSourceTests.swift in Sources */,
 				22DB61122D3A51B9007AFCF3 /* ImageSampleData.swift in Sources */,
 			);
