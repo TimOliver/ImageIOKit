@@ -81,26 +81,25 @@ extension ImageFileFormat {
     /// Checks the header of the file to see if it is a file format supported by this framework.
     /// - Parameter data: A data object representing compressed image file data
     public static func isValidFileFormat(data: Data) -> Bool {
-        // Loop through the possible formats and compare each byte to guarantee a match
-        if ImageFileFormat.allCases.first(where: { format in
-            for magicNumber in format.magicNumbers {
-                let magicNumberLength = magicNumber.count
-                let buffer = data.prefix(magicNumber.count)
-                var didFail = false
-                for index in 0..<magicNumberLength {
-                    let byte = magicNumber[index]
-                    if byte == 0x00 { continue } // Treat 0 values as wildcards
-                    if byte != buffer[index] {
-                        didFail = true
-                        break
-                    }
-                }
-                if !didFail { return true }
-            }
-            return false
-        }) != nil { return true }
 
-        return false
+        // Check if the magic numbers match by looping through until completion
+        let magicNumberMatchedBlock: (([UInt8]) -> Bool) = { magicNumber in
+            let magicNumberLength = magicNumber.count
+            let buffer = data.prefix(magicNumber.count)
+            for index in 0..<magicNumberLength {
+                let byte = magicNumber[index]
+                if byte == 0x00 { continue } // Treat 0 values as wildcards
+                if byte != buffer[index] {
+                    return false
+                }
+            }
+            return true
+        }
+
+        // Loop through the possible formats and compare each byte to guarantee a match
+        return ImageFileFormat.allCases.first(where: { format in
+            format.magicNumbers.contains(where: magicNumberMatchedBlock)
+        }) != nil
     }
 
 }
