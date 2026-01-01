@@ -10,7 +10,12 @@ import XCTest
 
 final class ImageIOKitTests: XCTestCase {
 
-    /// Test loading each format we support 
+    /// Test to ensure proper failure if invalid data is provided
+    func testCreatingImageSourceWithBadDataFails() {
+        XCTAssertNil(ImageSource(data: Data()))
+    }
+
+    /// Test loading each format we support
     func testCreatingImageSourceWithFilePaths() throws {
         for format in ImageSampleData.Format.allCases {
             autoreleasepool {
@@ -20,17 +25,4 @@ final class ImageIOKitTests: XCTestCase {
             }
         }
     }
-
-    func testPerformanceOfSearchFlow() {
-        self.measure {
-            for format in ImageSampleData.Format.allCases {
-                autoreleasepool {
-                    let imageURL = ImageSampleData.urlForTestImage(with: format)
-                    let imageSource = ImageSource(url: imageURL)
-                    XCTAssertNotNil(imageSource)
-                }
-            }
-        }
-     }
-
 }
