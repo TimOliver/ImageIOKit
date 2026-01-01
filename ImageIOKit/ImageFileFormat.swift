@@ -7,15 +7,14 @@
 
 import Foundation
 
-/// A list of all of the image formats (and their properties) supported by `ImageIOKit`.
+/// A list of all supported image file formats, and their respective metadata
 public enum ImageFileFormat: CaseIterable {
     case jpeg
     case png
     case webp
     case heic
-    // TODO: Add future support
-    // case avif
-    // case jpegXL
+    case avif
+    case jpegXL
 
     /// The officially recognized path extensions
     /// for each image file format.
@@ -25,6 +24,8 @@ public enum ImageFileFormat: CaseIterable {
         case .png: return ["png"]
         case .webp: return ["webp"]
         case .heic: return ["heif", "heifs", "heic", "heics", "avci", "avcs", "hif"]
+        case .avif: return ["avif"]
+        case .jpegXL: return ["jxl"]
         }
     }
 
@@ -38,6 +39,8 @@ public enum ImageFileFormat: CaseIterable {
         case .webp: return [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00,
                             0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38]
         case .heic: return [0x00, 0x00, 0x00, 0x24, 0x66, 0x74, 0x79, 0x70]
+        case .avif: return []
+        case .jpegXL: return []
         }
     }
 }
