@@ -86,13 +86,18 @@ extension ImageFileFormat {
             for magicNumber in format.magicNumbers {
                 let magicNumberLength = magicNumber.count
                 let buffer = data.prefix(magicNumber.count)
+                var didFail = false
                 for index in 0..<magicNumberLength {
                     let byte = magicNumber[index]
                     if byte == 0x00 { continue } // Treat 0 values as wildcards
-                    if byte != buffer[index] { break }
+                    if byte != buffer[index] {
+                        didFail = true
+                        break
+                    }
                 }
+                if !didFail { return true }
             }
-            return true
+            return false
         }) != nil { return true }
 
         return false
