@@ -28,19 +28,59 @@ final class ImageSourceTests: XCTestCase {
             }
         }
     }
+}
+
+extension ImageSourceTests {
+    private struct Constants {
+        static let thumbnailSize = CGSize(width: 200, height: 200)
+    }
 
     // MARK: - Memory Pressure Tests
 
-    func testLoadingJPEGImageMemoryHighMark() {
-        let thumbnailSize = CGSize(width: 200, height: 200)
-        let imageURL = ImageSampleData.urlForTestImage(with: .jpeg)
+    private func makeImageSource(for format: ImageSampleData.Format) -> ImageSource {
+        let imageURL = ImageSampleData.urlForTestImage(with: format)
         guard let imageSource = ImageSource(url: imageURL) else {
-            XCTFail("Unable to load Image")
-            return
+            fatalError("Unable to create image source")
         }
+        return imageSource
+    }
 
+    func testLoadingJPEGImageMemoryHighMark() {
+        let imageSource = makeImageSource(for: .jpeg)
         measure(metrics: [XCTMemoryMetric()]) {
-            let image = imageSource.makeThumbnail(fittingSize: thumbnailSize)
+            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+            XCTAssertNotNil(image)
+        }
+    }
+
+    func testLoadingPNGImageMemoryHighMark() {
+        let imageSource = makeImageSource(for: .png)
+        measure(metrics: [XCTMemoryMetric()]) {
+            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+            XCTAssertNotNil(image)
+        }
+    }
+
+    func testLoadingWebPImageMemoryHighMark() {
+        let imageSource = makeImageSource(for: .webp)
+        measure(metrics: [XCTMemoryMetric()]) {
+            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+            XCTAssertNotNil(image)
+        }
+    }
+
+    func testLoadingAVIFImageMemoryHighMark() {
+        let imageSource = makeImageSource(for: .avif)
+        measure(metrics: [XCTMemoryMetric()]) {
+            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
+            XCTAssertNotNil(image)
+        }
+    }
+
+    func testLoadingJXLImageMemoryHighMark() {
+        let imageSource = makeImageSource(for: .jpegXL)
+        measure(metrics: [XCTMemoryMetric()]) {
+            let image = imageSource.makeThumbnail(fittingSize: Constants.thumbnailSize)
             XCTAssertNotNil(image)
         }
     }
