@@ -14,6 +14,8 @@ public final class ImageSampleData {
         case png = "png"
         case webp = "webp"
         case heic = "heic"
+        case avif = "avif"
+        case jpegXL = "jxl"
     }
 
     static func urlForTestImage(with format: Format) -> URL {
