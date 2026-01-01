@@ -89,7 +89,7 @@ extension ImageFileFormat {
                 for index in 0..<magicNumberLength {
                     let byte = magicNumber[index]
                     if byte == 0x00 { continue } // Treat 0 values as wildcards
-                    if byte != buffer[index] { return false }
+                    if byte != buffer[index] { break }
                 }
             }
             return true
