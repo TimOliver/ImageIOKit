@@ -24,13 +24,24 @@ final class ImageSourceTests: XCTestCase {
                 let imageURL = ImageSampleData.urlForTestImage(with: format)
                 let imageSource = ImageSource(url: imageURL)
                 XCTAssertNotNil(imageSource)
-
-                guard let size = imageSource?.imageSize else {
-                    XCTFail("Failed to load size from image")
-                    return
-                }
-                XCTAssertNotEqual(size, .zero)
+                XCTAssertNotEqual(imageSource?.imageSize ?? .zero, .zero)
             }
+        }
+    }
+
+    // MARK: - Memory Pressure Tests
+
+    func testLoadingJPEGImageMemoryHighMark() {
+        let thumbnailSize = CGSize(width: 200, height: 200)
+        let imageURL = ImageSampleData.urlForTestImage(with: .jpeg)
+        guard let imageSource = ImageSource(url: imageURL) else {
+            XCTFail("Unable to load Image")
+            return
+        }
+
+        measure(metrics: [XCTMemoryMetric()]) {
+            let image = imageSource.makeThumbnail(fittingSize: thumbnailSize)
+            XCTAssertNotNil(image)
         }
     }
 }

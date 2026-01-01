@@ -17,6 +17,7 @@
 		222654382F062FCD00A76F85 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
+		2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543C2F066F5100A76F85 /* ImageColorModel.swift */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* ImageDestination.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -51,6 +52,7 @@
 		222654362F062FCD00A76F85 /* ApplePark.avif */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.avif; sourceTree = "<group>"; };
 		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
 		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
+		2226543C2F066F5100A76F85 /* ImageColorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorModel.swift; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
 		22DB61042D3A078A007AFCF3 /* ImageDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestination.swift; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 			isa = PBXGroup;
 			children = (
 				22DB61002D3A045C007AFCF3 /* ImageSource.swift */,
+				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
 				22DB61042D3A078A007AFCF3 /* ImageDestination.swift */,
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
 			);
@@ -259,6 +262,7 @@
 				221D5F0629EBD708006E60AB /* AppDelegate.swift in Sources */,
 				22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */,
 				221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */,
+				2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
