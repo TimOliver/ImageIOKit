@@ -14,6 +14,8 @@
 		221D5F0F29EBD709006E60AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 221D5F0E29EBD709006E60AB /* Assets.xcassets */; };
 		221D5F1229EBD709006E60AB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 221D5F1029EBD709006E60AB /* LaunchScreen.storyboard */; };
 		221D5F1D29EBD709006E60AB /* ImageSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */; };
+		222654382F062FCD00A76F85 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
+		222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* ImageDestination.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -45,6 +47,8 @@
 		221D5F1329EBD709006E60AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		221D5F1829EBD709006E60AB /* ImageIOKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageIOKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSourceTests.swift; sourceTree = "<group>"; };
+		222654362F062FCD00A76F85 /* ApplePark.avif */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.avif; sourceTree = "<group>"; };
+		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
 		22DB61042D3A078A007AFCF3 /* ImageDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestination.swift; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
@@ -129,6 +133,8 @@
 		22DB610C2D3A5155007AFCF3 /* SampleImages */ = {
 			isa = PBXGroup;
 			children = (
+				222654362F062FCD00A76F85 /* ApplePark.avif */,
+				222654372F062FCD00A76F85 /* ApplePark.jxl */,
 				22DB61082D3A5155007AFCF3 /* ApplePark.heic */,
 				22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */,
 				22DB610A2D3A5155007AFCF3 /* ApplePark.png */,
@@ -228,6 +234,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				222654382F062FCD00A76F85 /* ApplePark.avif in Resources */,
+				222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */,
 				22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */,
 				22DB610E2D3A5155007AFCF3 /* ApplePark.webp in Resources */,
 				22DB610F2D3A5155007AFCF3 /* ApplePark.heic in Resources */,
