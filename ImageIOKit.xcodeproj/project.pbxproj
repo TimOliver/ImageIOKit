@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		221C5ABA2F09226A00CC2C9F /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
+		221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
+		221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */; };
+		221C5ABD2F09226A00CC2C9F /* ApplePark.webp in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610B2D3A5155007AFCF3 /* ApplePark.webp */; };
+		221C5ABE2F09226A00CC2C9F /* ApplePark.heic in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61082D3A5155007AFCF3 /* ApplePark.heic */; };
 		221D5F0629EBD708006E60AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F0529EBD708006E60AB /* AppDelegate.swift */; };
 		221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F0729EBD708006E60AB /* SceneDelegate.swift */; };
 		221D5F0A29EBD708006E60AB /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F0929EBD708006E60AB /* ViewController.swift */; };
@@ -235,6 +240,11 @@
 				221D5F0F29EBD709006E60AB /* Assets.xcassets in Resources */,
 				2257603B2F069111004F10C1 /* ApplePark.avif in Resources */,
 				221D5F0D29EBD708006E60AB /* Main.storyboard in Resources */,
+				221C5ABA2F09226A00CC2C9F /* ApplePark.jxl in Resources */,
+				221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */,
+				221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */,
+				221C5ABD2F09226A00CC2C9F /* ApplePark.webp in Resources */,
+				221C5ABE2F09226A00CC2C9F /* ApplePark.heic in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -20,7 +20,15 @@ import UIKit
 /// This class aims to be as efficient and memory light as possible,
 /// only performing heavy loading operations on demand.
 public final class ImageSource {
-    
+
+    /// The types of downscaling modes that may be used when
+    /// creating smaller sized copies of this image.
+    public enum DownscaleStrategy {
+        case automatic      // Automatically determined based on the file format.
+        case partialDecode  // The ImageIO thumbnailing API is used to create a low-memory decode.
+        case fullDecode     // The image is fully decoded and downscaled via Core Graphics manually.
+    }
+
     /// The local file path to the image file, if it was loaded from disk.
     public private(set) var url: URL?
 
@@ -33,6 +41,9 @@ public final class ImageSource {
 
     /// The pixel dimensions of this image. (Will default to .zero before the image is loaded)
     public private(set) var imageSize: CGSize = .zero
+
+    /// Whether this image has an alpha channel or not.
+    public private(set) var hasAlpha: Bool = false
 
     /// The color model of the image if known.
     public private(set) var colorModel: ImageColorModel?
@@ -108,6 +119,9 @@ public final class ImageSource {
         if let colorProfile = properties[kCGImagePropertyProfileName] as? String {
             self.colorProfile = colorProfile
         }
+        if let hasAlpha = properties[kCGImagePropertyHasAlpha] as? Bool {
+            self.hasAlpha = hasAlpha
+        }
 
         // Everything passed, so the image is now sucessfully loaded
         self.imageSource = imageSource
@@ -119,21 +133,67 @@ public final class ImageSource {
     /// the whole original image into memory if possible.
     /// - Parameter size: The preferred bounding size that the thumbnail will scale to fit in.
     /// - Returns: The downscaled image if successful, nil otherwise.
-    public func makeThumbnail(fittingSize size: CGSize) -> UIImage? {
-        guard let imageSource else { return nil }
-
+    public func makeThumbnail(fittingSize size: CGSize, downscaleStrategy: DownscaleStrategy = .fullDecode) -> UIImage? {
         let scale = min(size.width / imageSize.width, size.height / imageSize.height)
         let newSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
 
+        guard let image = downscaleStrategy == .fullDecode ?
+                makeThumbnailFromFullDecode(size: newSize) :
+                    makePartiallyDecodedThumbnail(size: newSize) else { return nil }
+
+        return UIImage(cgImage: image)
+    }
+}
+
+// MARK: - Thumbnail Creation
+
+extension ImageSource {
+
+    private func makeThumbnailFromFullDecode(size: CGSize) -> CGImage? {
+        guard let imageSource, size != .zero else { return nil }
+        let width = Int(size.width), height = Int(size.height)
+
+        // Convert the image source to an image we can render out
+        let options: CFDictionary = [
+                kCGImageSourceShouldCache: false,
+                kCGImageSourceShouldCacheImmediately: false
+            ] as CFDictionary
+
+        guard let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) else { return nil }
+
+        // Use grayscale where we can, but default to RGB for all else.
+        let colorSpace = (colorModel ?? .rgb) == .grayscale ?
+                        CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB()
+        let alphaInfo: CGImageAlphaInfo = hasAlpha ? .noneSkipLast : .premultipliedLast
+        let bitmapInfo = CGBitmapInfo(rawValue: alphaInfo.rawValue)
+
+        // Create the context to draw into
+        guard let ctx = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else {
+            return nil
+        }
+
+        // Draw directly into the destination buffer
+        ctx.interpolationQuality = .high
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return ctx.makeImage()
+    }
+
+    private func makePartiallyDecodedThumbnail(size: CGSize) -> CGImage? {
+        guard let imageSource, size != .zero else { return nil }
         let options = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceShouldCache: true,
-            kCGImageSourceThumbnailMaxPixelSize: max(newSize.width, newSize.height)
+            kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height),
         ] as CFDictionary
-
-        guard let cgThumbnail = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) else { return nil }
-        return UIImage(cgImage: cgThumbnail)
+        return CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options)
     }
 }
