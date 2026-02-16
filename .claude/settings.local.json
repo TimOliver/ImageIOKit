@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.libvips.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:libjxl.readthedocs.io)",
+      "Bash(gh repo view:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh api:*)",
+      "Bash(gh search repos:*)",
+      "Bash(python3:*)",
+      "Bash(gh repo list:*)",
+      "WebFetch(domain:swiftpackageindex.com)",
+      "Bash(# Check the README of SDWebImage/libavif-Xcode for version info gh api repos/SDWebImage/libavif-Xcode/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Check the README of SDWebImage/libjxl-Xcode for version info gh api repos/SDWebImage/libjxl-Xcode/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Check the README of SDWebImage/libwebp-Xcode for version info gh api repos/SDWebImage/libwebp-Xcode/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Check the README of SDWebImage/libdav1d-Xcode for version info gh api repos/SDWebImage/libdav1d-Xcode/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Check SDWebImage libavif-Xcode README further for dav1d info gh api repos/SDWebImage/libavif-Xcode/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Check awxkee/jxl-coder-swift README for version info gh api repos/awxkee/jxl-coder-swift/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Check awxkee/mozjpeg.swift README for version info gh api repos/awxkee/mozjpeg.swift/readme --jq ''.content'' | base64 -d)",
+      "Bash(# Get the proper latest libwebp version \\(not rfc tag\\) gh api repos/webmproject/libwebp/tags --jq ''.[] | select\\(.name | startswith\\(\"\"v\"\"\\)\\) | .name'')",
+      "Bash(# Check the SusanDoggie libjpeg for platforms info gh api repos/SusanDoggie/libjpeg/contents/Package.swift --jq ''.content'')",
+      "Bash(# Check what version of libjpeg-turbo SusanDoggie bundles gh api repos/SusanDoggie/libjpeg/contents/dependencies/libjpeg-turbo --jq ''.[] | select\\(.name | test\\(\"\"jversion|CMakeLists.txt\"\"\\)\\) | .name'')",
+      "Bash(# Check the .gitmodules to find the commit/tag of libjpeg-turbo used gh api repos/SusanDoggie/libjpeg/contents/.gitmodules --jq ''.content'')",
+      "Bash(# Search for turbojpeg or jpegli swift package gh search repos \"\"jpegli swift\"\" --limit 5 --json fullName,description,updatedAt,stargazersCount)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(find:*)",
+      "Bash(file:*)"
+    ]
+  }
+}

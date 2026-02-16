@@ -1,0 +1,5 @@
+module CLibspng {
+    header "spng.h"
+    link "z"
+    export *
+}
