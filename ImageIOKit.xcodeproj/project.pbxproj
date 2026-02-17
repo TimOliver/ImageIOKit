@@ -39,25 +39,14 @@
 		F20000012F16000000000001 /* PixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000001 /* PixelBuffer.swift */; };
 		F20000012F16000000000002 /* ImageDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000002 /* ImageDecoder.swift */; };
 		F20000012F16000000000003 /* SoftwareScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000003 /* SoftwareScaler.swift */; };
-		F20000012F16000000000004 /* DecoderFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000004 /* DecoderFactory.swift */; };
 		F20000012F16000000000005 /* JPEGDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000005 /* JPEGDecoder.swift */; };
-		F20000012F16000000000006 /* PNGDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000006 /* PNGDecoder.swift */; };
-		F20000012F16000000000007 /* WebPDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000007 /* WebPDecoder.swift */; };
-		F20000012F16000000000008 /* AVIFDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000008 /* AVIFDecoder.swift */; };
 		F20000012F16000000000009 /* JXLDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000009 /* JXLDecoder.swift */; };
 		F1000002000000000000000A /* TileDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000A /* TileDescriptor.swift */; };
 		F1000002000000000000000B /* TileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000B /* TileGrid.swift */; };
 		F1000002000000000000000C /* TileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000C /* TileManager.swift */; };
 		F1000002000000000000000D /* MarginDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000D /* MarginDetector.swift */; };
 		F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000E /* BackgroundColorDetector.swift */; };
-		F1000002000000000000000F /* spng.c in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000F /* spng.c */; };
 		F20000012F17000000000001 /* ImageEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000001 /* ImageEncoder.swift */; };
-		F20000012F17000000000002 /* EncoderFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000002 /* EncoderFactory.swift */; };
-		F20000012F17000000000003 /* JPEGEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000003 /* JPEGEncoder.swift */; };
-		F20000012F17000000000004 /* PNGEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000004 /* PNGEncoder.swift */; };
-		F20000012F17000000000005 /* WebPEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000005 /* WebPEncoder.swift */; };
-		F20000012F17000000000006 /* AVIFEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000006 /* AVIFEncoder.swift */; };
-		F20000012F17000000000007 /* JXLEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000007 /* JXLEncoder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,27 +87,14 @@
 		F10000012F16000000000001 /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		F10000012F16000000000002 /* ImageDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoder.swift; sourceTree = "<group>"; };
 		F10000012F16000000000003 /* SoftwareScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScaler.swift; sourceTree = "<group>"; };
-		F10000012F16000000000004 /* DecoderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecoderFactory.swift; sourceTree = "<group>"; };
 		F10000012F16000000000005 /* JPEGDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JPEGDecoder.swift; sourceTree = "<group>"; };
-		F10000012F16000000000006 /* PNGDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PNGDecoder.swift; sourceTree = "<group>"; };
-		F10000012F16000000000007 /* WebPDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPDecoder.swift; sourceTree = "<group>"; };
-		F10000012F16000000000008 /* AVIFDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVIFDecoder.swift; sourceTree = "<group>"; };
 		F10000012F16000000000009 /* JXLDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLDecoder.swift; sourceTree = "<group>"; };
 		F1000001000000000000000A /* TileDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileDescriptor.swift; sourceTree = "<group>"; };
 		F1000001000000000000000B /* TileGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGrid.swift; sourceTree = "<group>"; };
 		F1000001000000000000000C /* TileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManager.swift; sourceTree = "<group>"; };
 		F1000001000000000000000D /* MarginDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarginDetector.swift; sourceTree = "<group>"; };
 		F1000001000000000000000E /* BackgroundColorDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColorDetector.swift; sourceTree = "<group>"; };
-		F1000001000000000000000F /* spng.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = spng.c; sourceTree = "<group>"; };
-		F10000010000000000000010 /* spng.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = spng.h; sourceTree = "<group>"; };
-		F10000010000000000000011 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		F10000012F17000000000001 /* ImageEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEncoder.swift; sourceTree = "<group>"; };
-		F10000012F17000000000002 /* EncoderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderFactory.swift; sourceTree = "<group>"; };
-		F10000012F17000000000003 /* JPEGEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JPEGEncoder.swift; sourceTree = "<group>"; };
-		F10000012F17000000000004 /* PNGEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PNGEncoder.swift; sourceTree = "<group>"; };
-		F10000012F17000000000005 /* WebPEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPEncoder.swift; sourceTree = "<group>"; };
-		F10000012F17000000000006 /* AVIFEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVIFEncoder.swift; sourceTree = "<group>"; };
-		F10000012F17000000000007 /* JXLEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLEncoder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,13 +170,9 @@
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
 				F10000012F16000000000001 /* PixelBuffer.swift */,
 				F10000012F16000000000003 /* SoftwareScaler.swift */,
-				F10000012F16000000000004 /* DecoderFactory.swift */,
-				F10000012F17000000000002 /* EncoderFactory.swift */,
 				F30000012F16000000000001 /* Decoders */,
-				F30000012F17000000000001 /* Encoders */,
 				F30000012F16000000000002 /* Tiling */,
 				F30000012F16000000000003 /* Analysis */,
-				F30000012F16000000000004 /* Vendor */,
 			);
 			path = ImageIOKit;
 			sourceTree = "<group>";
@@ -209,24 +181,9 @@
 			isa = PBXGroup;
 			children = (
 				F10000012F16000000000005 /* JPEGDecoder.swift */,
-				F10000012F16000000000006 /* PNGDecoder.swift */,
-				F10000012F16000000000007 /* WebPDecoder.swift */,
-				F10000012F16000000000008 /* AVIFDecoder.swift */,
 				F10000012F16000000000009 /* JXLDecoder.swift */,
 			);
 			path = Decoders;
-			sourceTree = "<group>";
-		};
-		F30000012F17000000000001 /* Encoders */ = {
-			isa = PBXGroup;
-			children = (
-				F10000012F17000000000003 /* JPEGEncoder.swift */,
-				F10000012F17000000000004 /* PNGEncoder.swift */,
-				F10000012F17000000000005 /* WebPEncoder.swift */,
-				F10000012F17000000000006 /* AVIFEncoder.swift */,
-				F10000012F17000000000007 /* JXLEncoder.swift */,
-			);
-			path = Encoders;
 			sourceTree = "<group>";
 		};
 		F30000012F16000000000002 /* Tiling */ = {
@@ -246,32 +203,6 @@
 				F1000001000000000000000E /* BackgroundColorDetector.swift */,
 			);
 			path = Analysis;
-			sourceTree = "<group>";
-		};
-		F30000012F16000000000004 /* Vendor */ = {
-			isa = PBXGroup;
-			children = (
-				F30000012F16000000000005 /* libspng */,
-			);
-			path = Vendor;
-			sourceTree = "<group>";
-		};
-		F30000012F16000000000005 /* libspng */ = {
-			isa = PBXGroup;
-			children = (
-				F1000001000000000000000F /* spng.c */,
-				F30000012F16000000000006 /* include */,
-			);
-			path = libspng;
-			sourceTree = "<group>";
-		};
-		F30000012F16000000000006 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				F10000010000000000000010 /* spng.h */,
-				F10000010000000000000011 /* module.modulemap */,
-			);
-			path = include;
 			sourceTree = "<group>";
 		};
 		22DB610C2D3A5155007AFCF3 /* SampleImages */ = {
@@ -307,8 +238,6 @@
 			name = ImageIOKitExample;
 			packageProductDependencies = (
 				F50000012F16000000000001 /* libjpeg */,
-				F50000012F16000000000002 /* libwebp */,
-				F50000012F16000000000003 /* avif */,
 				F50000012F16000000000004 /* libjxl */,
 			);
 			productName = ImageIOKit;
@@ -363,8 +292,6 @@
 			mainGroup = 221D5EF929EBD708006E60AB;
 			packageReferences = (
 				F40000012F16000000000001 /* XCRemoteSwiftPackageReference "libjpeg" */,
-				F40000012F16000000000002 /* XCRemoteSwiftPackageReference "libwebp-Xcode" */,
-				F40000012F16000000000003 /* XCRemoteSwiftPackageReference "avif.swift" */,
 				F40000012F16000000000004 /* XCRemoteSwiftPackageReference "libjxl-Xcode" */,
 			);
 			productRefGroup = 221D5F0329EBD708006E60AB /* Products */;
@@ -428,25 +355,14 @@
 				F20000012F16000000000001 /* PixelBuffer.swift in Sources */,
 				F20000012F16000000000002 /* ImageDecoder.swift in Sources */,
 				F20000012F16000000000003 /* SoftwareScaler.swift in Sources */,
-				F20000012F16000000000004 /* DecoderFactory.swift in Sources */,
 				F20000012F16000000000005 /* JPEGDecoder.swift in Sources */,
-				F20000012F16000000000006 /* PNGDecoder.swift in Sources */,
-				F20000012F16000000000007 /* WebPDecoder.swift in Sources */,
-				F20000012F16000000000008 /* AVIFDecoder.swift in Sources */,
 				F20000012F16000000000009 /* JXLDecoder.swift in Sources */,
 				F1000002000000000000000A /* TileDescriptor.swift in Sources */,
 				F1000002000000000000000B /* TileGrid.swift in Sources */,
 				F1000002000000000000000C /* TileManager.swift in Sources */,
 				F1000002000000000000000D /* MarginDetector.swift in Sources */,
 				F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */,
-				F1000002000000000000000F /* spng.c in Sources */,
 				F20000012F17000000000001 /* ImageEncoder.swift in Sources */,
-				F20000012F17000000000002 /* EncoderFactory.swift in Sources */,
-				F20000012F17000000000003 /* JPEGEncoder.swift in Sources */,
-				F20000012F17000000000004 /* PNGEncoder.swift in Sources */,
-				F20000012F17000000000005 /* WebPEncoder.swift in Sources */,
-				F20000012F17000000000006 /* AVIFEncoder.swift in Sources */,
-				F20000012F17000000000007 /* JXLEncoder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -618,7 +534,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/ImageIOKit/Vendor/libspng/include";
 				INFOPLIST_FILE = ImageIOKitExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
@@ -634,7 +549,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.tim.ImageIOKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/ImageIOKit/Vendor/libspng/include";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -648,7 +562,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/ImageIOKit/Vendor/libspng/include";
 				INFOPLIST_FILE = ImageIOKitExample/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
@@ -664,7 +577,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.tim.ImageIOKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/ImageIOKit/Vendor/libspng/include";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -747,22 +659,6 @@
 				minimumVersion = 1.0.3;
 			};
 		};
-		F40000012F16000000000002 /* XCRemoteSwiftPackageReference "libwebp-Xcode" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/libwebp-Xcode.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.0;
-			};
-		};
-		F40000012F16000000000003 /* XCRemoteSwiftPackageReference "avif.swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/awxkee/avif.swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.1.2;
-			};
-		};
 		F40000012F16000000000004 /* XCRemoteSwiftPackageReference "libjxl-Xcode" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SDWebImage/libjxl-Xcode.git";
@@ -778,16 +674,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F40000012F16000000000001 /* XCRemoteSwiftPackageReference "libjpeg" */;
 			productName = libjpeg;
-		};
-		F50000012F16000000000002 /* libwebp */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F40000012F16000000000002 /* XCRemoteSwiftPackageReference "libwebp-Xcode" */;
-			productName = libwebp;
-		};
-		F50000012F16000000000003 /* avif */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F40000012F16000000000003 /* XCRemoteSwiftPackageReference "avif.swift" */;
-			productName = avif;
 		};
 		F50000012F16000000000004 /* libjxl */ = {
 			isa = XCSwiftPackageProductDependency;

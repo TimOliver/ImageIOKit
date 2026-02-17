@@ -29,7 +29,8 @@
       "Bash(curl:*)",
       "Bash(xcodebuild:*)",
       "Bash(find:*)",
-      "Bash(file:*)"
+      "Bash(file:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

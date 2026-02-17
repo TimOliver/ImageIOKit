@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 
 /// A list of all supported image file formats, and their respective metadata
 public enum ImageFileFormat: CaseIterable {
@@ -53,6 +54,18 @@ public enum ImageFileFormat: CaseIterable {
         case .heic: return version >= 11
         case .webp: return version >= 14
         case .avif, .jpegXL: return version >= 17
+        }
+    }
+
+    /// The Uniform Type Identifier string for this format, used by CGImageDestination.
+    public var uniformTypeIdentifier: CFString {
+        switch self {
+        case .jpeg:   return UTType.jpeg.identifier as CFString
+        case .png:    return UTType.png.identifier as CFString
+        case .webp:   return UTType.webP.identifier as CFString
+        case .heic:   return UTType.heic.identifier as CFString
+        case .avif:   return "public.avif" as CFString
+        case .jpegXL: return "public.jxl" as CFString
         }
     }
 }

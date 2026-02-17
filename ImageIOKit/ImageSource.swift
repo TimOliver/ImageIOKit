@@ -2,13 +2,14 @@
 //  ImageSource.swift
 //  ImageIOKit
 //
-//  Facade over format-specific decoders. Preserves the existing public API
-//  while delegating to JPEGDecoder, PNGDecoder, WebPDecoder, AVIFDecoder,
-//  and JXLDecoder for actual decode work. Adds region decode support.
+//  Wraps Apple's CGImageSource for all decode and thumbnail operations.
+//  Delegates to JPEGRegionDecoder for JPEG region decode (tiling)
+//  and JXLReconstructor for lossless JXL → JPEG reconstruction.
 //
 
 import Foundation
 import CoreGraphics
+import ImageIO
 import UIKit
 
 /// An image source represents an arbitrary location of a compressed
@@ -21,14 +22,6 @@ import UIKit
 /// This class aims to be as efficient and memory light as possible,
 /// only performing heavy loading operations on demand.
 public final class ImageSource {
-
-    /// The types of downscaling modes that may be used when
-    /// creating smaller sized copies of this image.
-    public enum DownscaleStrategy {
-        case automatic      // Uses native shrink-on-load when available, falls back to software.
-        case partialDecode  // Uses codec-level shrink (JPEG scale_denom, JXL DC, WebP use_scaling).
-        case fullDecode     // The image is fully decoded and downscaled via Core Graphics manually.
-    }
 
     /// The local file path to the image file, if it was loaded from disk.
     public private(set) var url: URL?
@@ -55,28 +48,16 @@ public final class ImageSource {
     /// The detected file format of the image.
     public private(set) var fileFormat: ImageFileFormat?
 
-    /// The native decode capabilities of the underlying format.
+    /// The native decode capabilities of this source.
+    /// Only JPEG sources support region decode.
     public var capabilities: DecoderCapabilities {
-        guard let decoder else { return [] }
-        return type(of: decoder).capabilities
-    }
-
-    /// Estimated peak memory (in bytes) for a full-resolution decode.
-    /// Use this to decide whether to set a `memoryBudget` on decode options,
-    /// or to skip decoding entirely on memory-constrained devices.
-    ///
-    /// For JXL images, this accounts for libjxl's internal float32 working
-    /// buffers which can be ~8x the raw pixel data. For other formats, the
-    /// estimate is more conservative (typically ~2x).
-    public var estimatedDecodeMemory: Int {
-        guard let decoder else { return 0 }
-        return decoder.estimatedDecodeMemory
+        fileFormat == .jpeg ? [.regionDecode] : []
     }
 
     // MARK: - Private Properties
 
-    /// The format-specific decoder used for all decode operations.
-    private var decoder: (any ImageDecoder)?
+    /// The underlying CGImageSource.
+    private var cgImageSource: CGImageSource?
 
     // MARK: - Init
 
@@ -109,30 +90,48 @@ public final class ImageSource {
     public func loadImageData() -> Bool {
         guard !isLoaded else { return true }
 
-        // Create the appropriate decoder via the factory
-        let imageDecoder: (any ImageDecoder)?
+        // Create CGImageSource
+        let source: CGImageSource?
         if let url = self.url {
-            imageDecoder = DecoderFactory.decoder(for: url)
+            source = CGImageSourceCreateWithURL(url as CFURL, nil)
             self.fileFormat = ImageFileFormat.detect(from: url)
         } else if let data = self.data {
-            imageDecoder = DecoderFactory.decoder(for: data)
+            source = CGImageSourceCreateWithData(data as CFData, nil)
             self.fileFormat = ImageFileFormat.detect(from: data)
         } else {
             fatalError("ImageSource: A load was attempted without a valid image data or URL object.")
         }
 
-        guard let imageDecoder else { return false }
-        let meta = imageDecoder.metadata
+        guard let source else { return false }
 
-        guard meta.width > 0, meta.height > 0 else { return false }
+        // Read properties from the image header
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return false
+        }
 
-        self.decoder = imageDecoder
-        self.imageSize = meta.size
-        self.hasAlpha = meta.hasAlpha
-        self.colorModel = meta.colorModel
-        self.colorProfile = meta.colorProfile
+        let width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
+        let height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
+        guard width > 0, height > 0 else { return false }
+
+        // Detect format from UTI if not already detected via magic bytes
+        if self.fileFormat == nil, let uti = CGImageSourceGetType(source) as String? {
+            self.fileFormat = ImageFileFormat.allCases.first {
+                ($0.uniformTypeIdentifier as String) == uti
+            }
+        }
+
+        self.cgImageSource = source
+        self.imageSize = CGSize(width: width, height: height)
+        self.hasAlpha = properties[kCGImagePropertyHasAlpha] as? Bool ?? false
+
+        if let colorModelString = properties[kCGImagePropertyColorModel] as? String {
+            self.colorModel = ImageColorModel(colorModel: colorModelString)
+        }
+        if let profileName = properties[kCGImagePropertyProfileName] as? String {
+            self.colorProfile = profileName
+        }
+
         self.isLoaded = true
-
         return true
     }
 
@@ -141,37 +140,20 @@ public final class ImageSource {
     /// Generates a downscaled copy of the original image, optimistically avoiding decoding
     /// the whole original image into memory if possible.
     /// - Parameter size: The preferred bounding size that the thumbnail will scale to fit in.
-    /// - Parameter downscaleStrategy: The strategy used to generate the thumbnail.
-    /// - Parameter memoryBudget: Maximum bytes the decode is allowed to allocate.
-    ///   When exceeded, codecs that support it (e.g. JXL) will fall back to a lower-quality
-    ///   but memory-safe decode path. Pass 0 (the default) for no limit.
     /// - Returns: The downscaled image if successful, nil otherwise.
-    public func makeThumbnail(fittingSize size: CGSize, downscaleStrategy: DownscaleStrategy = .automatic,
-                              memoryBudget: Int = 0) -> UIImage? {
-        guard let decoder, isLoaded else { return nil }
+    public func makeThumbnail(fittingSize size: CGSize) -> UIImage? {
+        guard let cgImageSource, isLoaded else { return nil }
 
-        let fitSize = SoftwareScaler.fittingSize(for: imageSize, in: size)
-        guard fitSize.width > 0, fitSize.height > 0 else { return nil }
+        let maxDimension = max(size.width, size.height)
+        let options: [CFString: Any] = [
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
 
-        let options: DecodeOptions
-        switch downscaleStrategy {
-        case .automatic, .partialDecode:
-            options = DecodeOptions(targetSize: fitSize, memoryBudget: memoryBudget)
-        case .fullDecode:
-            options = DecodeOptions(memoryBudget: memoryBudget)
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(cgImageSource, 0, options as CFDictionary) else {
+            return nil
         }
-
-        guard let pixelBuffer = try? decoder.decode(options: options) else { return nil }
-
-        // For fullDecode strategy, we need to manually scale the full-res buffer
-        let outputBuffer: PixelBuffer
-        if downscaleStrategy == .fullDecode {
-            outputBuffer = SoftwareScaler.scale(pixelBuffer, to: fitSize) ?? pixelBuffer
-        } else {
-            outputBuffer = pixelBuffer
-        }
-
-        guard let cgImage = outputBuffer.makeCGImage() else { return nil }
         return UIImage(cgImage: cgImage)
     }
 
@@ -182,12 +164,33 @@ public final class ImageSource {
     /// - Parameter targetSize: Optional target size for the decoded region.
     /// - Returns: The decoded region as a UIImage, or nil on failure.
     public func decodeRegion(_ rect: CGRect, targetSize: CGSize? = nil) -> UIImage? {
-        guard let decoder, isLoaded else { return nil }
+        guard isLoaded else { return nil }
 
-        let options = DecodeOptions(targetSize: targetSize, cropRect: rect)
-        guard let pixelBuffer = try? decoder.decode(options: options),
-              let cgImage = pixelBuffer.makeCGImage() else { return nil }
-        return UIImage(cgImage: cgImage)
+        // JPEG: use libjpeg native region decode
+        if fileFormat == .jpeg {
+            let regionDecoder: JPEGRegionDecoder?
+            if let url {
+                regionDecoder = JPEGRegionDecoder(url: url)
+            } else if let data {
+                regionDecoder = JPEGRegionDecoder(data: data)
+            } else {
+                return nil
+            }
+
+            guard let regionDecoder,
+                  let pixelBuffer = try? regionDecoder.decodeRegion(cropRect: rect, targetSize: targetSize),
+                  let cgImage = pixelBuffer.makeCGImage() else { return nil }
+            return UIImage(cgImage: cgImage)
+        }
+
+        // All other formats: full decode via ImageIO + CGImage.cropping
+        guard let fullImage = decodeFullCGImage() else { return nil }
+
+        // Clamp the rect to the image bounds
+        let clampedRect = rect.intersection(CGRect(origin: .zero, size: imageSize))
+        guard !clampedRect.isEmpty,
+              let cropped = fullImage.cropping(to: clampedRect) else { return nil }
+        return UIImage(cgImage: cropped)
     }
 
     // MARK: - Full Decode
@@ -195,10 +198,37 @@ public final class ImageSource {
     /// Decodes the full image at its original resolution.
     /// - Returns: The decoded image as a UIImage, or nil on failure.
     public func decodeFullImage() -> UIImage? {
-        guard let decoder, isLoaded else { return nil }
-        guard let pixelBuffer = try? decoder.decode(),
-              let cgImage = pixelBuffer.makeCGImage() else { return nil }
+        guard let cgImage = decodeFullCGImage() else { return nil }
         return UIImage(cgImage: cgImage)
+    }
+
+    /// Decodes the full image and returns a CGImage. Used internally and by TileManager.
+    public func decodeFullCGImage() -> CGImage? {
+        guard let cgImageSource, isLoaded else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCacheImmediately: true
+        ]
+        return CGImageSourceCreateImageAtIndex(cgImageSource, 0, options as CFDictionary)
+    }
+
+    // MARK: - JPEG Reconstruction
+
+    /// For JXL images that were created by losslessly recompressing a JPEG,
+    /// reconstructs the exact original JPEG bitstream. Returns `nil` if the
+    /// source is not JXL or was not derived from a JPEG.
+    public func reconstructJPEG() -> Data? {
+        guard fileFormat == .jpegXL else { return nil }
+
+        let reconstructor: JXLReconstructor?
+        if let url {
+            reconstructor = JXLReconstructor(url: url)
+        } else if let data {
+            reconstructor = JXLReconstructor(data: data)
+        } else {
+            return nil
+        }
+
+        return reconstructor?.reconstructJPEG()
     }
 
     // MARK: - Raw Decode Access
@@ -209,9 +239,127 @@ public final class ImageSource {
     /// - Returns: A pixel buffer containing the decoded image data.
     /// - Throws: `ImageDecoderError` on failure.
     public func decode(options: DecodeOptions = DecodeOptions()) throws -> PixelBuffer {
-        guard let decoder, isLoaded else {
+        guard let cgImageSource, isLoaded else {
             throw ImageDecoderError.invalidData
         }
-        return try decoder.decode(options: options)
+
+        // Determine the CGImage to work with
+        let cgImage: CGImage
+
+        if let targetSize = options.targetSize, options.cropRect == nil {
+            // Use thumbnailing for downscaled decode
+            let maxDimension = max(targetSize.width, targetSize.height)
+            let thumbOptions: [CFString: Any] = [
+                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true
+            ]
+            guard let thumb = CGImageSourceCreateThumbnailAtIndex(cgImageSource, 0, thumbOptions as CFDictionary) else {
+                throw ImageDecoderError.decodeFailed("CGImageSourceCreateThumbnailAtIndex failed")
+            }
+            cgImage = thumb
+        } else {
+            // Full decode
+            let fullOptions: [CFString: Any] = [
+                kCGImageSourceShouldCacheImmediately: true
+            ]
+            guard let full = CGImageSourceCreateImageAtIndex(cgImageSource, 0, fullOptions as CFDictionary) else {
+                throw ImageDecoderError.decodeFailed("CGImageSourceCreateImageAtIndex failed")
+            }
+            cgImage = full
+        }
+
+        // Apply crop if requested
+        var workingImage = cgImage
+        if let cropRect = options.cropRect {
+            guard let cropped = cgImage.cropping(to: cropRect) else {
+                throw ImageDecoderError.invalidOptions("Crop rect \(cropRect) is out of bounds")
+            }
+            workingImage = cropped
+
+            // If target size was also requested, scale via a second thumbnail pass
+            if let targetSize = options.targetSize {
+                let fitSize = SoftwareScaler.fittingSize(
+                    for: CGSize(width: workingImage.width, height: workingImage.height),
+                    in: targetSize
+                )
+                workingImage = try renderToSize(workingImage, size: fitSize)
+            }
+        }
+
+        // Render CGImage into a PixelBuffer
+        return try renderToPixelBuffer(workingImage, pixelFormat: options.pixelFormat)
+    }
+
+    // MARK: - Private Helpers
+
+    /// Renders a CGImage into a new CGImage at the specified size.
+    private func renderToSize(_ image: CGImage, size: CGSize) throws -> CGImage {
+        let width = Int(size.width)
+        let height = Int(size.height)
+        guard width > 0, height > 0 else {
+            throw ImageDecoderError.invalidOptions("Target size is zero")
+        }
+
+        guard let ctx = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue).rawValue
+        ) else {
+            throw ImageDecoderError.decodeFailed("Failed to create CGContext for scaling")
+        }
+
+        ctx.interpolationQuality = .high
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        guard let result = ctx.makeImage() else {
+            throw ImageDecoderError.decodeFailed("Failed to create scaled CGImage")
+        }
+        return result
+    }
+
+    /// Renders a CGImage into a PixelBuffer with the requested pixel format.
+    private func renderToPixelBuffer(_ image: CGImage, pixelFormat: PixelBuffer.PixelFormat) throws -> PixelBuffer {
+        let width = image.width
+        let height = image.height
+
+        let colorSpace: CGColorSpace
+        let bitmapInfo: CGBitmapInfo
+
+        switch pixelFormat {
+        case .gray8:
+            colorSpace = CGColorSpaceCreateDeviceGray()
+            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
+        case .grayAlpha8:
+            colorSpace = CGColorSpaceCreateDeviceGray()
+            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+        case .rgb8:
+            colorSpace = CGColorSpaceCreateDeviceRGB()
+            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)
+        case .rgba8:
+            colorSpace = CGColorSpaceCreateDeviceRGB()
+            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+        }
+
+        let buffer = PixelBuffer(width: width, height: height, pixelFormat: pixelFormat)
+
+        guard let ctx = CGContext(
+            data: buffer.data,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: buffer.bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else {
+            throw ImageDecoderError.decodeFailed("Failed to create CGContext for pixel buffer rendering")
+        }
+
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return buffer
     }
 }

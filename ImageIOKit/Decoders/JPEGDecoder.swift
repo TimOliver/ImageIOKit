@@ -1,23 +1,21 @@
 //
-//  JPEGDecoder.swift
+//  JPEGRegionDecoder.swift
 //  ImageIOKit
 //
-//  JPEG decoder using libjpeg (standard API).
-//  Supports shrink-on-load (1/2, 1/4, 1/8) via scale_num/scale_denom
-//  and region decode via jpeg_crop_scanline + jpeg_skip_scanlines.
+//  JPEG region decoder using libjpeg (standard API).
+//  Supports region decode via jpeg_crop_scanline + jpeg_skip_scanlines,
+//  combined with DCT shrink-on-load (1/2, 1/4, 1/8).
 //
 
 import Foundation
 import CoreGraphics
 import libjpeg
 
-public final class JPEGDecoder: ImageDecoder {
-
-    public static let capabilities: DecoderCapabilities = [.shrinkOnLoad, .regionDecode]
-
-    public let metadata: ImageMetadata
+public struct JPEGRegionDecoder {
 
     private let imageData: Data
+    private let imageWidth: Int
+    private let imageHeight: Int
 
     /// JPEG supports these DCT scaling ratios: 1/1, 1/2, 1/4, 1/8
     private struct ScaleFactor {
@@ -34,20 +32,21 @@ public final class JPEGDecoder: ImageDecoder {
 
     // MARK: - Init
 
-    public convenience init?(url: URL) {
+    public init?(data: Data) {
+        self.imageData = data
+        guard let (w, h) = JPEGRegionDecoder.readDimensions(data: data) else { return nil }
+        self.imageWidth = w
+        self.imageHeight = h
+    }
+
+    public init?(url: URL) {
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         self.init(data: data)
     }
 
-    public init?(data: Data) {
-        self.imageData = data
-        guard let meta = JPEGDecoder.readHeader(data: data) else { return nil }
-        self.metadata = meta
-    }
-
     // MARK: - Header Reading
 
-    private static func readHeader(data: Data) -> ImageMetadata? {
+    private static func readDimensions(data: Data) -> (Int, Int)? {
         var cinfo = jpeg_decompress_struct()
         var jerr = jpeg_error_mgr()
         cinfo.err = jpeg_std_error(&jerr)
@@ -61,92 +60,19 @@ public final class JPEGDecoder: ImageDecoder {
         }
         guard ok else { return nil }
 
-        let colorModel: ImageColorModel = (cinfo.jpeg_color_space == JCS_GRAYSCALE) ? .grayscale : .rgb
-
-        return ImageMetadata(
-            width: Int(cinfo.image_width), height: Int(cinfo.image_height),
-            hasAlpha: false, colorModel: colorModel
-        )
+        return (Int(cinfo.image_width), Int(cinfo.image_height))
     }
 
-    // MARK: - Decode
+    // MARK: - Region Decode
 
-    public func decode(options: DecodeOptions) throws -> PixelBuffer {
-        if let cropRect = options.cropRect {
-            return try decodeRegion(cropRect: cropRect, targetSize: options.targetSize,
-                                    pixelFormat: options.pixelFormat)
-        }
-        return try decodeFull(targetSize: options.targetSize, pixelFormat: options.pixelFormat)
-    }
-
-    // MARK: - Full Decode (Standard libjpeg)
-
-    private func decodeFull(targetSize: CGSize?, pixelFormat: PixelBuffer.PixelFormat) throws -> PixelBuffer {
-        var cinfo = jpeg_decompress_struct()
-        var jerr = jpeg_error_mgr()
-        cinfo.err = jpeg_std_error(&jerr)
-        jpeg_CreateDecompress(&cinfo, JPEG_LIB_VERSION, MemoryLayout<jpeg_decompress_struct>.size)
-        defer { jpeg_destroy_decompress(&cinfo) }
-
-        try imageData.withUnsafeBytes { bufferPtr in
-            guard let baseAddress = bufferPtr.baseAddress else {
-                throw ImageDecoderError.invalidData
-            }
-            jpeg_mem_src(&cinfo, baseAddress.assumingMemoryBound(to: UInt8.self), UInt(imageData.count))
-        }
-
-        guard jpeg_read_header(&cinfo, 1) == JPEG_HEADER_OK else {
-            throw ImageDecoderError.invalidData
-        }
-
-        // Apply shrink-on-load scale factor
-        let scaleFactor = JPEGDecoder.bestScaleFactor(
-            imageWidth: metadata.width, imageHeight: metadata.height, for: targetSize
-        )
-        cinfo.scale_num = scaleFactor.num
-        cinfo.scale_denom = scaleFactor.denom
-
-        // Always decode to RGBA for simplicity
-        cinfo.out_color_space = JCS_EXT_RGBA
-        jpeg_calc_output_dimensions(&cinfo)
-
-        guard jpeg_start_decompress(&cinfo) != 0 else {
-            throw ImageDecoderError.decodeFailed("jpeg_start_decompress failed")
-        }
-
-        let outWidth = Int(cinfo.output_width)
-        let outHeight = Int(cinfo.output_height)
-        let bpp = 4 // RGBA
-        let buffer = PixelBuffer(width: outWidth, height: outHeight, pixelFormat: .rgba8)
-
-        let scanlineBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: outWidth * bpp)
-        defer { scanlineBuffer.deallocate() }
-
-        var row: UInt32 = 0
-        while row < cinfo.output_height {
-            var scanlinePtr: UnsafeMutablePointer<UInt8>? = scanlineBuffer
-            jpeg_read_scanlines(&cinfo, &scanlinePtr, 1)
-            let dstOffset = Int(row) * buffer.bytesPerRow
-            memcpy(buffer.data.advanced(by: dstOffset), scanlineBuffer, outWidth * bpp)
-            row += 1
-        }
-
-        jpeg_finish_decompress(&cinfo)
-
-        // Software scale to exact target size if the DCT scale factor didn't match exactly
-        if let targetSize, Int(targetSize.width) != outWidth || Int(targetSize.height) != outHeight {
-            if let scaled = SoftwareScaler.scale(buffer, to: targetSize) {
-                return convertPixelFormatIfNeeded(scaled, to: pixelFormat)
-            }
-        }
-
-        return convertPixelFormatIfNeeded(buffer, to: pixelFormat)
-    }
-
-    // MARK: - Region Decode (Standard libjpeg)
-
-    private func decodeRegion(cropRect: CGRect, targetSize: CGSize?,
-                              pixelFormat: PixelBuffer.PixelFormat) throws -> PixelBuffer {
+    /// Decodes a specific region of the JPEG image.
+    /// - Parameters:
+    ///   - cropRect: The region to decode, in pixel coordinates of the full image.
+    ///   - targetSize: Optional target size for the decoded region (enables DCT shrink-on-load).
+    ///   - pixelFormat: The desired pixel format for the output.
+    /// - Returns: A pixel buffer containing the decoded region.
+    public func decodeRegion(cropRect: CGRect, targetSize: CGSize? = nil,
+                             pixelFormat: PixelBuffer.PixelFormat = .rgba8) throws -> PixelBuffer {
         var cinfo = jpeg_decompress_struct()
         var jerr = jpeg_error_mgr()
         cinfo.err = jpeg_std_error(&jerr)
@@ -166,7 +92,7 @@ public final class JPEGDecoder: ImageDecoder {
 
         // Apply scale factor if target size is specified
         if let targetSize {
-            let scaleFactor = JPEGDecoder.bestScaleFactor(
+            let scaleFactor = JPEGRegionDecoder.bestScaleFactor(
                 imageWidth: Int(cropRect.width), imageHeight: Int(cropRect.height), for: targetSize
             )
             cinfo.scale_num = scaleFactor.num
@@ -181,8 +107,8 @@ public final class JPEGDecoder: ImageDecoder {
         }
 
         // Calculate scaled crop coordinates
-        let scaleX = CGFloat(cinfo.output_width) / CGFloat(metadata.width)
-        let scaleY = CGFloat(cinfo.output_height) / CGFloat(metadata.height)
+        let scaleX = CGFloat(cinfo.output_width) / CGFloat(imageWidth)
+        let scaleY = CGFloat(cinfo.output_height) / CGFloat(imageHeight)
 
         var cropX = UInt32(max(0, (cropRect.origin.x * scaleX).rounded(.down)))
         var cropWidth = UInt32(min(CGFloat(cinfo.output_width) - CGFloat(cropX),
@@ -230,14 +156,7 @@ public final class JPEGDecoder: ImageDecoder {
         }
         jpeg_finish_decompress(&cinfo)
 
-        // Software scale to exact target size if needed
-        if let targetSize, Int(targetSize.width) != outWidth || Int(targetSize.height) != outHeight {
-            if let scaled = SoftwareScaler.scale(buffer, to: targetSize) {
-                return convertPixelFormatIfNeeded(scaled, to: pixelFormat)
-            }
-        }
-
-        return convertPixelFormatIfNeeded(buffer, to: pixelFormat)
+        return buffer
     }
 
     // MARK: - Helpers
@@ -259,50 +178,5 @@ public final class JPEGDecoder: ImageDecoder {
             }
         }
         return best
-    }
-
-    private func convertPixelFormatIfNeeded(_ source: PixelBuffer, to format: PixelBuffer.PixelFormat) -> PixelBuffer {
-        guard format != .rgba8 else { return source }
-        if let converted = convertPixelFormat(source, to: format) {
-            return converted
-        }
-        return source
-    }
-
-    private func convertPixelFormat(_ source: PixelBuffer, to format: PixelBuffer.PixelFormat) -> PixelBuffer? {
-        guard format != source.pixelFormat else { return source }
-        guard let cgImage = source.makeCGImage() else { return nil }
-
-        let dest = PixelBuffer(width: source.width, height: source.height, pixelFormat: format)
-        let colorSpace: CGColorSpace
-        let bitmapInfo: CGBitmapInfo
-
-        switch format {
-        case .gray8:
-            colorSpace = CGColorSpaceCreateDeviceGray()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
-        case .grayAlpha8:
-            colorSpace = CGColorSpaceCreateDeviceGray()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-        case .rgb8:
-            colorSpace = CGColorSpaceCreateDeviceRGB()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
-        case .rgba8:
-            colorSpace = CGColorSpaceCreateDeviceRGB()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-        }
-
-        guard let ctx = CGContext(
-            data: dest.data,
-            width: dest.width,
-            height: dest.height,
-            bitsPerComponent: 8,
-            bytesPerRow: dest.bytesPerRow,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo.rawValue
-        ) else { return nil }
-
-        ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: dest.width, height: dest.height))
-        return dest
     }
 }
