@@ -51,6 +51,13 @@
 		F1000002000000000000000D /* MarginDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000D /* MarginDetector.swift */; };
 		F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000E /* BackgroundColorDetector.swift */; };
 		F1000002000000000000000F /* spng.c in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000F /* spng.c */; };
+		F20000012F17000000000001 /* ImageEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000001 /* ImageEncoder.swift */; };
+		F20000012F17000000000002 /* EncoderFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000002 /* EncoderFactory.swift */; };
+		F20000012F17000000000003 /* JPEGEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000003 /* JPEGEncoder.swift */; };
+		F20000012F17000000000004 /* PNGEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000004 /* PNGEncoder.swift */; };
+		F20000012F17000000000005 /* WebPEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000005 /* WebPEncoder.swift */; };
+		F20000012F17000000000006 /* AVIFEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000006 /* AVIFEncoder.swift */; };
+		F20000012F17000000000007 /* JXLEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F17000000000007 /* JXLEncoder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +112,13 @@
 		F1000001000000000000000F /* spng.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = spng.c; sourceTree = "<group>"; };
 		F10000010000000000000010 /* spng.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = spng.h; sourceTree = "<group>"; };
 		F10000010000000000000011 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		F10000012F17000000000001 /* ImageEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEncoder.swift; sourceTree = "<group>"; };
+		F10000012F17000000000002 /* EncoderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderFactory.swift; sourceTree = "<group>"; };
+		F10000012F17000000000003 /* JPEGEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JPEGEncoder.swift; sourceTree = "<group>"; };
+		F10000012F17000000000004 /* PNGEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PNGEncoder.swift; sourceTree = "<group>"; };
+		F10000012F17000000000005 /* WebPEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPEncoder.swift; sourceTree = "<group>"; };
+		F10000012F17000000000006 /* AVIFEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVIFEncoder.swift; sourceTree = "<group>"; };
+		F10000012F17000000000007 /* JXLEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLEncoder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,13 +188,16 @@
 			children = (
 				22DB61002D3A045C007AFCF3 /* ImageSource.swift */,
 				F10000012F16000000000002 /* ImageDecoder.swift */,
+				F10000012F17000000000001 /* ImageEncoder.swift */,
 				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
 				22DB61042D3A078A007AFCF3 /* ImageDestination.swift */,
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
 				F10000012F16000000000001 /* PixelBuffer.swift */,
 				F10000012F16000000000003 /* SoftwareScaler.swift */,
 				F10000012F16000000000004 /* DecoderFactory.swift */,
+				F10000012F17000000000002 /* EncoderFactory.swift */,
 				F30000012F16000000000001 /* Decoders */,
+				F30000012F17000000000001 /* Encoders */,
 				F30000012F16000000000002 /* Tiling */,
 				F30000012F16000000000003 /* Analysis */,
 				F30000012F16000000000004 /* Vendor */,
@@ -198,6 +215,18 @@
 				F10000012F16000000000009 /* JXLDecoder.swift */,
 			);
 			path = Decoders;
+			sourceTree = "<group>";
+		};
+		F30000012F17000000000001 /* Encoders */ = {
+			isa = PBXGroup;
+			children = (
+				F10000012F17000000000003 /* JPEGEncoder.swift */,
+				F10000012F17000000000004 /* PNGEncoder.swift */,
+				F10000012F17000000000005 /* WebPEncoder.swift */,
+				F10000012F17000000000006 /* AVIFEncoder.swift */,
+				F10000012F17000000000007 /* JXLEncoder.swift */,
+			);
+			path = Encoders;
 			sourceTree = "<group>";
 		};
 		F30000012F16000000000002 /* Tiling */ = {
@@ -411,6 +440,13 @@
 				F1000002000000000000000D /* MarginDetector.swift in Sources */,
 				F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */,
 				F1000002000000000000000F /* spng.c in Sources */,
+				F20000012F17000000000001 /* ImageEncoder.swift in Sources */,
+				F20000012F17000000000002 /* EncoderFactory.swift in Sources */,
+				F20000012F17000000000003 /* JPEGEncoder.swift in Sources */,
+				F20000012F17000000000004 /* PNGEncoder.swift in Sources */,
+				F20000012F17000000000005 /* WebPEncoder.swift in Sources */,
+				F20000012F17000000000006 /* AVIFEncoder.swift in Sources */,
+				F20000012F17000000000007 /* JXLEncoder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
