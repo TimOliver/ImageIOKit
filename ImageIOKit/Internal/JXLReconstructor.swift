@@ -10,16 +10,16 @@
 import Foundation
 import libjxl
 
-public struct JXLReconstructor {
+struct JXLReconstructor {
 
     private let imageData: Data
 
-    public init?(data: Data) {
+    init?(data: Data) {
         guard !data.isEmpty else { return nil }
         self.imageData = data
     }
 
-    public init?(url: URL) {
+    init?(url: URL) {
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         self.init(data: data)
     }
@@ -27,7 +27,7 @@ public struct JXLReconstructor {
     /// Attempts to reconstruct the original JPEG bitstream from a JXL file
     /// that was created by losslessly recompressing a JPEG. Returns the exact
     /// original JPEG bytes, or `nil` if the JXL was not derived from a JPEG.
-    public func reconstructJPEG() -> Data? {
+    func reconstructJPEG() -> Data? {
         guard let dec = JxlDecoderCreate(nil) else { return nil }
         defer { JxlDecoderDestroy(dec) }
 

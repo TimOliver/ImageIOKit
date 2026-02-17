@@ -10,10 +10,10 @@
 import Foundation
 import CoreGraphics
 
-public enum SoftwareScaler {
+enum SoftwareScaler {
 
     /// Crops a pixel buffer to the given rect (in pixel coordinates of the source).
-    public static func crop(_ source: PixelBuffer, to rect: CGRect) -> PixelBuffer? {
+    static func crop(_ source: PixelBuffer, to rect: CGRect) -> PixelBuffer? {
         let x = Int(rect.origin.x)
         let y = Int(rect.origin.y)
         let cropWidth = Int(rect.width)
@@ -37,7 +37,7 @@ public enum SoftwareScaler {
     }
 
     /// Computes the best fitting size that preserves aspect ratio within a bounding box.
-    public static func fittingSize(for imageSize: CGSize, in boundingSize: CGSize) -> CGSize {
+    static func fittingSize(for imageSize: CGSize, in boundingSize: CGSize) -> CGSize {
         let scale = min(boundingSize.width / imageSize.width,
                         boundingSize.height / imageSize.height)
         return CGSize(width: (imageSize.width * scale).rounded(.down),

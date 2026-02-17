@@ -1,14 +1,9 @@
 //
-//  ImageEncoder.swift
+//  EncodeOptions.swift
 //  ImageIOKit
-//
-//  Shared types used by image encode operations:
-//  EncodeOptions and errors.
 //
 
 import Foundation
-
-// MARK: - Encode Options
 
 /// Options that control how an image is encoded.
 public struct EncodeOptions {
@@ -20,12 +15,4 @@ public struct EncodeOptions {
     public init(quality: Double = 0.85) {
         self.quality = max(0.0, min(1.0, quality))
     }
-}
-
-// MARK: - Errors
-
-/// Errors produced by image encode operations.
-public enum ImageEncoderError: Error {
-    /// The encode operation failed. The associated string provides details.
-    case encodeFailed(String)
 }

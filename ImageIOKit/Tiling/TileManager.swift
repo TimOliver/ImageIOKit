@@ -5,7 +5,8 @@
 //  On-demand tile decoder with NSCache-backed storage.
 //  For JPEG sources, each tile is decoded independently via libjpeg
 //  region decode. For all other formats, the full image is decoded
-//  once via ImageIO and tiles are extracted via CGImage.cropping(to:).
+//  once via ImageIO (cached in ImageSource) and tiles are extracted
+//  via CGImage.cropping(to:).
 //
 
 import Foundation
@@ -24,16 +25,6 @@ public final class TileManager {
     // NSCache for decoded tile images, keyed by "col,row".
     private let cache = NSCache<NSString, UIImage>()
 
-    // For formats without region decode, holds the full-decoded CGImage.
-    // Wrapped in a class so NSCache can manage it and release under memory pressure.
-    private class CGImageBox {
-        let image: CGImage
-        init(_ image: CGImage) { self.image = image }
-    }
-    private let fullDecodeCache = NSCache<NSString, CGImageBox>()
-    private static let fullDecodeCacheKey = "fullDecode" as NSString
-    private let fullDecodeLock = NSLock()
-
     /// Creates a tile manager for the given image source.
     /// - Parameters:
     ///   - imageSource: The loaded image source to tile.
@@ -44,7 +35,6 @@ public final class TileManager {
         self.imageSource = imageSource
         self.grid = TileGrid(imageSize: imageSource.imageSize, tileSize: tileSize)
         cache.countLimit = cacheLimit
-        fullDecodeCache.countLimit = 1
     }
 
     /// Returns the decoded tile image, using the cache if available.
@@ -97,7 +87,7 @@ public final class TileManager {
                 }
                 results = pairs.compactMap { $0 }
             } else {
-                // Serial: shares fullDecodeCGImage behind NSLock
+                // Serial: full decode is cached in ImageSource
                 results = descriptors.compactMap { desc in
                     guard let image = self.tile(at: desc) else { return nil }
                     return (desc, image)
@@ -113,7 +103,6 @@ public final class TileManager {
     /// Clears all cached tiles.
     public func clearCache() {
         cache.removeAllObjects()
-        fullDecodeCache.removeAllObjects()
     }
 
     // MARK: - Private
@@ -128,26 +117,8 @@ public final class TileManager {
             return imageSource.decodeRegion(descriptor.rect)
         }
 
-        // Otherwise, extract tile from full-resolution CGImage
-        return extractTileFromFullDecode(descriptor)
-    }
-
-    /// For formats without native region decode, performs a full decode (cached in NSCache)
-    /// and extracts the requested tile region via CGImage.cropping(to:).
-    private func extractTileFromFullDecode(_ descriptor: TileDescriptor) -> UIImage? {
-        fullDecodeLock.lock()
-        let fullImage: CGImage?
-        if let cached = fullDecodeCache.object(forKey: TileManager.fullDecodeCacheKey) {
-            fullImage = cached.image
-        } else if let decoded = imageSource.decodeFullCGImage() {
-            fullDecodeCache.setObject(CGImageBox(decoded), forKey: TileManager.fullDecodeCacheKey)
-            fullImage = decoded
-        } else {
-            fullImage = nil
-        }
-        fullDecodeLock.unlock()
-
-        guard let fullImage,
+        // Otherwise, extract tile from full-resolution CGImage (cached in ImageSource)
+        guard let fullImage = imageSource.decodeFullCGImage(),
               let cropped = fullImage.cropping(to: descriptor.rect) else { return nil }
         return UIImage(cgImage: cropped)
     }

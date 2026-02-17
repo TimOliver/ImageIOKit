@@ -14,7 +14,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            let bundle = Bundle.main.url(forResource: "ApplePark", withExtension: "jxl")!
+            let bundle = Bundle.main.url(forResource: "ApplePark", withExtension: "webp")!
             let imageSource = /*UIImage(contentsOfFile: bundle.path)*/ ImageSource(url: bundle)
             if #available(iOS 15.0, *) {
                 //let image = imageSource?.preparingThumbnail(of: CGSize(width: 200, height: 200))

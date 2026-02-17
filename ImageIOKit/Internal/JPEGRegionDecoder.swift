@@ -11,7 +11,7 @@ import Foundation
 import CoreGraphics
 import libjpeg
 
-public struct JPEGRegionDecoder {
+struct JPEGRegionDecoder {
 
     private let imageData: Data
     private let imageWidth: Int
@@ -32,14 +32,14 @@ public struct JPEGRegionDecoder {
 
     // MARK: - Init
 
-    public init?(data: Data) {
+    init?(data: Data) {
         self.imageData = data
         guard let (w, h) = JPEGRegionDecoder.readDimensions(data: data) else { return nil }
         self.imageWidth = w
         self.imageHeight = h
     }
 
-    public init?(url: URL) {
+    init?(url: URL) {
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         self.init(data: data)
     }
@@ -71,7 +71,7 @@ public struct JPEGRegionDecoder {
     ///   - targetSize: Optional target size for the decoded region (enables DCT shrink-on-load).
     ///   - pixelFormat: The desired pixel format for the output.
     /// - Returns: A pixel buffer containing the decoded region.
-    public func decodeRegion(cropRect: CGRect, targetSize: CGSize? = nil,
+    func decodeRegion(cropRect: CGRect, targetSize: CGSize? = nil,
                              pixelFormat: PixelBuffer.PixelFormat = .rgba8) throws -> PixelBuffer {
         var cinfo = jpeg_decompress_struct()
         var jerr = jpeg_error_mgr()

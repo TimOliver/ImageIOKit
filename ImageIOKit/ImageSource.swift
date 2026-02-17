@@ -54,10 +54,40 @@ public final class ImageSource {
         fileFormat == .jpeg ? [.regionDecode] : []
     }
 
+    /// Estimated peak bytes required for a full-resolution decode of this image,
+    /// including both the output bitmap and ImageIO's transient decompression buffers.
+    ///
+    /// Multipliers are calibrated empirically per format against ImageIO:
+    /// - **JPEG**: ~0.5x — no alpha, compact internal representation
+    /// - **PNG/WebP/HEIC/AVIF**: ~1.5x — moderate decompression overhead
+    /// - **JXL**: ~4x — VarDCT requires float32 working buffers
+    ///
+    /// Use this to decide whether to decode images concurrently or serially
+    /// (e.g. compare against `os_proc_available_memory()`).
+    public var estimatedDecodeMemory: Int {
+        let bitmapBytes = Int(imageSize.width) * Int(imageSize.height) * 4
+        let multiplier: Double = switch fileFormat {
+        case .jpeg:   0.5
+        case .jpegXL: 4.0
+        default:      1.5
+        }
+        return Int(Double(bitmapBytes) * multiplier)
+    }
+
     // MARK: - Private Properties
 
     /// The underlying CGImageSource.
     private var cgImageSource: CGImageSource?
+
+    /// Cached full-resolution CGImage. Statically defined so NSCache can
+    /// manage it and purge under memory pressure. Shared across
+    /// all threads
+    private static let fullDecodeCacheKey = "full" as NSString
+    private let fullDecodeCache: NSCache<NSString, CGImage> = {
+        let cache = NSCache<NSString, CGImage>()
+        cache.countLimit = 1
+        return cache
+    }()
 
     // MARK: - Init
 
@@ -202,13 +232,23 @@ public final class ImageSource {
         return UIImage(cgImage: cgImage)
     }
 
-    /// Decodes the full image and returns a CGImage. Used internally and by TileManager.
+    /// Decodes the full image and returns a CGImage. The result is cached so
+    /// that repeated calls (e.g. tiling multiple regions) reuse the same decode.
+    /// The cache is purgeable under memory pressure.
     public func decodeFullCGImage() -> CGImage? {
+        if let cached = fullDecodeCache.object(forKey: ImageSource.fullDecodeCacheKey) {
+            return cached
+        }
+
         guard let cgImageSource, isLoaded else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceShouldCacheImmediately: true
         ]
-        return CGImageSourceCreateImageAtIndex(cgImageSource, 0, options as CFDictionary)
+        guard let image = CGImageSourceCreateImageAtIndex(cgImageSource, 0, options as CFDictionary) else {
+            return nil
+        }
+        fullDecodeCache.setObject(image, forKey: ImageSource.fullDecodeCacheKey)
+        return image
     }
 
     // MARK: - JPEG Reconstruction
