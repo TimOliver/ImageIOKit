@@ -8,6 +8,7 @@
 
 import Foundation
 import ImageIO
+import CoreGraphics
 
 public final class ImageDestination {
 
@@ -19,6 +20,7 @@ public final class ImageDestination {
     /// - Returns: The encoded image data.
     public static func encode(_ image: CGImage, format: ImageFileFormat,
                               options: EncodeOptions = EncodeOptions()) throws -> Data {
+        let finalImage = format.isOpaque ? Self.strippingAlpha(from: image) : image
         let data = NSMutableData()
         guard let dest = CGImageDestinationCreateWithData(data, format.uniformTypeIdentifier, 1, nil) else {
             throw ImageEncoderError.encodeFailed("Failed to create CGImageDestination for \(format)")
@@ -27,7 +29,7 @@ public final class ImageDestination {
         let properties: [CFString: Any] = [
             kCGImageDestinationLossyCompressionQuality: options.quality
         ]
-        CGImageDestinationAddImage(dest, image, properties as CFDictionary)
+        CGImageDestinationAddImage(dest, finalImage, properties as CFDictionary)
 
         guard CGImageDestinationFinalize(dest) else {
             throw ImageEncoderError.encodeFailed("CGImageDestinationFinalize failed")
@@ -43,6 +45,7 @@ public final class ImageDestination {
     ///   - options: Encoding options (quality).
     public static func write(_ image: CGImage, to url: URL, format: ImageFileFormat,
                              options: EncodeOptions = EncodeOptions()) throws {
+        let finalImage = format.isOpaque ? Self.strippingAlpha(from: image) : image
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, format.uniformTypeIdentifier, 1, nil) else {
             throw ImageEncoderError.encodeFailed("Failed to create CGImageDestination for \(format)")
         }
@@ -50,11 +53,35 @@ public final class ImageDestination {
         let properties: [CFString: Any] = [
             kCGImageDestinationLossyCompressionQuality: options.quality
         ]
-        CGImageDestinationAddImage(dest, image, properties as CFDictionary)
+        CGImageDestinationAddImage(dest, finalImage, properties as CFDictionary)
 
         guard CGImageDestinationFinalize(dest) else {
             throw ImageEncoderError.encodeFailed("CGImageDestinationFinalize failed for \(url)")
         }
+    }
+
+    // MARK: - Private
+
+    /// Returns the image with alpha stripped if it has an alpha channel.
+    /// No-op if the image is already opaque.
+    private static func strippingAlpha(from image: CGImage) -> CGImage {
+        let alpha = image.alphaInfo
+        guard alpha != .none, alpha != .noneSkipFirst, alpha != .noneSkipLast else {
+            return image
+        }
+        guard let ctx = CGContext(
+            data: nil,
+            width: image.width,
+            height: image.height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: image.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ) else {
+            return image
+        }
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return ctx.makeImage() ?? image
     }
 
     /// Produces a JPEG file optimized for efficient partial decoding.

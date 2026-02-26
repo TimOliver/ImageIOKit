@@ -403,3 +403,18 @@ public final class ImageSource {
         return buffer
     }
 }
+
+// MARK: - Quick Look
+
+extension ImageSource {
+    @objc func debugQuickLookObject() -> Any? {
+        if let thumbnail = makeThumbnail(fittingSize: CGSize(width: 512, height: 512)) {
+            return thumbnail
+        }
+        if isLoaded {
+            let format = fileFormat?.fileExtensions.first?.uppercased() ?? "Unknown"
+            return "\(format) \(Int(imageSize.width))×\(Int(imageSize.height))"
+        }
+        return "ImageSource (not loaded)"
+    }
+}

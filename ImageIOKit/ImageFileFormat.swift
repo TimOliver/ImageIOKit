@@ -57,6 +57,11 @@ public enum ImageFileFormat: CaseIterable {
         }
     }
 
+    /// Whether this format is always opaque (no alpha channel support).
+    public var isOpaque: Bool {
+        self == .jpeg
+    }
+
     /// The Uniform Type Identifier string for this format, used by CGImageDestination.
     public var uniformTypeIdentifier: CFString {
         switch self {

@@ -85,7 +85,10 @@ struct JXLReconstructor {
                 totalWritten = jpegBuffer.count - unused
 
             default:
-                break
+                // Unexpected status (e.g. JXL_DEC_NEED_IMAGE_OUT_BUFFER when the
+                // JXL was not derived from a JPEG). Bail out — reconstruction
+                // is not possible.
+                return nil
             }
             status = JxlDecoderProcessInput(dec)
         }
