@@ -40,6 +40,8 @@ public final class TileManager {
     /// Returns the decoded tile image, using the cache if available.
     /// For formats with native region decode, decodes only the tile region.
     /// For others, extracts the tile from a full-resolution decode.
+    /// - Parameter descriptor: The tile to decode.
+    /// - Returns: The decoded tile image, or `nil` on failure.
     public func tile(at descriptor: TileDescriptor) -> UIImage? {
         let key = cacheKey(for: descriptor)
 

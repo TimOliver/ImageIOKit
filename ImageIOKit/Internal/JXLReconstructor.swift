@@ -14,11 +14,17 @@ struct JXLReconstructor {
 
     private let imageData: Data
 
+    /// Creates a reconstructor from in-memory JXL data.
+    /// - Parameter data: The compressed JXL data.
+    /// - Returns: `nil` if the data is empty.
     init?(data: Data) {
         guard !data.isEmpty else { return nil }
         self.imageData = data
     }
 
+    /// Creates a reconstructor from a JXL file on disk.
+    /// - Parameter url: A local file URL to a JXL file.
+    /// - Returns: `nil` if the file cannot be read.
     init?(url: URL) {
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         self.init(data: data)

@@ -67,6 +67,14 @@ public final class ImageDestination {
     ///   (preserving aspect ratio), encodes as JPEG, and writes to `url`.
     ///
     /// The caller decides where to write and when to clean up.
+    ///
+    /// - Parameters:
+    ///   - source: The image source to condition.
+    ///   - maxDimension: The maximum allowed length of the image's longest edge in pixels.
+    ///                   Images larger than this are downscaled (preserving aspect ratio)
+    ///                   before encoding. Defaults to 4096.
+    ///   - url: The file URL to write the conditioned JPEG to.
+    ///   - encodeOptions: Options for JPEG encoding (quality). Defaults to standard quality.
     public static func condition(_ source: ImageSource,
                                  maxDimension: Int = 4096,
                                  to url: URL,

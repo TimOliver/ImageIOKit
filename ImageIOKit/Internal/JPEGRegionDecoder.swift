@@ -32,6 +32,9 @@ struct JPEGRegionDecoder {
 
     // MARK: - Init
 
+    /// Creates a region decoder from in-memory JPEG data.
+    /// - Parameter data: The compressed JPEG data.
+    /// - Returns: `nil` if the JPEG header cannot be read.
     init?(data: Data) {
         self.imageData = data
         guard let (w, h) = JPEGRegionDecoder.readDimensions(data: data) else { return nil }
@@ -39,6 +42,9 @@ struct JPEGRegionDecoder {
         self.imageHeight = h
     }
 
+    /// Creates a region decoder from a JPEG file on disk.
+    /// - Parameter url: A local file URL to a JPEG file.
+    /// - Returns: `nil` if the file cannot be read or the JPEG header is invalid.
     init?(url: URL) {
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         self.init(data: data)

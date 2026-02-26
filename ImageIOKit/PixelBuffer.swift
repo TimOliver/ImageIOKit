@@ -75,8 +75,11 @@ public final class PixelBuffer {
         self.deallocator = deallocator
     }
 
-    /// Creates a pixel buffer by allocating new memory.
-    /// The buffer is zero-initialized.
+    /// Creates a pixel buffer by allocating new zero-initialized memory.
+    /// - Parameters:
+    ///   - width: Image width in pixels.
+    ///   - height: Image height in pixels.
+    ///   - pixelFormat: The layout of pixel components.
     public convenience init(width: Int, height: Int, pixelFormat: PixelFormat) {
         let bytesPerRow = width * pixelFormat.bytesPerPixel
         let size = bytesPerRow * height
@@ -157,6 +160,10 @@ extension PixelBuffer {
 
     /// Returns the pixel value at the given coordinates as RGBA components.
     /// For non-RGBA formats, missing components default to 0 (alpha defaults to 255).
+    /// - Parameters:
+    ///   - x: The horizontal pixel coordinate (0-based, left to right).
+    ///   - y: The vertical pixel coordinate (0-based, top to bottom).
+    /// - Returns: The RGBA components, or `(0, 0, 0, 0)` if out of bounds.
     public func pixel(at x: Int, y: Int) -> (r: UInt8, g: UInt8, b: UInt8, a: UInt8) {
         guard x >= 0, x < width, y >= 0, y < height else { return (0, 0, 0, 0) }
         let offset = y * bytesPerRow + x * pixelFormat.bytesPerPixel

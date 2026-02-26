@@ -24,10 +24,8 @@
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
 		2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543C2F066F5100A76F85 /* ImageColorModel.swift */; };
 		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
-		228828C32F1279E600396669 /* Page100.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 228828C22F1279E600396669 /* Page100.jpg */; };
-		228828C42F1279E600396669 /* Page100.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 228828C22F1279E600396669 /* Page100.jpg */; };
-		228828C62F12BA5100396669 /* Page101.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 228828C52F12BA5100396669 /* Page101.jxl */; };
-		228828C72F12BA5100396669 /* Page101.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 228828C52F12BA5100396669 /* Page101.jxl */; };
+		229B93722F445BE400089FF5 /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = F50000012F16000000000001 /* libjpeg */; };
+		229B93732F445BE400089FF5 /* libjxl in Frameworks */ = {isa = PBXBuildFile; productRef = F50000012F16000000000004 /* libjxl */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* ImageDestination.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -36,6 +34,20 @@
 		22DB61102D3A5155007AFCF3 /* ApplePark.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */; };
 		22DB61122D3A51B9007AFCF3 /* ImageSampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61112D3A51B9007AFCF3 /* ImageSampleData.swift */; };
 		22DB61142D3B6053007AFCF3 /* ImageFileFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */; };
+		A20000012F26000000000001 /* ImageSourceDecodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000001 /* ImageSourceDecodeTests.swift */; };
+		A20000012F26000000000002 /* ImageDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000002 /* ImageDestinationTests.swift */; };
+		A20000012F26000000000003 /* PixelBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000003 /* PixelBufferTests.swift */; };
+		A20000012F26000000000004 /* TileGridTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000004 /* TileGridTests.swift */; };
+		A20000012F26000000000005 /* TileManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000005 /* TileManagerTests.swift */; };
+		A20000012F26000000000006 /* AnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000006 /* AnalysisTests.swift */; };
+		A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000007 /* MemoryTrackingTests.swift */; };
+		F1000002000000000000000A /* TileDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000A /* TileDescriptor.swift */; };
+		F1000002000000000000000B /* TileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000B /* TileGrid.swift */; };
+		F1000002000000000000000C /* TileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000C /* TileManager.swift */; };
+		F1000002000000000000000D /* MarginDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000D /* MarginDetector.swift */; };
+		F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000E /* BackgroundColorDetector.swift */; };
+		F2000001201800000000000A /* JXLReconstructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000A /* JXLReconstructor.swift */; };
+		F2000001201800000000000B /* SoftwareScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000B /* SoftwareScaler.swift */; };
 		F20000012F16000000000001 /* PixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000001 /* PixelBuffer.swift */; };
 		F20000012F18000000000001 /* DecodeOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000001 /* DecodeOptions.swift */; };
 		F20000012F18000000000002 /* ImageMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000002 /* ImageMetadata.swift */; };
@@ -46,13 +58,6 @@
 		F20000012F18000000000007 /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000007 /* BackgroundColor.swift */; };
 		F20000012F18000000000008 /* ImageMargins.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000008 /* ImageMargins.swift */; };
 		F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000009 /* JPEGRegionDecoder.swift */; };
-		F2000001201800000000000A /* JXLReconstructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000A /* JXLReconstructor.swift */; };
-		F2000001201800000000000B /* SoftwareScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000B /* SoftwareScaler.swift */; };
-		F1000002000000000000000A /* TileDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000A /* TileDescriptor.swift */; };
-		F1000002000000000000000B /* TileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000B /* TileGrid.swift */; };
-		F1000002000000000000000C /* TileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000C /* TileManager.swift */; };
-		F1000002000000000000000D /* MarginDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000D /* MarginDetector.swift */; };
-		F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000E /* BackgroundColorDetector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,8 +85,6 @@
 		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
 		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
 		2226543C2F066F5100A76F85 /* ImageColorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorModel.swift; sourceTree = "<group>"; };
-		228828C22F1279E600396669 /* Page100.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = Page100.jpg; sourceTree = "<group>"; };
-		228828C52F12BA5100396669 /* Page101.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = Page101.jxl; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
 		22DB61042D3A078A007AFCF3 /* ImageDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestination.swift; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
@@ -90,6 +93,20 @@
 		22DB610B2D3A5155007AFCF3 /* ApplePark.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.webp; sourceTree = "<group>"; };
 		22DB61112D3A51B9007AFCF3 /* ImageSampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSampleData.swift; sourceTree = "<group>"; };
 		22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormat.swift; sourceTree = "<group>"; };
+		A10000012F26000000000001 /* ImageSourceDecodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSourceDecodeTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000002 /* ImageDestinationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestinationTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000003 /* PixelBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBufferTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000004 /* TileGridTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGridTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000005 /* TileManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManagerTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000006 /* AnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000007 /* MemoryTrackingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTrackingTests.swift; sourceTree = "<group>"; };
+		F1000001000000000000000A /* TileDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileDescriptor.swift; sourceTree = "<group>"; };
+		F1000001000000000000000B /* TileGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGrid.swift; sourceTree = "<group>"; };
+		F1000001000000000000000C /* TileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManager.swift; sourceTree = "<group>"; };
+		F1000001000000000000000D /* MarginDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarginDetector.swift; sourceTree = "<group>"; };
+		F1000001000000000000000E /* BackgroundColorDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColorDetector.swift; sourceTree = "<group>"; };
+		F1000001201800000000000A /* JXLReconstructor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLReconstructor.swift; sourceTree = "<group>"; };
+		F1000001201800000000000B /* SoftwareScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScaler.swift; sourceTree = "<group>"; };
 		F10000012F16000000000001 /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		F10000012F18000000000001 /* DecodeOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeOptions.swift; sourceTree = "<group>"; };
 		F10000012F18000000000002 /* ImageMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMetadata.swift; sourceTree = "<group>"; };
@@ -100,13 +117,6 @@
 		F10000012F18000000000007 /* BackgroundColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColor.swift; sourceTree = "<group>"; };
 		F10000012F18000000000008 /* ImageMargins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMargins.swift; sourceTree = "<group>"; };
 		F10000012F18000000000009 /* JPEGRegionDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JPEGRegionDecoder.swift; sourceTree = "<group>"; };
-		F1000001201800000000000A /* JXLReconstructor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLReconstructor.swift; sourceTree = "<group>"; };
-		F1000001201800000000000B /* SoftwareScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScaler.swift; sourceTree = "<group>"; };
-		F1000001000000000000000A /* TileDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileDescriptor.swift; sourceTree = "<group>"; };
-		F1000001000000000000000B /* TileGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGrid.swift; sourceTree = "<group>"; };
-		F1000001000000000000000C /* TileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManager.swift; sourceTree = "<group>"; };
-		F1000001000000000000000D /* MarginDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarginDetector.swift; sourceTree = "<group>"; };
-		F1000001000000000000000E /* BackgroundColorDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColorDetector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +124,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				229B93732F445BE400089FF5 /* libjxl in Frameworks */,
+				229B93722F445BE400089FF5 /* libjpeg in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,6 +179,13 @@
 				22DB61112D3A51B9007AFCF3 /* ImageSampleData.swift */,
 				221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */,
 				2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */,
+				A10000012F26000000000001 /* ImageSourceDecodeTests.swift */,
+				A10000012F26000000000002 /* ImageDestinationTests.swift */,
+				A10000012F26000000000003 /* PixelBufferTests.swift */,
+				A10000012F26000000000004 /* TileGridTests.swift */,
+				A10000012F26000000000005 /* TileManagerTests.swift */,
+				A10000012F26000000000006 /* AnalysisTests.swift */,
+				A10000012F26000000000007 /* MemoryTrackingTests.swift */,
 			);
 			path = ImageIOKitTests;
 			sourceTree = "<group>";
@@ -175,27 +194,34 @@
 			isa = PBXGroup;
 			children = (
 				22DB61002D3A045C007AFCF3 /* ImageSource.swift */,
-				F10000012F16000000000002 /* ImageDecoder.swift */,
-				F10000012F17000000000001 /* ImageEncoder.swift */,
-				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
 				22DB61042D3A078A007AFCF3 /* ImageDestination.swift */,
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
+				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
 				F10000012F16000000000001 /* PixelBuffer.swift */,
-				F10000012F16000000000003 /* SoftwareScaler.swift */,
-				F30000012F16000000000001 /* Decoders */,
+				F10000012F18000000000001 /* DecodeOptions.swift */,
+				F10000012F18000000000002 /* ImageMetadata.swift */,
+				F10000012F18000000000003 /* DecoderCapabilities.swift */,
+				F10000012F18000000000004 /* ImageDecoderError.swift */,
+				F10000012F18000000000005 /* EncodeOptions.swift */,
+				F10000012F18000000000006 /* ImageEncoderError.swift */,
+				F30000012F18000000000001 /* Internal */,
 				F30000012F16000000000002 /* Tiling */,
 				F30000012F16000000000003 /* Analysis */,
 			);
 			path = ImageIOKit;
 			sourceTree = "<group>";
 		};
-		F30000012F16000000000001 /* Decoders */ = {
+		22DB610C2D3A5155007AFCF3 /* SampleImages */ = {
 			isa = PBXGroup;
 			children = (
-				F10000012F16000000000005 /* JPEGDecoder.swift */,
-				F10000012F16000000000009 /* JXLDecoder.swift */,
+				222654362F062FCD00A76F85 /* ApplePark.avif */,
+				222654372F062FCD00A76F85 /* ApplePark.jxl */,
+				22DB61082D3A5155007AFCF3 /* ApplePark.heic */,
+				22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */,
+				22DB610A2D3A5155007AFCF3 /* ApplePark.png */,
+				22DB610B2D3A5155007AFCF3 /* ApplePark.webp */,
 			);
-			path = Decoders;
+			path = SampleImages;
 			sourceTree = "<group>";
 		};
 		F30000012F16000000000002 /* Tiling */ = {
@@ -211,25 +237,22 @@
 		F30000012F16000000000003 /* Analysis */ = {
 			isa = PBXGroup;
 			children = (
-				F1000001000000000000000D /* MarginDetector.swift */,
+				F10000012F18000000000007 /* BackgroundColor.swift */,
 				F1000001000000000000000E /* BackgroundColorDetector.swift */,
+				F10000012F18000000000008 /* ImageMargins.swift */,
+				F1000001000000000000000D /* MarginDetector.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
 		};
-		22DB610C2D3A5155007AFCF3 /* SampleImages */ = {
+		F30000012F18000000000001 /* Internal */ = {
 			isa = PBXGroup;
 			children = (
-				222654362F062FCD00A76F85 /* ApplePark.avif */,
-				222654372F062FCD00A76F85 /* ApplePark.jxl */,
-				22DB61082D3A5155007AFCF3 /* ApplePark.heic */,
-				22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */,
-				22DB610A2D3A5155007AFCF3 /* ApplePark.png */,
-				22DB610B2D3A5155007AFCF3 /* ApplePark.webp */,
-				228828C22F1279E600396669 /* Page100.jpg */,
-				228828C52F12BA5100396669 /* Page101.jxl */,
+				F10000012F18000000000009 /* JPEGRegionDecoder.swift */,
+				F1000001201800000000000A /* JXLReconstructor.swift */,
+				F1000001201800000000000B /* SoftwareScaler.swift */,
 			);
-			path = SampleImages;
+			path = Internal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -282,7 +305,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1430;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					221D5F0129EBD708006E60AB = {
 						CreatedOnToolsVersion = 14.3;
@@ -322,12 +345,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				221D5F1229EBD709006E60AB /* LaunchScreen.storyboard in Resources */,
-				228828C72F12BA5100396669 /* Page101.jxl in Resources */,
 				221D5F0F29EBD709006E60AB /* Assets.xcassets in Resources */,
 				2257603B2F069111004F10C1 /* ApplePark.avif in Resources */,
 				221D5F0D29EBD708006E60AB /* Main.storyboard in Resources */,
 				221C5ABA2F09226A00CC2C9F /* ApplePark.jxl in Resources */,
-				228828C32F1279E600396669 /* Page100.jpg in Resources */,
 				221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */,
 				221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */,
 				221C5ABD2F09226A00CC2C9F /* ApplePark.webp in Resources */,
@@ -344,8 +365,6 @@
 				22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */,
 				22DB610E2D3A5155007AFCF3 /* ApplePark.webp in Resources */,
 				22DB610F2D3A5155007AFCF3 /* ApplePark.heic in Resources */,
-				228828C42F1279E600396669 /* Page100.jpg in Resources */,
-				228828C62F12BA5100396669 /* Page101.jxl in Resources */,
 				22DB61102D3A5155007AFCF3 /* ApplePark.jpeg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -365,16 +384,22 @@
 				221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */,
 				2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */,
 				F20000012F16000000000001 /* PixelBuffer.swift in Sources */,
-				F20000012F16000000000002 /* ImageDecoder.swift in Sources */,
-				F20000012F16000000000003 /* SoftwareScaler.swift in Sources */,
-				F20000012F16000000000005 /* JPEGDecoder.swift in Sources */,
-				F20000012F16000000000009 /* JXLDecoder.swift in Sources */,
+				F20000012F18000000000001 /* DecodeOptions.swift in Sources */,
+				F20000012F18000000000002 /* ImageMetadata.swift in Sources */,
+				F20000012F18000000000003 /* DecoderCapabilities.swift in Sources */,
+				F20000012F18000000000004 /* ImageDecoderError.swift in Sources */,
+				F20000012F18000000000005 /* EncodeOptions.swift in Sources */,
+				F20000012F18000000000006 /* ImageEncoderError.swift in Sources */,
+				F20000012F18000000000007 /* BackgroundColor.swift in Sources */,
+				F20000012F18000000000008 /* ImageMargins.swift in Sources */,
+				F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */,
+				F2000001201800000000000A /* JXLReconstructor.swift in Sources */,
+				F2000001201800000000000B /* SoftwareScaler.swift in Sources */,
 				F1000002000000000000000A /* TileDescriptor.swift in Sources */,
 				F1000002000000000000000B /* TileGrid.swift in Sources */,
 				F1000002000000000000000C /* TileManager.swift in Sources */,
 				F1000002000000000000000D /* MarginDetector.swift in Sources */,
 				F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */,
-				F20000012F17000000000001 /* ImageEncoder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -385,6 +410,13 @@
 				2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */,
 				221D5F1D29EBD709006E60AB /* ImageSourceTests.swift in Sources */,
 				22DB61122D3A51B9007AFCF3 /* ImageSampleData.swift in Sources */,
+				A20000012F26000000000001 /* ImageSourceDecodeTests.swift in Sources */,
+				A20000012F26000000000002 /* ImageDestinationTests.swift in Sources */,
+				A20000012F26000000000003 /* PixelBufferTests.swift in Sources */,
+				A20000012F26000000000004 /* TileGridTests.swift in Sources */,
+				A20000012F26000000000005 /* TileManagerTests.swift in Sources */,
+				A20000012F26000000000006 /* AnalysisTests.swift in Sources */,
+				A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,6 +454,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -485,6 +518,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";

@@ -92,7 +92,8 @@ extension ImageFileFormat {
     }
 
     /// Checks the header of the file to see if it is a file format supported by this framework.
-    /// - Parameter data: A data object representing compressed image file data
+    /// - Parameter data: A data object representing compressed image file data.
+    /// - Returns: Whether the data's magic bytes match a supported format.
     public static func isValidFileFormat(data: Data) -> Bool {
         detect(from: data) != nil
     }

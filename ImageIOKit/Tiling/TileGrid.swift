@@ -40,6 +40,10 @@ public struct TileGrid {
     }
 
     /// Returns the tile descriptor for the given grid position.
+    /// - Parameters:
+    ///   - column: The zero-based column index (left to right).
+    ///   - row: The zero-based row index (top to bottom).
+    /// - Returns: The tile descriptor, or `nil` if the position is out of bounds.
     public func tile(column: Int, row: Int) -> TileDescriptor? {
         guard column >= 0, column < columns, row >= 0, row < rows else { return nil }
 
@@ -66,8 +70,10 @@ public struct TileGrid {
         return tiles
     }
 
-    /// Returns the tiles that intersect the given viewport rect (in image pixel coordinates).
+    /// Returns the tiles that intersect the given viewport rect.
     /// Use this to determine which tiles need to be decoded for the current visible area.
+    /// - Parameter viewport: The visible rect in image pixel coordinates.
+    /// - Returns: The tile descriptors that overlap the viewport.
     public func tiles(in viewport: CGRect) -> [TileDescriptor] {
         let minCol = max(0, Int(floor(viewport.minX / tileSize.width)))
         let maxCol = min(columns - 1, Int(floor(viewport.maxX / tileSize.width)))
