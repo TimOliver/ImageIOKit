@@ -366,40 +366,80 @@ public final class ImageSource {
     private func renderToPixelBuffer(_ image: CGImage, pixelFormat: PixelBuffer.PixelFormat) throws -> PixelBuffer {
         let width = image.width
         let height = image.height
+        let buffer = PixelBuffer(width: width, height: height, pixelFormat: pixelFormat)
+        let drawRect = CGRect(x: 0, y: 0, width: width, height: height)
 
-        let colorSpace: CGColorSpace
-        let bitmapInfo: CGBitmapInfo
-
+        // CGContext at 8bpc only supports gray/1-byte and RGBA/RGBX/4-byte.
+        // For rgb8 and grayAlpha8 we render to a supported intermediate and convert.
         switch pixelFormat {
         case .gray8:
-            colorSpace = CGColorSpaceCreateDeviceGray()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
-        case .grayAlpha8:
-            colorSpace = CGColorSpaceCreateDeviceGray()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-        case .rgb8:
-            colorSpace = CGColorSpaceCreateDeviceRGB()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)
+            guard let ctx = CGContext(
+                data: buffer.data, width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: buffer.bytesPerRow,
+                space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: CGImageAlphaInfo.none.rawValue
+            ) else { throw ImageDecoderError.decodeFailed("Failed to create CGContext for pixel buffer rendering") }
+            ctx.draw(image, in: drawRect)
+
         case .rgba8:
-            colorSpace = CGColorSpaceCreateDeviceRGB()
-            bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+            guard let ctx = CGContext(
+                data: buffer.data, width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: buffer.bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { throw ImageDecoderError.decodeFailed("Failed to create CGContext for pixel buffer rendering") }
+            ctx.draw(image, in: drawRect)
+
+        case .rgb8:
+            // Render to RGBX (4 bytes/pixel), then strip the padding byte
+            let tempBytesPerRow = width * 4
+            let tempData = UnsafeMutableRawPointer.allocate(byteCount: tempBytesPerRow * height, alignment: 16)
+            defer { tempData.deallocate() }
+
+            guard let ctx = CGContext(
+                data: tempData, width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: tempBytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+            ) else { throw ImageDecoderError.decodeFailed("Failed to create CGContext for pixel buffer rendering") }
+            ctx.draw(image, in: drawRect)
+
+            let src = tempData.assumingMemoryBound(to: UInt8.self)
+            let dst = buffer.data.assumingMemoryBound(to: UInt8.self)
+            for row in 0..<height {
+                for col in 0..<width {
+                    let s = row * tempBytesPerRow + col * 4
+                    let d = row * buffer.bytesPerRow + col * 3
+                    dst[d] = src[s]; dst[d+1] = src[s+1]; dst[d+2] = src[s+2]
+                }
+            }
+
+        case .grayAlpha8:
+            // Render to RGBA (4 bytes/pixel), then convert to luminance + alpha
+            let tempBytesPerRow = width * 4
+            let tempData = UnsafeMutableRawPointer.allocate(byteCount: tempBytesPerRow * height, alignment: 16)
+            defer { tempData.deallocate() }
+
+            guard let ctx = CGContext(
+                data: tempData, width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: tempBytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { throw ImageDecoderError.decodeFailed("Failed to create CGContext for pixel buffer rendering") }
+            ctx.draw(image, in: drawRect)
+
+            let src = tempData.assumingMemoryBound(to: UInt8.self)
+            let dst = buffer.data.assumingMemoryBound(to: UInt8.self)
+            for row in 0..<height {
+                for col in 0..<width {
+                    let s = row * tempBytesPerRow + col * 4
+                    let d = row * buffer.bytesPerRow + col * 2
+                    let gray = (299 * Int(src[s]) + 587 * Int(src[s+1]) + 114 * Int(src[s+2])) / 1000
+                    dst[d] = UInt8(gray); dst[d+1] = src[s+3]
+                }
+            }
         }
 
-        let buffer = PixelBuffer(width: width, height: height, pixelFormat: pixelFormat)
-
-        guard let ctx = CGContext(
-            data: buffer.data,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: buffer.bytesPerRow,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo.rawValue
-        ) else {
-            throw ImageDecoderError.decodeFailed("Failed to create CGContext for pixel buffer rendering")
-        }
-
-        ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         return buffer
     }
 }

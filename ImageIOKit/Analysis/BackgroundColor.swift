@@ -22,7 +22,7 @@ public struct BackgroundColor {
 
     /// Whether the detected color is considered "dark" (for choosing text/UI contrast).
     public var isDark: Bool {
-        let luminance = 0.299 * Double(red) + 0.587 * Double(green) + 0.114 * Double(blue)
-        return luminance < 128
+        let luminance = 299 * Int(red) + 587 * Int(green) + 114 * Int(blue)
+        return luminance < 128_000
     }
 }
