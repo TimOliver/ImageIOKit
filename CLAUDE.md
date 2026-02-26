@@ -18,15 +18,20 @@ Image decode library for a comic reader app.
 - Two C library carve-outs:
   - **libjpeg** — JPEG region decode (`crop_scanline`) for tile-based zoom
   - **libjxl** — lossless JPEG reconstruction from JXL (`JXL_DEC_JPEG_RECONSTRUCTION`)
-- `ImageDestination.condition` transcodes non-JPEG sources to JPEG on disk, giving them shrink-on-load and region decode for free
+- `ImageSource.condition` transcodes non-JPEG sources to JPEG on disk, giving them shrink-on-load and region decode for free
 
 ## Key Classes
-- `ImageSource` — public facade wrapping `CGImageSource`. Decode, thumbnail, region decode, JPEG reconstruction. Caches full-resolution `CGImage` via `NSCache` (purgeable under memory pressure).
-- `ImageDestination` — encode/write/condition/transcode via `CGImageDestination`. Accepts `CGImage` directly.
+- `ImageSource` — public facade wrapping `CGImageSource`. Decode, thumbnail, region decode, JPEG reconstruction. Caches full-resolution `CGImage` via `NSCache` (purgeable under memory pressure). Supports Xcode Quick Look via `debugQuickLookObject()`. Extended with `condition(maxDimension:to:)` and `transcode(to:)` for conditioning/transcoding workflows.
+- `CGImage` extensions — `encode(as:options:)` and `write(to:as:options:)` via `CGImageDestination`.
 - `JPEGRegionDecoder` — libjpeg `crop_scanline` for JPEG-only tile decode
 - `JXLReconstructor` — libjxl JPEG bitstream reconstruction for JXL-from-JPEG sources
 - `TileManager` — on-demand tile decode with `NSCache`. JPEG tiles via parallel region decode; all other formats via `CGImage.cropping(to:)` on the cached full decode.
-- `PixelBuffer` — C-allocated pixel data with zero-copy `CGImage` via retained `CGDataProvider`
+- `PixelBuffer` — C-allocated pixel data with zero-copy `CGImage` via retained `CGDataProvider`. Supports 4 formats: `rgba8`, `rgb8`, `gray8`, `grayAlpha8`.
+
+## CGContext Constraints
+- CGContext at 8bpc only supports **gray/no-alpha (1 byte)** and **RGB+alpha or RGB+skip (4 bytes)**
+- 3-byte RGB and 2-byte gray+alpha are **not** valid CGContext configurations — render to a supported intermediate (RGBX or RGBA) and convert
+- Use integer arithmetic for BT.601 luminance (`299*R + 587*G + 114*B`) to avoid floating-point boundary errors
 
 ## SPM Dependencies
 - `libjpeg` (SusanDoggie/libjpeg) — JPEG region decode

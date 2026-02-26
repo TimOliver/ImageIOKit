@@ -26,8 +26,9 @@
 		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		229B93722F445BE400089FF5 /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = F50000012F16000000000001 /* libjpeg */; };
 		229B93732F445BE400089FF5 /* libjxl in Frameworks */ = {isa = PBXBuildFile; productRef = F50000012F16000000000004 /* libjxl */; };
+		22DA37ED2F509B1600360AA3 /* DecoderCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DA37EC2F509B1600360AA3 /* DecoderCapabilities.swift */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
-		22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* ImageDestination.swift */; };
+		22DB61052D3A078A007AFCF3 /* CGImage+Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
 		22DB610E2D3A5155007AFCF3 /* ApplePark.webp in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610B2D3A5155007AFCF3 /* ApplePark.webp */; };
 		22DB610F2D3A5155007AFCF3 /* ApplePark.heic in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61082D3A5155007AFCF3 /* ApplePark.heic */; };
@@ -51,7 +52,6 @@
 		F20000012F16000000000001 /* PixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000001 /* PixelBuffer.swift */; };
 		F20000012F18000000000001 /* DecodeOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000001 /* DecodeOptions.swift */; };
 		F20000012F18000000000002 /* ImageMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000002 /* ImageMetadata.swift */; };
-		F20000012F18000000000003 /* DecoderCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000003 /* DecoderCapabilities.swift */; };
 		F20000012F18000000000004 /* ImageDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000004 /* ImageDecoderError.swift */; };
 		F20000012F18000000000005 /* EncodeOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000005 /* EncodeOptions.swift */; };
 		F20000012F18000000000006 /* ImageEncoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000006 /* ImageEncoderError.swift */; };
@@ -85,8 +85,9 @@
 		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
 		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
 		2226543C2F066F5100A76F85 /* ImageColorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorModel.swift; sourceTree = "<group>"; };
+		22DA37EC2F509B1600360AA3 /* DecoderCapabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecoderCapabilities.swift; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
-		22DB61042D3A078A007AFCF3 /* ImageDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestination.swift; sourceTree = "<group>"; };
+		22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGImage+Encoding.swift"; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
 		22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ApplePark.jpeg; sourceTree = "<group>"; };
 		22DB610A2D3A5155007AFCF3 /* ApplePark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ApplePark.png; sourceTree = "<group>"; };
@@ -110,7 +111,6 @@
 		F10000012F16000000000001 /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		F10000012F18000000000001 /* DecodeOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeOptions.swift; sourceTree = "<group>"; };
 		F10000012F18000000000002 /* ImageMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMetadata.swift; sourceTree = "<group>"; };
-		F10000012F18000000000003 /* DecoderCapabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecoderCapabilities.swift; sourceTree = "<group>"; };
 		F10000012F18000000000004 /* ImageDecoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoderError.swift; sourceTree = "<group>"; };
 		F10000012F18000000000005 /* EncodeOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeOptions.swift; sourceTree = "<group>"; };
 		F10000012F18000000000006 /* ImageEncoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEncoderError.swift; sourceTree = "<group>"; };
@@ -194,16 +194,16 @@
 			isa = PBXGroup;
 			children = (
 				22DB61002D3A045C007AFCF3 /* ImageSource.swift */,
-				22DB61042D3A078A007AFCF3 /* ImageDestination.swift */,
+				22DA37EC2F509B1600360AA3 /* DecoderCapabilities.swift */,
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
 				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
 				F10000012F16000000000001 /* PixelBuffer.swift */,
 				F10000012F18000000000001 /* DecodeOptions.swift */,
 				F10000012F18000000000002 /* ImageMetadata.swift */,
-				F10000012F18000000000003 /* DecoderCapabilities.swift */,
 				F10000012F18000000000004 /* ImageDecoderError.swift */,
 				F10000012F18000000000005 /* EncodeOptions.swift */,
 				F10000012F18000000000006 /* ImageEncoderError.swift */,
+				22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */,
 				F30000012F18000000000001 /* Internal */,
 				F30000012F16000000000002 /* Tiling */,
 				F30000012F16000000000003 /* Analysis */,
@@ -378,7 +378,7 @@
 			files = (
 				22DB61142D3B6053007AFCF3 /* ImageFileFormat.swift in Sources */,
 				221D5F0A29EBD708006E60AB /* ViewController.swift in Sources */,
-				22DB61052D3A078A007AFCF3 /* ImageDestination.swift in Sources */,
+				22DB61052D3A078A007AFCF3 /* CGImage+Encoding.swift in Sources */,
 				221D5F0629EBD708006E60AB /* AppDelegate.swift in Sources */,
 				22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */,
 				221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */,
@@ -386,9 +386,9 @@
 				F20000012F16000000000001 /* PixelBuffer.swift in Sources */,
 				F20000012F18000000000001 /* DecodeOptions.swift in Sources */,
 				F20000012F18000000000002 /* ImageMetadata.swift in Sources */,
-				F20000012F18000000000003 /* DecoderCapabilities.swift in Sources */,
 				F20000012F18000000000004 /* ImageDecoderError.swift in Sources */,
 				F20000012F18000000000005 /* EncodeOptions.swift in Sources */,
+				22DA37ED2F509B1600360AA3 /* DecoderCapabilities.swift in Sources */,
 				F20000012F18000000000006 /* ImageEncoderError.swift in Sources */,
 				F20000012F18000000000007 /* BackgroundColor.swift in Sources */,
 				F20000012F18000000000008 /* ImageMargins.swift in Sources */,

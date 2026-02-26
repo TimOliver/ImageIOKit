@@ -43,7 +43,7 @@ final class ImageDestinationTests: XCTestCase {
 
     func testEncodeToJPEG() throws {
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let data = try ImageDestination.encode(cgImage, format: .jpeg)
+        let data = try cgImage.encode(as: .jpeg)
         XCTAssertGreaterThan(data.count, 0)
         // Verify JPEG magic bytes
         XCTAssertEqual(data[0], 0xFF)
@@ -52,7 +52,7 @@ final class ImageDestinationTests: XCTestCase {
 
     func testEncodeToPNG() throws {
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let data = try ImageDestination.encode(cgImage, format: .png)
+        let data = try cgImage.encode(as: .png)
         XCTAssertGreaterThan(data.count, 0)
         // Verify PNG magic bytes
         XCTAssertEqual(data[0], 0x89)
@@ -61,16 +61,16 @@ final class ImageDestinationTests: XCTestCase {
 
     func testEncodeToHEIC() throws {
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let data = try ImageDestination.encode(cgImage, format: .heic)
+        let data = try cgImage.encode(as: .heic)
         XCTAssertGreaterThan(data.count, 0)
     }
 
     func testEncodeQualityAffectsSize() throws {
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let lowQ = try ImageDestination.encode(cgImage, format: .jpeg,
-                                                options: EncodeOptions(quality: 0.1))
-        let highQ = try ImageDestination.encode(cgImage, format: .jpeg,
-                                                 options: EncodeOptions(quality: 0.95))
+        let lowQ = try cgImage.encode(as: .jpeg,
+                                      options: EncodeOptions(quality: 0.1))
+        let highQ = try cgImage.encode(as: .jpeg,
+                                       options: EncodeOptions(quality: 0.95))
         XCTAssertGreaterThan(highQ.count, lowQ.count,
                              "Higher quality should produce larger data")
     }
@@ -83,7 +83,7 @@ final class ImageDestinationTests: XCTestCase {
 
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
         let outputURL = dir.appendingPathComponent("output.jpeg")
-        try ImageDestination.write(cgImage, to: outputURL, format: .jpeg)
+        try cgImage.write(to: outputURL, as: .jpeg)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.path))
         // Verify the file is a valid image
@@ -98,7 +98,7 @@ final class ImageDestinationTests: XCTestCase {
 
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
         let outputURL = dir.appendingPathComponent("output.png")
-        try ImageDestination.write(cgImage, to: outputURL, format: .png)
+        try cgImage.write(to: outputURL, as: .png)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.path))
         let source = ImageSource(url: outputURL)
@@ -115,8 +115,7 @@ final class ImageDestinationTests: XCTestCase {
         let outputURL = dir.appendingPathComponent("conditioned.jpeg")
         // JPEG that fits within maxDimension should pass through unchanged
         let maxDim = Int(max(source.imageSize.width, source.imageSize.height)) + 1000
-        let conditioned = try ImageDestination.condition(source, maxDimension: maxDim,
-                                                         to: outputURL)
+        let conditioned = try source.condition(maxDimension: maxDim, to: outputURL)
         // Should return the same source (passthrough)
         XCTAssertTrue(conditioned === source,
                        "JPEG within bounds should pass through without re-encode")
@@ -128,7 +127,7 @@ final class ImageDestinationTests: XCTestCase {
 
         let source = makeSource(for: .png)
         let outputURL = dir.appendingPathComponent("conditioned.jpeg")
-        let conditioned = try ImageDestination.condition(source, to: outputURL)
+        let conditioned = try source.condition(to: outputURL)
 
         XCTAssertEqual(conditioned.fileFormat, .jpeg,
                        "Conditioned output should be JPEG")
@@ -143,8 +142,7 @@ final class ImageDestinationTests: XCTestCase {
         let source = makeSource(for: .jpeg)
         let outputURL = dir.appendingPathComponent("conditioned.jpeg")
         // Use a small maxDimension to force downscaling
-        let conditioned = try ImageDestination.condition(source, maxDimension: 256,
-                                                         to: outputURL)
+        let conditioned = try source.condition(maxDimension: 256, to: outputURL)
         XCTAssertEqual(conditioned.fileFormat, .jpeg)
         let longEdge = max(conditioned.imageSize.width, conditioned.imageSize.height)
         XCTAssertLessThanOrEqual(longEdge, 260,
@@ -157,7 +155,7 @@ final class ImageDestinationTests: XCTestCase {
 
         let source = makeSource(for: .jpegXL)
         let outputURL = dir.appendingPathComponent("conditioned.jpeg")
-        let conditioned = try ImageDestination.condition(source, to: outputURL)
+        let conditioned = try source.condition(to: outputURL)
 
         XCTAssertEqual(conditioned.fileFormat, .jpeg,
                        "JXL conditioned output should be JPEG")
@@ -169,7 +167,7 @@ final class ImageDestinationTests: XCTestCase {
     func testTranscodePNGToJPEG() throws {
         let source = makeSource(for: .png)
         let data = try autoreleasepool {
-            try ImageDestination.transcode(from: source, to: .jpeg)
+            try source.transcode(to: .jpeg)
         }
         XCTAssertGreaterThan(data.count, 0)
         // Verify JPEG output
@@ -179,7 +177,7 @@ final class ImageDestinationTests: XCTestCase {
 
     func testTranscodeJXLToJPEG() throws {
         let source = makeSource(for: .jpegXL)
-        let data = try ImageDestination.transcode(from: source, to: .jpeg)
+        let data = try source.transcode(to: .jpeg)
         XCTAssertGreaterThan(data.count, 0)
         // Should produce valid JPEG either via reconstruction or re-encode
         XCTAssertEqual(data[0], 0xFF)
@@ -193,7 +191,7 @@ final class ImageDestinationTests: XCTestCase {
             XCTFail("Failed to create source")
             return
         }
-        let data = try ImageDestination.transcode(from: source, to: .png)
+        let data = try source.transcode(to: .png)
         XCTAssertGreaterThan(data.count, 0)
         // Verify PNG output
         XCTAssertEqual(data[0], 0x89)
