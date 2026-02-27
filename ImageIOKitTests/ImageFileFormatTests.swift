@@ -29,7 +29,7 @@ final class ImageFileFormatTests: XCTestCase {
         }
     }
 
-    // Test invalid datat to cofnirm the header validation code fails correctly.
+    // Test invalid datat to confirm the header validation code fails correctly.
     public func testImageFormatFileHeadersWithInvalidData() {
         guard let textData = "Hello world!".data(using: .utf8) else {
             XCTFail("Unable to generate test data")

@@ -42,6 +42,9 @@
 		A20000012F26000000000005 /* TileManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000005 /* TileManagerTests.swift */; };
 		A20000012F26000000000006 /* AnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000006 /* AnalysisTests.swift */; };
 		A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000007 /* MemoryTrackingTests.swift */; };
+		A20000012F26000000000008 /* ImageMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000008 /* ImageMetadataTests.swift */; };
+		A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000009 /* PixelBufferMetalTests.swift */; };
+		A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2600000000000A /* SoftwareScalerTests.swift */; };
 		F1000002000000000000000A /* TileDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000A /* TileDescriptor.swift */; };
 		F1000002000000000000000B /* TileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000B /* TileGrid.swift */; };
 		F1000002000000000000000C /* TileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000C /* TileManager.swift */; };
@@ -103,6 +106,9 @@
 		A10000012F26000000000005 /* TileManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManagerTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000006 /* AnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000007 /* MemoryTrackingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTrackingTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000008 /* ImageMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMetadataTests.swift; sourceTree = "<group>"; };
+		A10000012F26000000000009 /* PixelBufferMetalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBufferMetalTests.swift; sourceTree = "<group>"; };
+		A10000012F2600000000000A /* SoftwareScalerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScalerTests.swift; sourceTree = "<group>"; };
 		F1000001000000000000000A /* TileDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileDescriptor.swift; sourceTree = "<group>"; };
 		F1000001000000000000000B /* TileGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGrid.swift; sourceTree = "<group>"; };
 		F1000001000000000000000C /* TileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManager.swift; sourceTree = "<group>"; };
@@ -190,6 +196,9 @@
 				A10000012F26000000000005 /* TileManagerTests.swift */,
 				A10000012F26000000000006 /* AnalysisTests.swift */,
 				A10000012F26000000000007 /* MemoryTrackingTests.swift */,
+				A10000012F26000000000008 /* ImageMetadataTests.swift */,
+				A10000012F26000000000009 /* PixelBufferMetalTests.swift */,
+				A10000012F2600000000000A /* SoftwareScalerTests.swift */,
 			);
 			path = ImageIOKitTests;
 			sourceTree = "<group>";
@@ -447,6 +456,9 @@
 				A20000012F26000000000005 /* TileManagerTests.swift in Sources */,
 				A20000012F26000000000006 /* AnalysisTests.swift in Sources */,
 				A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */,
+				A20000012F26000000000008 /* ImageMetadataTests.swift in Sources */,
+				A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */,
+				A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
