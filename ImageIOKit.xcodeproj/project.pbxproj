@@ -50,6 +50,7 @@
 		F2000001201800000000000A /* JXLReconstructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000A /* JXLReconstructor.swift */; };
 		F2000001201800000000000B /* SoftwareScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000B /* SoftwareScaler.swift */; };
 		F20000012F16000000000001 /* PixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000001 /* PixelBuffer.swift */; };
+		F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000002 /* PixelBuffer+Metal.swift */; };
 		F20000012F18000000000001 /* DecodeOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000001 /* DecodeOptions.swift */; };
 		F20000012F18000000000002 /* ImageMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000002 /* ImageMetadata.swift */; };
 		F20000012F18000000000004 /* ImageDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000004 /* ImageDecoderError.swift */; };
@@ -71,6 +72,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2215AF7D2F51E2FC00D773B7 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		221D5F0229EBD708006E60AB /* ImageIOKitExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageIOKitExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		221D5F0529EBD708006E60AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		221D5F0729EBD708006E60AB /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 		F1000001201800000000000A /* JXLReconstructor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLReconstructor.swift; sourceTree = "<group>"; };
 		F1000001201800000000000B /* SoftwareScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScaler.swift; sourceTree = "<group>"; };
 		F10000012F16000000000001 /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
+		F10000012F16000000000002 /* PixelBuffer+Metal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PixelBuffer+Metal.swift"; sourceTree = "<group>"; };
 		F10000012F18000000000001 /* DecodeOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeOptions.swift; sourceTree = "<group>"; };
 		F10000012F18000000000002 /* ImageMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMetadata.swift; sourceTree = "<group>"; };
 		F10000012F18000000000004 /* ImageDecoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoderError.swift; sourceTree = "<group>"; };
@@ -142,6 +145,7 @@
 		221D5EF929EBD708006E60AB = {
 			isa = PBXGroup;
 			children = (
+				2215AF7D2F51E2FC00D773B7 /* Package.swift */,
 				22DB60FF2D3A0448007AFCF3 /* ImageIOKit */,
 				221D5F0429EBD708006E60AB /* ImageIOKitExample */,
 				221D5F1B29EBD709006E60AB /* ImageIOKitTests */,
@@ -194,16 +198,12 @@
 			isa = PBXGroup;
 			children = (
 				22DB61002D3A045C007AFCF3 /* ImageSource.swift */,
-				22DA37EC2F509B1600360AA3 /* DecoderCapabilities.swift */,
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
 				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
-				F10000012F16000000000001 /* PixelBuffer.swift */,
-				F10000012F18000000000001 /* DecodeOptions.swift */,
 				F10000012F18000000000002 /* ImageMetadata.swift */,
-				F10000012F18000000000004 /* ImageDecoderError.swift */,
-				F10000012F18000000000005 /* EncodeOptions.swift */,
-				F10000012F18000000000006 /* ImageEncoderError.swift */,
-				22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */,
+				F30000012F18000000000004 /* Decoding */,
+				F30000012F18000000000005 /* Encoding */,
+				F30000012F18000000000006 /* PixelBuffer */,
 				F30000012F18000000000001 /* Internal */,
 				F30000012F16000000000002 /* Tiling */,
 				F30000012F16000000000003 /* Analysis */,
@@ -253,6 +253,35 @@
 				F1000001201800000000000B /* SoftwareScaler.swift */,
 			);
 			path = Internal;
+			sourceTree = "<group>";
+		};
+		F30000012F18000000000004 /* Decoding */ = {
+			isa = PBXGroup;
+			children = (
+				F10000012F18000000000001 /* DecodeOptions.swift */,
+				22DA37EC2F509B1600360AA3 /* DecoderCapabilities.swift */,
+				F10000012F18000000000004 /* ImageDecoderError.swift */,
+			);
+			path = Decoding;
+			sourceTree = "<group>";
+		};
+		F30000012F18000000000005 /* Encoding */ = {
+			isa = PBXGroup;
+			children = (
+				22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */,
+				F10000012F18000000000005 /* EncodeOptions.swift */,
+				F10000012F18000000000006 /* ImageEncoderError.swift */,
+			);
+			path = Encoding;
+			sourceTree = "<group>";
+		};
+		F30000012F18000000000006 /* PixelBuffer */ = {
+			isa = PBXGroup;
+			children = (
+				F10000012F16000000000001 /* PixelBuffer.swift */,
+				F10000012F16000000000002 /* PixelBuffer+Metal.swift */,
+			);
+			path = PixelBuffer;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -384,6 +413,7 @@
 				221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */,
 				2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */,
 				F20000012F16000000000001 /* PixelBuffer.swift in Sources */,
+				F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */,
 				F20000012F18000000000001 /* DecodeOptions.swift in Sources */,
 				F20000012F18000000000002 /* ImageMetadata.swift in Sources */,
 				F20000012F18000000000004 /* ImageDecoderError.swift in Sources */,

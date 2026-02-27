@@ -30,7 +30,8 @@
       "Bash(xcodebuild:*)",
       "Bash(find:*)",
       "Bash(file:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(cd:*)"
     ]
   }
 }
