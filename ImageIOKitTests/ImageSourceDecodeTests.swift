@@ -115,18 +115,18 @@ final class ImageSourceDecodeTests: XCTestCase {
 
     // MARK: - Capabilities
 
-    func testJPEGHasRegionDecode() {
+    func testJPEGIsRegionDecodable() {
         let source = makeSource(for: .jpeg)
-        XCTAssertTrue(source.capabilities.contains(.regionDecode))
+        XCTAssertTrue(source.isRegionDecodable)
     }
 
-    func testNonJPEGFormatsLackRegionDecode() {
+    func testNonJPEGFormatsAreNotRegionDecodable() {
         let nonJPEG: [ImageSampleData.Format] = [.png, .webp, .heic, .avif, .jpegXL]
         for format in nonJPEG {
             autoreleasepool {
                 let source = makeSource(for: format)
-                XCTAssertFalse(source.capabilities.contains(.regionDecode),
-                               "\(format) should not have regionDecode")
+                XCTAssertFalse(source.isRegionDecodable,
+                               "\(format) should not be region decodable")
             }
         }
     }
@@ -263,8 +263,7 @@ final class ImageSourceDecodeTests: XCTestCase {
 
     func testRawDecodeWithTargetSize() throws {
         let source = makeSource(for: .jpeg)
-        let options = DecodeOptions(targetSize: CGSize(width: 256, height: 256))
-        let buffer = try source.decode(options: options)
+        let buffer = try source.decode(targetSize: CGSize(width: 256, height: 256))
         // Should be smaller than original
         XCTAssertLessThanOrEqual(buffer.width, 256)
         XCTAssertLessThanOrEqual(buffer.height, 256)
@@ -274,8 +273,7 @@ final class ImageSourceDecodeTests: XCTestCase {
     func testRawDecodeWithCropRect() throws {
         let source = makeSource(for: .jpeg)
         let crop = CGRect(x: 100, y: 100, width: 500, height: 300)
-        let options = DecodeOptions(cropRect: crop)
-        let buffer = try source.decode(options: options)
+        let buffer = try source.decode(cropRect: crop)
         XCTAssertEqual(buffer.width, 500)
         XCTAssertEqual(buffer.height, 300)
     }
@@ -284,8 +282,7 @@ final class ImageSourceDecodeTests: XCTestCase {
         let source = makeSource(for: .jpeg)
         let crop = CGRect(x: 0, y: 0, width: 1000, height: 1000)
         let target = CGSize(width: 200, height: 200)
-        let options = DecodeOptions(targetSize: target, cropRect: crop)
-        let buffer = try source.decode(options: options)
+        let buffer = try source.decode(targetSize: target, cropRect: crop)
         XCTAssertLessThanOrEqual(buffer.width, 200)
         XCTAssertLessThanOrEqual(buffer.height, 200)
     }
@@ -293,8 +290,7 @@ final class ImageSourceDecodeTests: XCTestCase {
     func testRawDecodeInvalidCropThrows() {
         let source = makeSource(for: .jpeg)
         let hugeRect = CGRect(x: 99999, y: 99999, width: 100, height: 100)
-        let options = DecodeOptions(cropRect: hugeRect)
-        XCTAssertThrowsError(try source.decode(options: options)) { error in
+        XCTAssertThrowsError(try source.decode(cropRect: hugeRect)) { error in
             guard let decoderError = error as? ImageDecoderError else {
                 XCTFail("Expected ImageDecoderError, got \(error)")
                 return
@@ -313,9 +309,8 @@ final class ImageSourceDecodeTests: XCTestCase {
 
         for format in formats {
             try autoreleasepool {
-                let options = DecodeOptions(targetSize: CGSize(width: 100, height: 100),
-                                            pixelFormat: format)
-                let buffer = try source.decode(options: options)
+                let buffer = try source.decode(targetSize: CGSize(width: 100, height: 100),
+                                              pixelFormat: format)
                 XCTAssertEqual(buffer.pixelFormat, format, "Pixel format mismatch for \(format)")
                 XCTAssertGreaterThan(buffer.width, 0)
                 XCTAssertGreaterThan(buffer.height, 0)

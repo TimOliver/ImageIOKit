@@ -48,10 +48,10 @@ public final class ImageSource {
     /// The detected file format of the image.
     public private(set) var fileFormat: ImageFileFormat?
 
-    /// The native decode capabilities of this source.
-    /// Only JPEG sources support region decode.
-    public var capabilities: DecoderCapabilities {
-        fileFormat == .jpeg ? [.regionDecode] : []
+    /// Whether this source supports sub-region decode without decoding the full image.
+    /// Only JPEG sources support this (via libjpeg crop_scanline).
+    public var isRegionDecodable: Bool {
+        fileFormat == .jpeg
     }
 
     /// Estimated peak bytes required for a full-resolution decode of this image,
@@ -82,7 +82,7 @@ public final class ImageSource {
     /// Cached full-resolution CGImage. Statically defined so NSCache can
     /// manage it and purge under memory pressure. Shared across
     /// all threads
-    private static let fullDecodeCacheKey = "full" as NSString
+    private static let fullDecodeCacheKey = "fullDecode" as NSString
     private let fullDecodeCache: NSCache<NSString, CGImage> = {
         let cache = NSCache<NSString, CGImage>()
         cache.countLimit = 1
@@ -273,12 +273,22 @@ public final class ImageSource {
 
     // MARK: - Raw Decode Access
 
-    /// Decodes the image with the given options and returns the raw pixel buffer.
+    /// Decodes the image and returns the raw pixel buffer.
     /// This is the lowest-level decode method, suitable for custom processing pipelines.
-    /// - Parameter options: Controls target size, crop region, and pixel format.
+    /// - Parameters:
+    ///   - targetSize: Target output size. The decoder will produce an image close to this
+    ///     size using the most efficient method available. Pass `nil` for full-resolution decode.
+    ///   - cropRect: Region of the full image to decode, in pixel coordinates.
+    ///     For JPEG sources, this uses native region decode (libjpeg crop_scanline).
+    ///     For others, the full image is decoded then cropped. Pass `nil` to decode the entire image.
+    ///   - pixelFormat: Desired pixel format for the output buffer.
     /// - Returns: A pixel buffer containing the decoded image data.
     /// - Throws: `ImageDecoderError` on failure.
-    public func decode(options: DecodeOptions = DecodeOptions()) throws -> PixelBuffer {
+    public func decode(
+        targetSize: CGSize? = nil,
+        cropRect: CGRect? = nil,
+        pixelFormat: PixelBuffer.PixelFormat = .rgba8
+    ) throws -> PixelBuffer {
         guard let cgImageSource, isLoaded else {
             throw ImageDecoderError.invalidData
         }
@@ -286,7 +296,7 @@ public final class ImageSource {
         // Determine the CGImage to work with
         let cgImage: CGImage
 
-        if let targetSize = options.targetSize, options.cropRect == nil {
+        if let targetSize, cropRect == nil {
             // Use thumbnailing for downscaled decode
             let maxDimension = max(targetSize.width, targetSize.height)
             let thumbOptions: [CFString: Any] = [
@@ -311,14 +321,14 @@ public final class ImageSource {
 
         // Apply crop if requested
         var workingImage = cgImage
-        if let cropRect = options.cropRect {
+        if let cropRect {
             guard let cropped = cgImage.cropping(to: cropRect) else {
                 throw ImageDecoderError.invalidOptions("Crop rect \(cropRect) is out of bounds")
             }
             workingImage = cropped
 
             // If target size was also requested, scale via a second thumbnail pass
-            if let targetSize = options.targetSize {
+            if let targetSize {
                 let fitSize = SoftwareScaler.fittingSize(
                     for: CGSize(width: workingImage.width, height: workingImage.height),
                     in: targetSize
@@ -328,7 +338,7 @@ public final class ImageSource {
         }
 
         // Render CGImage into a PixelBuffer
-        return try renderToPixelBuffer(workingImage, pixelFormat: options.pixelFormat)
+        return try renderToPixelBuffer(workingImage, pixelFormat: pixelFormat)
     }
 
     // MARK: - Private Helpers

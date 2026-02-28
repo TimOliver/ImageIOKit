@@ -79,7 +79,7 @@ public final class TileManager {
             guard let self else { return }
 
             let results: [(TileDescriptor, UIImage)]
-            if self.imageSource.capabilities.contains(.regionDecode) {
+            if self.imageSource.isRegionDecodable {
                 // Parallel: each tile gets its own independent codec context
                 var pairs = [(TileDescriptor, UIImage)?](repeating: nil, count: descriptors.count)
                 DispatchQueue.concurrentPerform(iterations: descriptors.count) { i in
@@ -115,7 +115,7 @@ public final class TileManager {
 
     private func decodeTile(_ descriptor: TileDescriptor) -> UIImage? {
         // Use native region decode if available
-        if imageSource.capabilities.contains(.regionDecode) {
+        if imageSource.isRegionDecodable {
             return imageSource.decodeRegion(descriptor.rect)
         }
 

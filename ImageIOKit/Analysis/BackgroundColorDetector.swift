@@ -27,8 +27,7 @@ public enum BackgroundColorDetector {
 
         // Decode a small thumbnail
         let thumbSize = CGSize(width: 400, height: 400)
-        let options = DecodeOptions(targetSize: thumbSize, pixelFormat: .rgba8)
-        guard let pixelBuffer = try? imageSource.decode(options: options) else { return nil }
+        guard let pixelBuffer = try? imageSource.decode(targetSize: thumbSize, pixelFormat: .rgba8) else { return nil }
 
         // Try margin-based detection first
         if let margins = MarginDetector.detectMargins(in: imageSource), margins.hasMargins {

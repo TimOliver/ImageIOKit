@@ -41,7 +41,7 @@ final class TileManagerTests: XCTestCase {
 
     func testTileDecodeJPEG() {
         let source = makeSource(for: .jpeg)
-        XCTAssertTrue(source.capabilities.contains(.regionDecode))
+        XCTAssertTrue(source.isRegionDecodable)
 
         let manager = TileManager(imageSource: source)
         guard let firstTile = manager.grid.tile(column: 0, row: 0) else {
@@ -57,7 +57,7 @@ final class TileManagerTests: XCTestCase {
 
     func testTileDecodeNonJPEG() {
         let source = makeSource(for: .png)
-        XCTAssertFalse(source.capabilities.contains(.regionDecode))
+        XCTAssertFalse(source.isRegionDecodable)
 
         let manager = TileManager(imageSource: source)
         guard let firstTile = manager.grid.tile(column: 0, row: 0) else {

@@ -7,7 +7,7 @@ import Foundation
 import CoreGraphics
 
 /// Lightweight metadata read from the image header without full decoding.
-public struct ImageMetadata {
+public struct    {
     /// Full image width in pixels.
     public let width: Int
     /// Full image height in pixels.

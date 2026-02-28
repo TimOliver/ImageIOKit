@@ -20,8 +20,7 @@ final class ImageDestinationTests: XCTestCase {
 
     private func decodeThumbnailCGImage(for format: ImageSampleData.Format) -> CGImage {
         let source = makeSource(for: format)
-        let options = DecodeOptions(targetSize: CGSize(width: 200, height: 200))
-        guard let buffer = try? source.decode(options: options),
+        guard let buffer = try? source.decode(targetSize: CGSize(width: 200, height: 200)),
               let cgImage = buffer.makeCGImage() else {
             fatalError("Failed to decode thumbnail for \(format)")
         }

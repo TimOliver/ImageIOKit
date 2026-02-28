@@ -34,8 +34,7 @@ public enum MarginDetector {
 
         // Decode a small thumbnail for analysis
         let thumbSize = CGSize(width: thumbnailMaxDimension, height: thumbnailMaxDimension)
-        let options = DecodeOptions(targetSize: thumbSize, pixelFormat: .rgba8)
-        guard let pixelBuffer = try? imageSource.decode(options: options) else { return nil }
+        guard let pixelBuffer = try? imageSource.decode(targetSize: thumbSize, pixelFormat: .rgba8) else { return nil }
 
         let thumbWidth = pixelBuffer.width
         let thumbHeight = pixelBuffer.height
