@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 
 /// A list of all supported image file formats, and their respective metadata
 public enum ImageFileFormat: CaseIterable {
@@ -55,6 +56,23 @@ public enum ImageFileFormat: CaseIterable {
         case .avif, .jpegXL: return version >= 17
         }
     }
+
+    /// Whether this format is always opaque (no alpha channel support).
+    public var isOpaque: Bool {
+        self == .jpeg
+    }
+
+    /// The Uniform Type Identifier string for this format, used by CGImageDestination.
+    public var uniformTypeIdentifier: CFString {
+        switch self {
+        case .jpeg:   return UTType.jpeg.identifier as CFString
+        case .png:    return UTType.png.identifier as CFString
+        case .webp:   return UTType.webP.identifier as CFString
+        case .heic:   return UTType.heic.identifier as CFString
+        case .avif:   return "public.avif" as CFString
+        case .jpegXL: return "public.jxl" as CFString
+        }
+    }
 }
 
 // MARK: - Format Validation
@@ -79,9 +97,16 @@ extension ImageFileFormat {
     }
 
     /// Checks the header of the file to see if it is a file format supported by this framework.
-    /// - Parameter data: A data object representing compressed image file data
+    /// - Parameter data: A data object representing compressed image file data.
+    /// - Returns: Whether the data's magic bytes match a supported format.
     public static func isValidFileFormat(data: Data) -> Bool {
-        // Check if the magic numbers match by looping through until completion
+        detect(from: data) != nil
+    }
+
+    /// Detects the image format from the magic bytes in the data header.
+    /// - Parameter data: Compressed image file data.
+    /// - Returns: The detected format, or `nil` if unrecognized.
+    public static func detect(from data: Data) -> ImageFileFormat? {
         let magicNumberMatchedBlock: (([UInt8]) -> Bool) = { magicNumber in
             let magicNumberLength = magicNumber.count
             if data.count < magicNumberLength { return false }
@@ -96,9 +121,17 @@ extension ImageFileFormat {
             return true
         }
 
-        // Loop through the possible formats and compare each byte to guarantee a match
         return ImageFileFormat.allCases.first(where: { format in
             format.magicNumbers.contains(where: magicNumberMatchedBlock)
-        }) != nil
+        })
+    }
+
+    /// Detects the image format from a file URL's extension.
+    /// - Parameter url: Path to an image file.
+    /// - Returns: The detected format, or `nil` if the extension is unrecognized.
+    public static func detect(from url: URL) -> ImageFileFormat? {
+        let ext = url.pathExtension.lowercased()
+        guard !ext.isEmpty else { return nil }
+        return allCases.first { $0.fileExtensions.contains(ext) }
     }
 }

@@ -1,8 +1,10 @@
 //
-//  ImageIOKit.swift
-//  ImageIOKitExample
+//  ImageSource.swift
+//  ImageIOKit
 //
-//  Created by Tim Oliver on 17/1/2025.
+//  Wraps Apple's CGImageSource for all decode and thumbnail operations.
+//  Delegates to JPEGRegionDecoder for JPEG region decode (tiling)
+//  and JXLReconstructor for lossless JXL → JPEG reconstruction.
 //
 
 import Foundation
@@ -10,24 +12,34 @@ import CoreGraphics
 import ImageIO
 import UIKit
 
+/// The types of color modes in which an image may be encoded.
+public enum ImageColorModel {
+    case rgb
+    case grayscale
+    case cmyk
+    case lab
+
+    internal init?(colorModel: String) {
+        switch (colorModel as CFString) {
+        case kCGImagePropertyColorModelRGB: self = .rgb
+        case kCGImagePropertyColorModelGray: self = .grayscale
+        case kCGImagePropertyColorModelCMYK: self = .cmyk
+        case kCGImagePropertyColorModelLab: self = .lab
+        default: return nil
+        }
+    }
+}
+
 /// An image source represents an arbitrary location of a compressed
 /// image file, whether it be a file on disk, or directly in memory.
-/// 
+///
 /// Image sources can be used to efficiently decode the full bitmap into memory,
 /// or be used to transform image data to other file formats, avoiding
 /// incurring the memory hit of a full decode as much as possible.
-///  
+///
 /// This class aims to be as efficient and memory light as possible,
 /// only performing heavy loading operations on demand.
 public final class ImageSource {
-
-    /// The types of downscaling modes that may be used when
-    /// creating smaller sized copies of this image.
-    public enum DownscaleStrategy {
-        case automatic      // Automatically determined based on the file format.
-        case partialDecode  // The ImageIO thumbnailing API is used to create a low-memory decode.
-        case fullDecode     // The image is fully decoded and downscaled via Core Graphics manually.
-    }
 
     /// The local file path to the image file, if it was loaded from disk.
     public private(set) var url: URL?
@@ -51,17 +63,47 @@ public final class ImageSource {
     /// The color profile of the image if known.
     public private(set) var colorProfile: String?
 
-    /// The type of the image (such as "com.apple.icns"). (Nil until the image has been loaded)
-    public var type: String? {
-        guard let imageSource else { return nil }
-        return CGImageSourceGetType(imageSource) as String?
+    /// The detected file format of the image.
+    public private(set) var fileFormat: ImageFileFormat?
+
+    /// Whether this source supports sub-region decode without decoding the full image.
+    /// Only JPEG sources support this (via libjpeg crop_scanline).
+    public var isRegionDecodable: Bool {
+        fileFormat == .jpeg
     }
 
-    // MARK: - Private Properties
+    /// Estimated peak bytes required for a full-resolution decode of this image,
+    /// including both the output bitmap and ImageIO's transient decompression buffers.
+    ///
+    /// Multipliers are calibrated empirically per format against ImageIO:
+    /// - **JPEG**: ~0.5x — no alpha, compact internal representation
+    /// - **PNG/WebP/HEIC/AVIF/JPEG-XL**: ~1.25x — moderate decompression overhead
+    ///
+    /// Use this to decide whether to decode images concurrently or serially
+    /// (e.g. compare against `os_proc_available_memory()`).
+    public var estimatedDecodeMemory: Int {
+        let bitmapBytes = Int(imageSize.width) * Int(imageSize.height) * 4
+        let multiplier: Double = switch fileFormat {
+        case .jpeg:   0.5
+        default:      1.25
+        }
+        return Int(Double(bitmapBytes) * multiplier)
+    }
 
-    // The underlying image source, pointing at the image data.
-    // Lazily loaded once it is needed for processing.
-    private var imageSource: CGImageSource?
+    // MARK: - Internal Properties
+
+    /// The underlying CGImageSource.
+    var cgImageSource: CGImageSource?
+
+    /// Cached full-resolution CGImage. Statically defined so NSCache can
+    /// manage it and purge under memory pressure. Shared across
+    /// all threads
+    static let fullDecodeCacheKey = "fullDecode" as NSString
+    let fullDecodeCache: NSCache<NSString, CGImage> = {
+        let cache = NSCache<NSString, CGImage>()
+        cache.countLimit = 1
+        return cache
+    }()
 
     // MARK: - Init
 
@@ -90,110 +132,67 @@ public final class ImageSource {
     /// Loads the header data for the provided image file and configures this object to start reading information from it.
     /// This is called automatically normally when `loadImmediately` in the `init` methods are `true`, but this can be manually deferred in order to control when a potential IO blocking operation occurs.
     /// - Returns: `true` if the image header was successfully read, or `false` if it failed.
+    @discardableResult
     public func loadImageData() -> Bool {
         guard !isLoaded else { return true }
 
-        // Based on whether we were provided with a url or data, attempt to load with ImageIO
-        let imageSource: CGImageSource?
+        // Create CGImageSource
+        let source: CGImageSource?
         if let url = self.url {
-            imageSource = CGImageSourceCreateWithURL(url as CFURL, nil)
+            source = CGImageSourceCreateWithURL(url as CFURL, nil)
+            self.fileFormat = ImageFileFormat.detect(from: url)
         } else if let data = self.data {
-            imageSource = CGImageSourceCreateWithData(data as CFData, nil)
+            source = CGImageSourceCreateWithData(data as CFData, nil)
+            self.fileFormat = ImageFileFormat.detect(from: data)
         } else {
             fatalError("ImageSource: A load was attempted without a valid image data or URL object.")
         }
 
-        // `CGImageSourceCreate` will still produce a non-nil value even if the image data was invalid.
-        // While we can use ImageIO to verify the image data's state, for speediness, let's just
-        // rely on fetching the image size as that alone is a valid guarantee.
-        guard let imageSource,
-              let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
-              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
-              let height = properties[kCGImagePropertyPixelHeight] as? CGFloat else { return false }
+        guard let source else { return false }
+
+        // Read properties from the image header
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return false
+        }
+
+        let width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
+        let height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
+        guard width > 0, height > 0 else { return false }
+
+        // Detect format from UTI if not already detected via magic bytes
+        if self.fileFormat == nil, let uti = CGImageSourceGetType(source) as String? {
+            self.fileFormat = ImageFileFormat.allCases.first {
+                ($0.uniformTypeIdentifier as String) == uti
+            }
+        }
+
+        self.cgImageSource = source
         self.imageSize = CGSize(width: width, height: height)
+        self.hasAlpha = properties[kCGImagePropertyHasAlpha] as? Bool ?? false
 
-        // While the image size is mandatory, save some of the more common properties while we have the data.
-        if let colorModel = properties[kCGImagePropertyColorModel] as? String {
-            self.colorModel = ImageColorModel(colorModel: colorModel)
+        if let colorModelString = properties[kCGImagePropertyColorModel] as? String {
+            self.colorModel = ImageColorModel(colorModel: colorModelString)
         }
-        if let colorProfile = properties[kCGImagePropertyProfileName] as? String {
-            self.colorProfile = colorProfile
-        }
-        if let hasAlpha = properties[kCGImagePropertyHasAlpha] as? Bool {
-            self.hasAlpha = hasAlpha
+        if let profileName = properties[kCGImagePropertyProfileName] as? String {
+            self.colorProfile = profileName
         }
 
-        // Everything passed, so the image is now sucessfully loaded
-        self.imageSource = imageSource
-        isLoaded = true
+        self.isLoaded = true
         return true
-    }
-
-    /// Generates a downscaled copy of the original image, optimistically avoiding decoding
-    /// the whole original image into memory if possible.
-    /// - Parameter size: The preferred bounding size that the thumbnail will scale to fit in.
-    /// - Returns: The downscaled image if successful, nil otherwise.
-    public func makeThumbnail(fittingSize size: CGSize, downscaleStrategy: DownscaleStrategy = .fullDecode) -> UIImage? {
-        let scale = min(size.width / imageSize.width, size.height / imageSize.height)
-        let newSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-
-        guard let image = downscaleStrategy == .fullDecode ?
-                makeThumbnailFromFullDecode(size: newSize) :
-                    makePartiallyDecodedThumbnail(size: newSize) else { return nil }
-
-        return UIImage(cgImage: image)
     }
 }
 
-// MARK: - Thumbnail Creation
+// MARK: - Quick Look
 
 extension ImageSource {
-
-    private func makeThumbnailFromFullDecode(size: CGSize) -> CGImage? {
-        guard let imageSource, size != .zero else { return nil }
-        let width = Int(size.width), height = Int(size.height)
-
-        // Convert the image source to an image we can render out
-        let options: CFDictionary = [
-                kCGImageSourceShouldCache: false,
-                kCGImageSourceShouldCacheImmediately: false
-            ] as CFDictionary
-
-        guard let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) else { return nil }
-
-        // Use grayscale where we can, but default to RGB for all else.
-        let colorSpace = (colorModel ?? .rgb) == .grayscale ?
-                        CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB()
-        let alphaInfo: CGImageAlphaInfo = hasAlpha ? .noneSkipLast : .premultipliedLast
-        let bitmapInfo = CGBitmapInfo(rawValue: alphaInfo.rawValue)
-
-        // Create the context to draw into
-        guard let ctx = CGContext(
-            data: nil,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo.rawValue
-        ) else {
-            return nil
+    @objc func debugQuickLookObject() -> Any? {
+        if let thumbnail = makeThumbnail(fittingSize: CGSize(width: 512, height: 512)) {
+            return thumbnail
         }
-
-        // Draw directly into the destination buffer
-        ctx.interpolationQuality = .high
-        ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return ctx.makeImage()
-    }
-
-    private func makePartiallyDecodedThumbnail(size: CGSize) -> CGImage? {
-        guard let imageSource, size != .zero else { return nil }
-        let options = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height),
-        ] as CFDictionary
-        return CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options)
+        if isLoaded {
+            let format = fileFormat?.fileExtensions.first?.uppercased() ?? "Unknown"
+            return "\(format) \(Int(imageSize.width))×\(Int(imageSize.height))"
+        }
+        return "ImageSource (not loaded)"
     }
 }

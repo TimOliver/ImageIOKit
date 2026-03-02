@@ -1,0 +1,24 @@
+{
+  "originHash" : "0c4d4c7db6c30ef5c14dfb6d3189c1d26378f1eebfdbd890b5dd9ceddd5da2a1",
+  "pins" : [
+    {
+      "identity" : "libjpeg-turbo-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/TimOliver/libjpeg-turbo-cocoa.git",
+      "state" : {
+        "revision" : "9b8a24dc9223f18c1da24978d12e734cb78d956c",
+        "version" : "3.1.3"
+      }
+    },
+    {
+      "identity" : "libjxl-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/TimOliver/libjxl-cocoa",
+      "state" : {
+        "revision" : "149f109940c3651b41f8ccba8fbf6a247b6be705",
+        "version" : "0.11.2"
+      }
+    }
+  ],
+  "version" : 3
+}
