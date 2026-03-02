@@ -26,6 +26,21 @@ public final class ImageSampleData {
         guard let bundleURL = Bundle(for: Self.self).resourceURL else {
             fatalError("Unable to find main bundle")
         }
-        return bundleURL.appendingPathComponent("ApplePark.\(format.rawValue)")
+        switch format {
+        case .jpegXL:
+            // Default JXL sample is the JPEG-derived variant (supports reconstruction)
+            return bundleURL.appendingPathComponent("ApplePark-JPG.jxl")
+        default:
+            return bundleURL.appendingPathComponent("ApplePark.\(format.rawValue)")
+        }
+    }
+
+    /// URL for the JXL sample that was created from a non-JPEG source (PNG).
+    /// This variant does NOT support JPEG reconstruction.
+    static func urlForPNGDerivedJXL() -> URL {
+        guard let bundleURL = Bundle(for: Self.self).resourceURL else {
+            fatalError("Unable to find main bundle")
+        }
+        return bundleURL.appendingPathComponent("ApplePark-PNG.jxl")
     }
 }

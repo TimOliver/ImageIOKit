@@ -172,7 +172,17 @@ public final class ImageSource {
     /// - Parameter size: The preferred bounding size that the thumbnail will scale to fit in.
     /// - Returns: The downscaled image if successful, nil otherwise.
     public func makeThumbnail(fittingSize size: CGSize) -> UIImage? {
-        guard let cgImageSource, isLoaded else { return nil }
+        guard isLoaded else { return nil }
+
+        // JXL: decode via libjxl callback decoder for lower peak memory,
+        // then scale down to the requested thumbnail size.
+        if fileFormat == .jpegXL {
+            if let thumbnail = makeJXLThumbnail(fittingSize: size) {
+                return thumbnail
+            }
+        }
+
+        guard let cgImageSource else { return nil }
 
         let maxDimension = max(size.width, size.height)
         let options: [CFString: Any] = [
@@ -185,6 +195,55 @@ public final class ImageSource {
             return nil
         }
         return UIImage(cgImage: cgImage)
+    }
+
+    /// Decodes a JXL image via libjxl's callback decoder and scales it
+    /// down to fit within the given bounding size.
+    private func makeJXLThumbnail(fittingSize size: CGSize) -> UIImage? {
+        let decoder: JXLDecoder?
+        if let url {
+            decoder = JXLDecoder(url: url)
+        } else if let data {
+            decoder = JXLDecoder(data: data)
+        } else {
+            return nil
+        }
+
+        guard let decoder,
+              let pixelBuffer = try? decoder.decode(),
+              let fullImage = pixelBuffer.makeCGImage() else {
+            return nil
+        }
+
+        // Compute the scaled size that fits within the bounding box
+        let imageWidth = CGFloat(pixelBuffer.width)
+        let imageHeight = CGFloat(pixelBuffer.height)
+        let scale = min(size.width / imageWidth, size.height / imageHeight)
+        // If the image already fits, return it directly
+        if scale >= 1.0 {
+            return UIImage(cgImage: fullImage)
+        }
+
+        let targetWidth = Int((imageWidth * scale).rounded())
+        let targetHeight = Int((imageHeight * scale).rounded())
+
+        // Scale via CGContext
+        guard let colorSpace = fullImage.colorSpace,
+              let ctx = CGContext(
+                data: nil,
+                width: targetWidth,
+                height: targetHeight,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              ) else {
+            return nil
+        }
+        ctx.interpolationQuality = .high
+        ctx.draw(fullImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
+        guard let scaled = ctx.makeImage() else { return nil }
+        return UIImage(cgImage: scaled)
     }
 
     // MARK: - Region Decode

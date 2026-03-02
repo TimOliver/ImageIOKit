@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		221C5ABA2F09226A00CC2C9F /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
 		221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
 		221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */; };
 		221C5ABD2F09226A00CC2C9F /* ApplePark.webp in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610B2D3A5155007AFCF3 /* ApplePark.webp */; };
@@ -20,12 +19,15 @@
 		221D5F1229EBD709006E60AB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 221D5F1029EBD709006E60AB /* LaunchScreen.storyboard */; };
 		221D5F1D29EBD709006E60AB /* ImageSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */; };
 		222654382F062FCD00A76F85 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
-		222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 222654372F062FCD00A76F85 /* ApplePark.jxl */; };
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
 		2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543C2F066F5100A76F85 /* ImageColorModel.swift */; };
 		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		226343EC2F55B7DD0017941C /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EB2F55B7DD0017941C /* libjpeg */; };
 		226343EF2F55B7E60017941C /* jxl in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EE2F55B7E60017941C /* jxl */; };
+		226343F52F55CBC00017941C /* ApplePark-JPG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F32F55CBC00017941C /* ApplePark-JPG.jxl */; };
+		226343F62F55CBC00017941C /* ApplePark-PNG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F42F55CBC00017941C /* ApplePark-PNG.jxl */; };
+		226343F72F55CBC00017941C /* ApplePark-JPG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F32F55CBC00017941C /* ApplePark-JPG.jxl */; };
+		226343F82F55CBC00017941C /* ApplePark-PNG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F42F55CBC00017941C /* ApplePark-PNG.jxl */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* CGImage+Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -43,6 +45,7 @@
 		A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000007 /* MemoryTrackingTests.swift */; };
 		A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000009 /* PixelBufferMetalTests.swift */; };
 		A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2600000000000A /* SoftwareScalerTests.swift */; };
+		A20000012F2600000000000B /* JXLDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2600000000000B /* JXLDecoderTests.swift */; };
 		F1000002000000000000000A /* TileDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000A /* TileDescriptor.swift */; };
 		F1000002000000000000000B /* TileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000B /* TileGrid.swift */; };
 		F1000002000000000000000C /* TileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000C /* TileManager.swift */; };
@@ -50,6 +53,7 @@
 		F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000E /* BackgroundColorDetector.swift */; };
 		F2000001201800000000000A /* JXLReconstructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000A /* JXLReconstructor.swift */; };
 		F2000001201800000000000B /* SoftwareScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000B /* SoftwareScaler.swift */; };
+		F2000001201800000000000C /* JXLDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000C /* JXLDecoder.swift */; };
 		F20000012F16000000000001 /* PixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000001 /* PixelBuffer.swift */; };
 		F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000002 /* PixelBuffer+Metal.swift */; };
 		F20000012F18000000000004 /* ImageDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000004 /* ImageDecoderError.swift */; };
@@ -83,11 +87,12 @@
 		221D5F1829EBD709006E60AB /* ImageIOKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageIOKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSourceTests.swift; sourceTree = "<group>"; };
 		222654362F062FCD00A76F85 /* ApplePark.avif */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.avif; sourceTree = "<group>"; };
-		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
 		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
 		2226543C2F066F5100A76F85 /* ImageColorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorModel.swift; sourceTree = "<group>"; };
 		226343F12F55B9050017941C /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		226343F22F55B9110017941C /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
+		226343F32F55CBC00017941C /* ApplePark-JPG.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ApplePark-JPG.jxl"; sourceTree = "<group>"; };
+		226343F42F55CBC00017941C /* ApplePark-PNG.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ApplePark-PNG.jxl"; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
 		22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGImage+Encoding.swift"; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
@@ -105,6 +110,7 @@
 		A10000012F26000000000007 /* MemoryTrackingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTrackingTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000009 /* PixelBufferMetalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBufferMetalTests.swift; sourceTree = "<group>"; };
 		A10000012F2600000000000A /* SoftwareScalerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScalerTests.swift; sourceTree = "<group>"; };
+		A10000012F2600000000000B /* JXLDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLDecoderTests.swift; sourceTree = "<group>"; };
 		F1000001000000000000000A /* TileDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileDescriptor.swift; sourceTree = "<group>"; };
 		F1000001000000000000000B /* TileGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileGrid.swift; sourceTree = "<group>"; };
 		F1000001000000000000000C /* TileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileManager.swift; sourceTree = "<group>"; };
@@ -112,6 +118,7 @@
 		F1000001000000000000000E /* BackgroundColorDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColorDetector.swift; sourceTree = "<group>"; };
 		F1000001201800000000000A /* JXLReconstructor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLReconstructor.swift; sourceTree = "<group>"; };
 		F1000001201800000000000B /* SoftwareScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScaler.swift; sourceTree = "<group>"; };
+		F1000001201800000000000C /* JXLDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLDecoder.swift; sourceTree = "<group>"; };
 		F10000012F16000000000001 /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		F10000012F16000000000002 /* PixelBuffer+Metal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PixelBuffer+Metal.swift"; sourceTree = "<group>"; };
 		F10000012F18000000000004 /* ImageDecoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoderError.swift; sourceTree = "<group>"; };
@@ -193,6 +200,7 @@
 				A10000012F26000000000007 /* MemoryTrackingTests.swift */,
 				A10000012F26000000000009 /* PixelBufferMetalTests.swift */,
 				A10000012F2600000000000A /* SoftwareScalerTests.swift */,
+				A10000012F2600000000000B /* JXLDecoderTests.swift */,
 			);
 			path = ImageIOKitTests;
 			sourceTree = "<group>";
@@ -225,8 +233,9 @@
 		22DB610C2D3A5155007AFCF3 /* SampleImages */ = {
 			isa = PBXGroup;
 			children = (
+				226343F32F55CBC00017941C /* ApplePark-JPG.jxl */,
+				226343F42F55CBC00017941C /* ApplePark-PNG.jxl */,
 				222654362F062FCD00A76F85 /* ApplePark.avif */,
-				222654372F062FCD00A76F85 /* ApplePark.jxl */,
 				22DB61082D3A5155007AFCF3 /* ApplePark.heic */,
 				22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */,
 				22DB610A2D3A5155007AFCF3 /* ApplePark.png */,
@@ -259,6 +268,7 @@
 		F30000012F18000000000001 /* Internal */ = {
 			isa = PBXGroup;
 			children = (
+				F1000001201800000000000C /* JXLDecoder.swift */,
 				F10000012F18000000000009 /* JPEGRegionDecoder.swift */,
 				F1000001201800000000000A /* JXLReconstructor.swift */,
 				F1000001201800000000000B /* SoftwareScaler.swift */,
@@ -386,10 +396,11 @@
 				221D5F0F29EBD709006E60AB /* Assets.xcassets in Resources */,
 				2257603B2F069111004F10C1 /* ApplePark.avif in Resources */,
 				221D5F0D29EBD708006E60AB /* Main.storyboard in Resources */,
-				221C5ABA2F09226A00CC2C9F /* ApplePark.jxl in Resources */,
 				221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */,
 				221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */,
 				221C5ABD2F09226A00CC2C9F /* ApplePark.webp in Resources */,
+				226343F52F55CBC00017941C /* ApplePark-JPG.jxl in Resources */,
+				226343F62F55CBC00017941C /* ApplePark-PNG.jxl in Resources */,
 				221C5ABE2F09226A00CC2C9F /* ApplePark.heic in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -399,10 +410,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				222654382F062FCD00A76F85 /* ApplePark.avif in Resources */,
-				222654392F062FCD00A76F85 /* ApplePark.jxl in Resources */,
 				22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */,
 				22DB610E2D3A5155007AFCF3 /* ApplePark.webp in Resources */,
 				22DB610F2D3A5155007AFCF3 /* ApplePark.heic in Resources */,
+				226343F72F55CBC00017941C /* ApplePark-JPG.jxl in Resources */,
+				226343F82F55CBC00017941C /* ApplePark-PNG.jxl in Resources */,
 				22DB61102D3A5155007AFCF3 /* ApplePark.jpeg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -431,6 +443,7 @@
 				F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */,
 				F2000001201800000000000A /* JXLReconstructor.swift in Sources */,
 				F2000001201800000000000B /* SoftwareScaler.swift in Sources */,
+				F2000001201800000000000C /* JXLDecoder.swift in Sources */,
 				F1000002000000000000000A /* TileDescriptor.swift in Sources */,
 				F1000002000000000000000B /* TileGrid.swift in Sources */,
 				F1000002000000000000000C /* TileManager.swift in Sources */,
@@ -455,6 +468,7 @@
 				A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */,
 				A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */,
 				A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */,
+				A20000012F2600000000000B /* JXLDecoderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
