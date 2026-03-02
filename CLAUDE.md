@@ -18,16 +18,16 @@ Image decode library for a comic reader app.
 - Two C library carve-outs:
   - **libjpeg** — JPEG region decode (`crop_scanline`) for tile-based zoom
   - **libjxl** — lossless JPEG reconstruction from JXL (`JXL_DEC_JPEG_RECONSTRUCTION`)
+- Encoding uses `CGImageDestinationAddImageFromSource` for zero-decode stream copies when no alpha strip is needed
 - `ImageSource.condition` transcodes non-JPEG sources to JPEG on disk, giving them shrink-on-load and region decode for free
 
 ## Key Classes
-- `ImageSource` — public facade wrapping `CGImageSource`. `decode(targetSize:cropRect:pixelFormat:)` for full/thumbnail/cropped decode into `PixelBuffer`. `isRegionDecodable` indicates JPEG sources that support native sub-region decode. Caches full-resolution `CGImage` via `NSCache` (purgeable under memory pressure). `estimatedDecodeMemory` for memory budgeting. Supports Xcode Quick Look via `debugQuickLookObject()`. Extended with `condition(maxDimension:to:)` and `transcode(to:)` for conditioning/transcoding workflows.
-- `CGImage` extensions — `encode(as:options:)` and `write(to:as:options:)` via `CGImageDestination`.
+- `ImageSource` — public facade wrapping `CGImageSource`. `decode(targetSize:cropRect:pixelFormat:)` for full/thumbnail/cropped decode into `PixelBuffer`. `isRegionDecodable` indicates JPEG sources that support native sub-region decode. Caches full-resolution `CGImage` via `NSCache` (purgeable under memory pressure). `estimatedDecodeMemory` for memory budgeting. Supports Xcode Quick Look via `debugQuickLookObject()`.
+- `ImageSource+Encoding` — `encode(as:quality:)` and `write(to:as:quality:)` via `CGImageDestination` with zero-decode fast path. `condition(maxDimension:to:quality:)` and `transcode(to:quality:)` for conditioning/transcoding workflows. `reconstructJPEGfromJPEGXL()` for lossless JXL → JPEG bitstream reconstruction.
+- `CGImage+Encoding` — internal `strippingAlpha()` helper for encoding alpha sources to opaque formats.
 - `JPEGRegionDecoder` — libjpeg `crop_scanline` for JPEG-only tile decode (`import jpeglib`)
 - `JXLReconstructor` — libjxl JPEG bitstream reconstruction for JXL-from-JPEG sources (`import jxl`)
-- `TileManager` — on-demand tile decode with `NSCache`. JPEG tiles via parallel region decode; all other formats via `CGImage.cropping(to:)` on the cached full decode.
 - `PixelBuffer` — C-allocated pixel data with zero-copy `CGImage` via retained `CGDataProvider`. Supports 4 formats: `rgba8`, `rgb8`, `gray8`, `grayAlpha8`. Metal texture creation via `makeTexture(device:)`.
-- `MarginDetector` / `BackgroundColorDetector` — thumbnail-based analysis for detecting uniform borders and background colors in comic pages.
 - `SoftwareScaler` — crop and aspect-ratio fitting utility for `PixelBuffer`.
 
 ## CGContext Constraints

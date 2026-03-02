@@ -38,13 +38,10 @@
 		A20000012F26000000000001 /* ImageSourceDecodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000001 /* ImageSourceDecodeTests.swift */; };
 		A20000012F26000000000002 /* ImageDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000002 /* ImageDestinationTests.swift */; };
 		A20000012F26000000000003 /* PixelBufferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000003 /* PixelBufferTests.swift */; };
-		A20000012F26000000000006 /* AnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000006 /* AnalysisTests.swift */; };
 		A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000007 /* MemoryTrackingTests.swift */; };
 		A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F26000000000009 /* PixelBufferMetalTests.swift */; };
 		A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2600000000000A /* SoftwareScalerTests.swift */; };
 		A20000012F2600000000000B /* JXLDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2600000000000B /* JXLDecoderTests.swift */; };
-		F1000002000000000000000D /* MarginDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000D /* MarginDetector.swift */; };
-		F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001000000000000000E /* BackgroundColorDetector.swift */; };
 		F2000001201800000000000A /* JXLReconstructor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000A /* JXLReconstructor.swift */; };
 		F2000001201800000000000B /* SoftwareScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000B /* SoftwareScaler.swift */; };
 		F2000001201800000000000C /* JXLDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000001201800000000000C /* JXLDecoder.swift */; };
@@ -52,8 +49,6 @@
 		F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000002 /* PixelBuffer+Metal.swift */; };
 		F20000012F18000000000004 /* ImageDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000004 /* ImageDecoderError.swift */; };
 		F20000012F18000000000006 /* ImageEncoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000006 /* ImageEncoderError.swift */; };
-		F20000012F18000000000007 /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000007 /* BackgroundColor.swift */; };
-		F20000012F18000000000008 /* ImageMargins.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000008 /* ImageMargins.swift */; };
 		F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000009 /* JPEGRegionDecoder.swift */; };
 		F20000012F1800000000000A /* ImageSource+Decoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F1800000000000A /* ImageSource+Decoding.swift */; };
 		F20000012F1800000000000B /* ImageSource+Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F1800000000000B /* ImageSource+Encoding.swift */; };
@@ -98,13 +93,10 @@
 		A10000012F26000000000001 /* ImageSourceDecodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSourceDecodeTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000002 /* ImageDestinationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDestinationTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000003 /* PixelBufferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBufferTests.swift; sourceTree = "<group>"; };
-		A10000012F26000000000006 /* AnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000007 /* MemoryTrackingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTrackingTests.swift; sourceTree = "<group>"; };
 		A10000012F26000000000009 /* PixelBufferMetalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBufferMetalTests.swift; sourceTree = "<group>"; };
 		A10000012F2600000000000A /* SoftwareScalerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScalerTests.swift; sourceTree = "<group>"; };
 		A10000012F2600000000000B /* JXLDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLDecoderTests.swift; sourceTree = "<group>"; };
-		F1000001000000000000000D /* MarginDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarginDetector.swift; sourceTree = "<group>"; };
-		F1000001000000000000000E /* BackgroundColorDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColorDetector.swift; sourceTree = "<group>"; };
 		F1000001201800000000000A /* JXLReconstructor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLReconstructor.swift; sourceTree = "<group>"; };
 		F1000001201800000000000B /* SoftwareScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareScaler.swift; sourceTree = "<group>"; };
 		F1000001201800000000000C /* JXLDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JXLDecoder.swift; sourceTree = "<group>"; };
@@ -112,8 +104,6 @@
 		F10000012F16000000000002 /* PixelBuffer+Metal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PixelBuffer+Metal.swift"; sourceTree = "<group>"; };
 		F10000012F18000000000004 /* ImageDecoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoderError.swift; sourceTree = "<group>"; };
 		F10000012F18000000000006 /* ImageEncoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEncoderError.swift; sourceTree = "<group>"; };
-		F10000012F18000000000007 /* BackgroundColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColor.swift; sourceTree = "<group>"; };
-		F10000012F18000000000008 /* ImageMargins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMargins.swift; sourceTree = "<group>"; };
 		F10000012F18000000000009 /* JPEGRegionDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JPEGRegionDecoder.swift; sourceTree = "<group>"; };
 		F10000012F1800000000000A /* ImageSource+Decoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ImageSource+Decoding.swift"; sourceTree = "<group>"; };
 		F10000012F1800000000000B /* ImageSource+Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ImageSource+Encoding.swift"; sourceTree = "<group>"; };
@@ -184,7 +174,6 @@
 				A10000012F26000000000001 /* ImageSourceDecodeTests.swift */,
 				A10000012F26000000000002 /* ImageDestinationTests.swift */,
 				A10000012F26000000000003 /* PixelBufferTests.swift */,
-				A10000012F26000000000006 /* AnalysisTests.swift */,
 				A10000012F26000000000007 /* MemoryTrackingTests.swift */,
 				A10000012F26000000000009 /* PixelBufferMetalTests.swift */,
 				A10000012F2600000000000A /* SoftwareScalerTests.swift */,
@@ -210,7 +199,6 @@
 				F30000012F18000000000004 /* Decoding */,
 				F30000012F18000000000005 /* Encoding */,
 				F30000012F18000000000006 /* PixelBuffer */,
-				F30000012F16000000000003 /* Analysis */,
 				F30000012F18000000000001 /* Internal */,
 			);
 			path = ImageIOKit;
@@ -228,17 +216,6 @@
 				22DB610B2D3A5155007AFCF3 /* ApplePark.webp */,
 			);
 			path = SampleImages;
-			sourceTree = "<group>";
-		};
-		F30000012F16000000000003 /* Analysis */ = {
-			isa = PBXGroup;
-			children = (
-				F10000012F18000000000007 /* BackgroundColor.swift */,
-				F1000001000000000000000E /* BackgroundColorDetector.swift */,
-				F10000012F18000000000008 /* ImageMargins.swift */,
-				F1000001000000000000000D /* MarginDetector.swift */,
-			);
-			path = Analysis;
 			sourceTree = "<group>";
 		};
 		F30000012F18000000000001 /* Internal */ = {
@@ -415,14 +392,10 @@
 				F20000012F1800000000000A /* ImageSource+Decoding.swift in Sources */,
 				F20000012F1800000000000B /* ImageSource+Encoding.swift in Sources */,
 				F20000012F18000000000006 /* ImageEncoderError.swift in Sources */,
-				F20000012F18000000000007 /* BackgroundColor.swift in Sources */,
-				F20000012F18000000000008 /* ImageMargins.swift in Sources */,
 				F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */,
 				F2000001201800000000000A /* JXLReconstructor.swift in Sources */,
 				F2000001201800000000000B /* SoftwareScaler.swift in Sources */,
 				F2000001201800000000000C /* JXLDecoder.swift in Sources */,
-				F1000002000000000000000D /* MarginDetector.swift in Sources */,
-				F1000002000000000000000E /* BackgroundColorDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -436,7 +409,6 @@
 				A20000012F26000000000001 /* ImageSourceDecodeTests.swift in Sources */,
 				A20000012F26000000000002 /* ImageDestinationTests.swift in Sources */,
 				A20000012F26000000000003 /* PixelBufferTests.swift in Sources */,
-				A20000012F26000000000006 /* AnalysisTests.swift in Sources */,
 				A20000012F26000000000007 /* MemoryTrackingTests.swift in Sources */,
 				A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */,
 				A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */,
