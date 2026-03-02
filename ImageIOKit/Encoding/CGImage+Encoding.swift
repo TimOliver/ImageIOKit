@@ -17,10 +17,10 @@ public extension CGImage {
     /// Encode to the specified format.
     /// - Parameters:
     ///   - format: The target image file format.
-    ///   - options: Encoding options (quality).
+    ///   - quality: Compression quality from 0.0 (smallest file) to 1.0 (best quality). Default is 0.85.
     /// - Returns: The encoded image data.
     func encode(as format: ImageFileFormat,
-                options: EncodeOptions = EncodeOptions()) throws -> Data {
+                quality: Double = 0.85) throws -> Data {
         let finalImage = format.isOpaque ? strippingAlpha() : self
         let data = NSMutableData()
         guard let dest = CGImageDestinationCreateWithData(data, format.uniformTypeIdentifier, 1, nil) else {
@@ -28,7 +28,7 @@ public extension CGImage {
         }
 
         let properties: [CFString: Any] = [
-            kCGImageDestinationLossyCompressionQuality: options.quality
+            kCGImageDestinationLossyCompressionQuality: max(0.0, min(1.0, quality))
         ]
         CGImageDestinationAddImage(dest, finalImage, properties as CFDictionary)
 
@@ -42,16 +42,16 @@ public extension CGImage {
     /// - Parameters:
     ///   - url: The file URL to write to.
     ///   - format: The target image file format.
-    ///   - options: Encoding options (quality).
+    ///   - quality: Compression quality from 0.0 (smallest file) to 1.0 (best quality). Default is 0.85.
     func write(to url: URL, as format: ImageFileFormat,
-               options: EncodeOptions = EncodeOptions()) throws {
+               quality: Double = 0.85) throws {
         let finalImage = format.isOpaque ? strippingAlpha() : self
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, format.uniformTypeIdentifier, 1, nil) else {
             throw ImageEncoderError.encodeFailed("Failed to create CGImageDestination for \(format)")
         }
 
         let properties: [CFString: Any] = [
-            kCGImageDestinationLossyCompressionQuality: options.quality
+            kCGImageDestinationLossyCompressionQuality: max(0.0, min(1.0, quality))
         ]
         CGImageDestinationAddImage(dest, finalImage, properties as CFDictionary)
 

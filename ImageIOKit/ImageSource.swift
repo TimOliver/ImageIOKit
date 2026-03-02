@@ -204,10 +204,10 @@ public extension ImageSource {
     ///                   Images larger than this are downscaled (preserving aspect ratio)
     ///                   before encoding. Defaults to 4096.
     ///   - url: The file URL to write the conditioned JPEG to.
-    ///   - encodeOptions: Options for JPEG encoding (quality). Defaults to standard quality.
+    ///   - quality: Compression quality from 0.0 (smallest) to 1.0 (best). Default is 0.85.
     func condition(maxDimension: Int = 4096,
                    to url: URL,
-                   encodeOptions: EncodeOptions = EncodeOptions()) throws -> ImageSource {
+                   quality: Double = 0.85) throws -> ImageSource {
         let maxDim = CGFloat(maxDimension)
         let longEdge = max(imageSize.width, imageSize.height)
 
@@ -240,7 +240,7 @@ public extension ImageSource {
             guard let thumb = CGImageSourceCreateThumbnailAtIndex(jpegSource, 0, thumbOptions as CFDictionary) else {
                 throw ImageEncoderError.encodeFailed("Failed to create thumbnail from reconstructed JPEG")
             }
-            try thumb.write(to: url, as: .jpeg, options: encodeOptions)
+            try thumb.write(to: url, as: .jpeg, quality: quality)
             guard let conditioned = ImageSource(url: url) else {
                 throw ImageEncoderError.encodeFailed("Failed to load conditioned JPEG")
             }
@@ -271,7 +271,7 @@ public extension ImageSource {
             cgImage = full
         }
 
-        try cgImage.write(to: url, as: .jpeg, options: encodeOptions)
+        try cgImage.write(to: url, as: .jpeg, quality: quality)
 
         guard let conditioned = ImageSource(url: url) else {
             throw ImageEncoderError.encodeFailed("Failed to load conditioned JPEG")
@@ -287,10 +287,10 @@ public extension ImageSource {
     ///
     /// - Parameters:
     ///   - format: The target image file format.
-    ///   - encodeOptions: Options for encoding to the target format.
+    ///   - quality: Compression quality from 0.0 (smallest) to 1.0 (best). Default is 0.85.
     /// - Returns: The transcoded image data.
     func transcode(to format: ImageFileFormat,
-                   encodeOptions: EncodeOptions = EncodeOptions()) throws -> Data {
+                   quality: Double = 0.85) throws -> Data {
         // Fast path: JXL → JPEG via lossless bitstream reconstruction
         if format == .jpeg, fileFormat == .jpegXL,
            let jpegData = reconstructJPEG() {
@@ -300,7 +300,7 @@ public extension ImageSource {
         guard let cgImage = decodeFullCGImage() else {
             throw ImageEncoderError.encodeFailed("Failed to decode source image for transcoding")
         }
-        return try cgImage.encode(as: format, options: encodeOptions)
+        return try cgImage.encode(as: format, quality: quality)
     }
 }
 

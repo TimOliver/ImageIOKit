@@ -66,10 +66,8 @@ final class ImageDestinationTests: XCTestCase {
 
     func testEncodeQualityAffectsSize() throws {
         let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let lowQ = try cgImage.encode(as: .jpeg,
-                                      options: EncodeOptions(quality: 0.1))
-        let highQ = try cgImage.encode(as: .jpeg,
-                                       options: EncodeOptions(quality: 0.95))
+        let lowQ = try cgImage.encode(as: .jpeg, quality: 0.1)
+        let highQ = try cgImage.encode(as: .jpeg, quality: 0.95)
         XCTAssertGreaterThan(highQ.count, lowQ.count,
                              "Higher quality should produce larger data")
     }
@@ -196,16 +194,14 @@ final class ImageDestinationTests: XCTestCase {
         XCTAssertEqual(data[0], 0x89)
     }
 
-    // MARK: - EncodeOptions
+    // MARK: - Quality Clamping
 
-    func testEncodeOptionsQualityClamping() {
-        let low = EncodeOptions(quality: -0.5)
-        XCTAssertEqual(low.quality, 0.0, accuracy: 0.001)
-
-        let high = EncodeOptions(quality: 1.5)
-        XCTAssertEqual(high.quality, 1.0, accuracy: 0.001)
-
-        let normal = EncodeOptions(quality: 0.5)
-        XCTAssertEqual(normal.quality, 0.5, accuracy: 0.001)
+    func testEncodeQualityClamping() throws {
+        let cgImage = decodeThumbnailCGImage(for: .jpeg)
+        // Out-of-range values should not crash — they are clamped internally
+        let underflow = try cgImage.encode(as: .jpeg, quality: -0.5)
+        XCTAssertGreaterThan(underflow.count, 0)
+        let overflow = try cgImage.encode(as: .jpeg, quality: 1.5)
+        XCTAssertGreaterThan(overflow.count, 0)
     }
 }

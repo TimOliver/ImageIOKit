@@ -57,12 +57,11 @@
 		F20000012F16000000000001 /* PixelBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000001 /* PixelBuffer.swift */; };
 		F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F16000000000002 /* PixelBuffer+Metal.swift */; };
 		F20000012F18000000000004 /* ImageDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000004 /* ImageDecoderError.swift */; };
-		F20000012F1800000000000A /* ImageSource+Decoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F1800000000000A /* ImageSource+Decoding.swift */; };
-		F20000012F18000000000005 /* EncodeOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000005 /* EncodeOptions.swift */; };
 		F20000012F18000000000006 /* ImageEncoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000006 /* ImageEncoderError.swift */; };
 		F20000012F18000000000007 /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000007 /* BackgroundColor.swift */; };
 		F20000012F18000000000008 /* ImageMargins.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000008 /* ImageMargins.swift */; };
 		F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F18000000000009 /* JPEGRegionDecoder.swift */; };
+		F20000012F1800000000000A /* ImageSource+Decoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F1800000000000A /* ImageSource+Decoding.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,12 +122,11 @@
 		F10000012F16000000000001 /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		F10000012F16000000000002 /* PixelBuffer+Metal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PixelBuffer+Metal.swift"; sourceTree = "<group>"; };
 		F10000012F18000000000004 /* ImageDecoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDecoderError.swift; sourceTree = "<group>"; };
-		F10000012F1800000000000A /* ImageSource+Decoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ImageSource+Decoding.swift"; sourceTree = "<group>"; };
-		F10000012F18000000000005 /* EncodeOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeOptions.swift; sourceTree = "<group>"; };
 		F10000012F18000000000006 /* ImageEncoderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEncoderError.swift; sourceTree = "<group>"; };
 		F10000012F18000000000007 /* BackgroundColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColor.swift; sourceTree = "<group>"; };
 		F10000012F18000000000008 /* ImageMargins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMargins.swift; sourceTree = "<group>"; };
 		F10000012F18000000000009 /* JPEGRegionDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JPEGRegionDecoder.swift; sourceTree = "<group>"; };
+		F10000012F1800000000000A /* ImageSource+Decoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ImageSource+Decoding.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,9 +223,9 @@
 				F30000012F18000000000004 /* Decoding */,
 				F30000012F18000000000005 /* Encoding */,
 				F30000012F18000000000006 /* PixelBuffer */,
-				F30000012F18000000000001 /* Internal */,
 				F30000012F16000000000002 /* Tiling */,
 				F30000012F16000000000003 /* Analysis */,
+				F30000012F18000000000001 /* Internal */,
 			);
 			path = ImageIOKit;
 			sourceTree = "<group>";
@@ -281,8 +279,8 @@
 		F30000012F18000000000004 /* Decoding */ = {
 			isa = PBXGroup;
 			children = (
-				F10000012F18000000000004 /* ImageDecoderError.swift */,
 				F10000012F1800000000000A /* ImageSource+Decoding.swift */,
+				F10000012F18000000000004 /* ImageDecoderError.swift */,
 			);
 			path = Decoding;
 			sourceTree = "<group>";
@@ -291,7 +289,6 @@
 			isa = PBXGroup;
 			children = (
 				22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */,
-				F10000012F18000000000005 /* EncodeOptions.swift */,
 				F10000012F18000000000006 /* ImageEncoderError.swift */,
 			);
 			path = Encoding;
@@ -440,7 +437,6 @@
 				F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */,
 				F20000012F18000000000004 /* ImageDecoderError.swift in Sources */,
 				F20000012F1800000000000A /* ImageSource+Decoding.swift in Sources */,
-				F20000012F18000000000005 /* EncodeOptions.swift in Sources */,
 				F20000012F18000000000006 /* ImageEncoderError.swift in Sources */,
 				F20000012F18000000000007 /* BackgroundColor.swift in Sources */,
 				F20000012F18000000000008 /* ImageMargins.swift in Sources */,
