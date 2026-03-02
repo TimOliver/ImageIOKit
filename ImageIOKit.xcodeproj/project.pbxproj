@@ -20,7 +20,6 @@
 		221D5F1D29EBD709006E60AB /* ImageSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */; };
 		222654382F062FCD00A76F85 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
-		2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543C2F066F5100A76F85 /* ImageColorModel.swift */; };
 		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		226343EC2F55B7DD0017941C /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EB2F55B7DD0017941C /* libjpeg */; };
 		226343EF2F55B7E60017941C /* jxl in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EE2F55B7E60017941C /* jxl */; };
@@ -84,7 +83,6 @@
 		221D5F1C29EBD709006E60AB /* ImageSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSourceTests.swift; sourceTree = "<group>"; };
 		222654362F062FCD00A76F85 /* ApplePark.avif */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.avif; sourceTree = "<group>"; };
 		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
-		2226543C2F066F5100A76F85 /* ImageColorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorModel.swift; sourceTree = "<group>"; };
 		226343F12F55B9050017941C /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		226343F22F55B9110017941C /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
 		226343F32F55CBC00017941C /* ApplePark-JPG.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ApplePark-JPG.jxl"; sourceTree = "<group>"; };
@@ -209,7 +207,6 @@
 			children = (
 				22DB61002D3A045C007AFCF3 /* ImageSource.swift */,
 				22DB61132D3B6053007AFCF3 /* ImageFileFormat.swift */,
-				2226543C2F066F5100A76F85 /* ImageColorModel.swift */,
 				F30000012F18000000000004 /* Decoding */,
 				F30000012F18000000000005 /* Encoding */,
 				F30000012F18000000000006 /* PixelBuffer */,
@@ -412,7 +409,6 @@
 				221D5F0629EBD708006E60AB /* AppDelegate.swift in Sources */,
 				22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */,
 				221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */,
-				2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */,
 				F20000012F16000000000001 /* PixelBuffer.swift in Sources */,
 				F20000012F16000000000002 /* PixelBuffer+Metal.swift in Sources */,
 				F20000012F18000000000004 /* ImageDecoderError.swift in Sources */,

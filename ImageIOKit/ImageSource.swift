@@ -12,6 +12,24 @@ import CoreGraphics
 import ImageIO
 import UIKit
 
+/// The types of color modes in which an image may be encoded.
+public enum ImageColorModel {
+    case rgb
+    case grayscale
+    case cmyk
+    case lab
+
+    internal init?(colorModel: String) {
+        switch (colorModel as CFString) {
+        case kCGImagePropertyColorModelRGB: self = .rgb
+        case kCGImagePropertyColorModelGray: self = .grayscale
+        case kCGImagePropertyColorModelCMYK: self = .cmyk
+        case kCGImagePropertyColorModelLab: self = .lab
+        default: return nil
+        }
+    }
+}
+
 /// An image source represents an arbitrary location of a compressed
 /// image file, whether it be a file on disk, or directly in memory.
 ///
@@ -161,26 +179,6 @@ public final class ImageSource {
 
         self.isLoaded = true
         return true
-    }
-
-    // MARK: - JPEG Reconstruction
-
-    /// For JXL images that were created by losslessly recompressing a JPEG,
-    /// reconstructs the exact original JPEG bitstream. Returns `nil` if the
-    /// source is not JXL or was not derived from a JPEG.
-    public func reconstructJPEG() -> Data? {
-        guard fileFormat == .jpegXL else { return nil }
-
-        let reconstructor: JXLReconstructor?
-        if let url {
-            reconstructor = JXLReconstructor(url: url)
-        } else if let data {
-            reconstructor = JXLReconstructor(data: data)
-        } else {
-            return nil
-        }
-
-        return reconstructor?.reconstructJPEG()
     }
 }
 

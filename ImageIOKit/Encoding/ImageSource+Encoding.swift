@@ -102,7 +102,7 @@ public extension ImageSource {
 
         // JXL → lossless JPEG reconstruction avoids the expensive full JXL decode.
         // If the reconstructed JPEG is oversized, thumbnail it via ImageIO.
-        if fileFormat == .jpegXL, let jpegData = reconstructJPEG() {
+        if fileFormat == .jpegXL, let jpegData = reconstructJPEGfromJPEGXL() {
             if longEdge <= maxDim {
                 // Fits — write reconstructed JPEG directly
                 try jpegData.write(to: url)
@@ -194,11 +194,31 @@ public extension ImageSource {
                    quality: Double = 0.85) throws -> Data {
         // Fast path: JXL → JPEG via lossless bitstream reconstruction
         if format == .jpeg, fileFormat == .jpegXL,
-           let jpegData = reconstructJPEG() {
+           let jpegData = reconstructJPEGfromJPEGXL() {
             return jpegData
         }
 
         return try encode(as: format, quality: quality)
+    }
+
+    // MARK: - JPEG Reconstruction
+
+    /// For JXL images that were created by losslessly recompressing a JPEG,
+    /// reconstructs the exact original JPEG bitstream. Returns `nil` if the
+    /// source is not JXL or was not derived from a JPEG.
+    func reconstructJPEGfromJPEGXL() -> Data? {
+        guard fileFormat == .jpegXL else { return nil }
+
+        let reconstructor: JXLReconstructor?
+        if let url {
+            reconstructor = JXLReconstructor(url: url)
+        } else if let data {
+            reconstructor = JXLReconstructor(data: data)
+        } else {
+            return nil
+        }
+
+        return reconstructor?.reconstructJPEG()
     }
 }
 
