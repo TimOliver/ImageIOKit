@@ -18,15 +18,6 @@ final class ImageDestinationTests: XCTestCase {
         return source
     }
 
-    private func decodeThumbnailCGImage(for format: ImageSampleData.Format) -> CGImage {
-        let source = makeSource(for: format)
-        guard let buffer = try? source.decode(targetSize: CGSize(width: 200, height: 200)),
-              let cgImage = buffer.makeCGImage() else {
-            fatalError("Failed to decode thumbnail for \(format)")
-        }
-        return cgImage
-    }
-
     private var tempDirectory: URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("ImageIOKitTests-\(UUID().uuidString)")
@@ -41,8 +32,8 @@ final class ImageDestinationTests: XCTestCase {
     // MARK: - Encode
 
     func testEncodeToJPEG() throws {
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let data = try cgImage.encode(as: .jpeg)
+        let source = makeSource(for: .jpeg)
+        let data = try source.encode(as: .jpeg)
         XCTAssertGreaterThan(data.count, 0)
         // Verify JPEG magic bytes
         XCTAssertEqual(data[0], 0xFF)
@@ -50,8 +41,8 @@ final class ImageDestinationTests: XCTestCase {
     }
 
     func testEncodeToPNG() throws {
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let data = try cgImage.encode(as: .png)
+        let source = makeSource(for: .jpeg)
+        let data = try source.encode(as: .png)
         XCTAssertGreaterThan(data.count, 0)
         // Verify PNG magic bytes
         XCTAssertEqual(data[0], 0x89)
@@ -59,15 +50,17 @@ final class ImageDestinationTests: XCTestCase {
     }
 
     func testEncodeToHEIC() throws {
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let data = try cgImage.encode(as: .heic)
+        let source = makeSource(for: .jpeg)
+        let data = try source.encode(as: .heic)
         XCTAssertGreaterThan(data.count, 0)
     }
 
     func testEncodeQualityAffectsSize() throws {
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
-        let lowQ = try cgImage.encode(as: .jpeg, quality: 0.1)
-        let highQ = try cgImage.encode(as: .jpeg, quality: 0.95)
+        // Use a PNG source encoding to JPEG to ensure re-encoding occurs
+        // (same-format stream copy would produce identical output regardless of quality)
+        let source = makeSource(for: .png)
+        let lowQ = try source.encode(as: .jpeg, quality: 0.1)
+        let highQ = try source.encode(as: .jpeg, quality: 0.95)
         XCTAssertGreaterThan(highQ.count, lowQ.count,
                              "Higher quality should produce larger data")
     }
@@ -78,28 +71,28 @@ final class ImageDestinationTests: XCTestCase {
         let dir = makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
 
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
+        let source = makeSource(for: .jpeg)
         let outputURL = dir.appendingPathComponent("output.jpeg")
-        try cgImage.write(to: outputURL, as: .jpeg)
+        try source.write(to: outputURL, as: .jpeg)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.path))
         // Verify the file is a valid image
-        let source = ImageSource(url: outputURL)
-        XCTAssertNotNil(source)
-        XCTAssertGreaterThan(source?.imageSize.width ?? 0, 0)
+        let written = ImageSource(url: outputURL)
+        XCTAssertNotNil(written)
+        XCTAssertGreaterThan(written?.imageSize.width ?? 0, 0)
     }
 
     func testWriteToPNG() throws {
         let dir = makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
 
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
+        let source = makeSource(for: .jpeg)
         let outputURL = dir.appendingPathComponent("output.png")
-        try cgImage.write(to: outputURL, as: .png)
+        try source.write(to: outputURL, as: .png)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.path))
-        let source = ImageSource(url: outputURL)
-        XCTAssertNotNil(source)
+        let written = ImageSource(url: outputURL)
+        XCTAssertNotNil(written)
     }
 
     // MARK: - Condition
@@ -182,12 +175,7 @@ final class ImageDestinationTests: XCTestCase {
     }
 
     func testTranscodeJPEGToPNG() throws {
-        // Use a small decode to keep test fast
-        let jpegURL = ImageSampleData.urlForTestImage(with: .jpeg)
-        guard let source = ImageSource(url: jpegURL) else {
-            XCTFail("Failed to create source")
-            return
-        }
+        let source = makeSource(for: .jpeg)
         let data = try source.transcode(to: .png)
         XCTAssertGreaterThan(data.count, 0)
         // Verify PNG output
@@ -197,11 +185,11 @@ final class ImageDestinationTests: XCTestCase {
     // MARK: - Quality Clamping
 
     func testEncodeQualityClamping() throws {
-        let cgImage = decodeThumbnailCGImage(for: .jpeg)
+        let source = makeSource(for: .png)
         // Out-of-range values should not crash — they are clamped internally
-        let underflow = try cgImage.encode(as: .jpeg, quality: -0.5)
+        let underflow = try source.encode(as: .jpeg, quality: -0.5)
         XCTAssertGreaterThan(underflow.count, 0)
-        let overflow = try cgImage.encode(as: .jpeg, quality: 1.5)
+        let overflow = try source.encode(as: .jpeg, quality: 1.5)
         XCTAssertGreaterThan(overflow.count, 0)
     }
 }
