@@ -9,7 +9,7 @@
 
 import Foundation
 import CoreGraphics
-import libjpeg
+import jpeglib
 
 struct JPEGRegionDecoder {
 

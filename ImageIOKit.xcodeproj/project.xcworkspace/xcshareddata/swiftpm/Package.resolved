@@ -1,22 +1,22 @@
 {
-  "originHash" : "dc488db4a0c6ec0f6c7dc89c4ab3909f73306b0c6e803edaf39029c44e7fce29",
+  "originHash" : "0c4d4c7db6c30ef5c14dfb6d3189c1d26378f1eebfdbd890b5dd9ceddd5da2a1",
   "pins" : [
     {
-      "identity" : "libjpeg",
+      "identity" : "libjpeg-turbo-cocoa",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SusanDoggie/libjpeg.git",
+      "location" : "https://github.com/TimOliver/libjpeg-turbo-cocoa.git",
       "state" : {
-        "revision" : "26649717b522caf3d0c70ceba28ce31066b79e26",
-        "version" : "1.0.3"
+        "revision" : "9b8a24dc9223f18c1da24978d12e734cb78d956c",
+        "version" : "3.1.3"
       }
     },
     {
-      "identity" : "libjxl-xcode",
+      "identity" : "libjxl-cocoa",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SDWebImage/libjxl-Xcode.git",
+      "location" : "https://github.com/TimOliver/libjxl-cocoa",
       "state" : {
-        "revision" : "069adca6bbe953b52e969d024406781d70ce93ff",
-        "version" : "0.10.4"
+        "revision" : "149f109940c3651b41f8ccba8fbf6a247b6be705",
+        "version" : "0.11.2"
       }
     }
   ],

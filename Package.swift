@@ -9,14 +9,14 @@ let package = Package(
         .library(name: "ImageIOKit", targets: ["ImageIOKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/SusanDoggie/libjpeg.git", from: "1.0.3"),
+        .package(url: "https://github.com/TimOliver/libjpeg-turbo-cocoa.git", from: "3.1.3"),
         .package(url: "https://github.com/SDWebImage/libjxl-Xcode.git", from: "0.10.4"),
     ],
     targets: [
         .target(
             name: "ImageIOKit",
             dependencies: [
-                "libjpeg",
+                .product(name: "libjpeg-ios", package: "libjpeg-turbo-cocoa"),
                 .product(name: "libjxl", package: "libjxl-Xcode"),
             ],
             path: "ImageIOKit",

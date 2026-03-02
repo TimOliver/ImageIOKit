@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import libjxl
+import jxl
 
 struct JXLReconstructor {
 

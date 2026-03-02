@@ -24,8 +24,8 @@
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
 		2226543D2F066F5500A76F85 /* ImageColorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543C2F066F5100A76F85 /* ImageColorModel.swift */; };
 		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
-		229B93722F445BE400089FF5 /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = F50000012F16000000000001 /* libjpeg */; };
-		229B93732F445BE400089FF5 /* libjxl in Frameworks */ = {isa = PBXBuildFile; productRef = F50000012F16000000000004 /* libjxl */; };
+		226343EC2F55B7DD0017941C /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EB2F55B7DD0017941C /* libjpeg */; };
+		226343EF2F55B7E60017941C /* jxl in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EE2F55B7E60017941C /* jxl */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
 		22DB61052D3A078A007AFCF3 /* CGImage+Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
@@ -86,6 +86,8 @@
 		222654372F062FCD00A76F85 /* ApplePark.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.jxl; sourceTree = "<group>"; };
 		2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFileFormatTests.swift; sourceTree = "<group>"; };
 		2226543C2F066F5100A76F85 /* ImageColorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageColorModel.swift; sourceTree = "<group>"; };
+		226343F12F55B9050017941C /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		226343F22F55B9110017941C /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
 		22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGImage+Encoding.swift"; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
@@ -125,8 +127,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				229B93732F445BE400089FF5 /* libjxl in Frameworks */,
-				229B93722F445BE400089FF5 /* libjpeg in Frameworks */,
+				226343EC2F55B7DD0017941C /* libjpeg in Frameworks */,
+				226343EF2F55B7E60017941C /* jxl in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -147,6 +149,7 @@
 				22DB60FF2D3A0448007AFCF3 /* ImageIOKit */,
 				221D5F0429EBD708006E60AB /* ImageIOKitExample */,
 				221D5F1B29EBD709006E60AB /* ImageIOKitTests */,
+				226343F02F55B9050017941C /* Frameworks */,
 				221D5F0329EBD708006E60AB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -192,6 +195,15 @@
 				A10000012F2600000000000A /* SoftwareScalerTests.swift */,
 			);
 			path = ImageIOKitTests;
+			sourceTree = "<group>";
+		};
+		226343F02F55B9050017941C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				226343F22F55B9110017941C /* libc++.1.tbd */,
+				226343F12F55B9050017941C /* libc++.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		22DB60FF2D3A0448007AFCF3 /* ImageIOKit */ = {
@@ -298,8 +310,8 @@
 			);
 			name = ImageIOKitExample;
 			packageProductDependencies = (
-				F50000012F16000000000001 /* libjpeg */,
-				F50000012F16000000000004 /* libjxl */,
+				226343EB2F55B7DD0017941C /* libjpeg */,
+				226343EE2F55B7E60017941C /* jxl */,
 			);
 			productName = ImageIOKit;
 			productReference = 221D5F0229EBD708006E60AB /* ImageIOKitExample.app */;
@@ -352,8 +364,8 @@
 			);
 			mainGroup = 221D5EF929EBD708006E60AB;
 			packageReferences = (
-				F40000012F16000000000001 /* XCRemoteSwiftPackageReference "libjpeg" */,
-				F40000012F16000000000004 /* XCRemoteSwiftPackageReference "libjxl-Xcode" */,
+				226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */,
+				226343ED2F55B7E60017941C /* XCRemoteSwiftPackageReference "libjxl-cocoa" */,
 			);
 			productRefGroup = 221D5F0329EBD708006E60AB /* Products */;
 			projectDirPath = "";
@@ -612,12 +624,13 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.tim.ImageIOKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -640,12 +653,13 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.tim.ImageIOKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -661,7 +675,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.tim.ImageIOKitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -679,7 +693,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.tim.ImageIOKitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -723,34 +737,34 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		F40000012F16000000000001 /* XCRemoteSwiftPackageReference "libjpeg" */ = {
+		226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SusanDoggie/libjpeg.git";
+			repositoryURL = "https://github.com/TimOliver/libjpeg-turbo-cocoa.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.3;
+				minimumVersion = 3.1.3;
 			};
 		};
-		F40000012F16000000000004 /* XCRemoteSwiftPackageReference "libjxl-Xcode" */ = {
+		226343ED2F55B7E60017941C /* XCRemoteSwiftPackageReference "libjxl-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/libjxl-Xcode.git";
+			repositoryURL = "https://github.com/TimOliver/libjxl-cocoa";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.10.4;
+				minimumVersion = 0.11.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F50000012F16000000000001 /* libjpeg */ = {
+		226343EB2F55B7DD0017941C /* libjpeg */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F40000012F16000000000001 /* XCRemoteSwiftPackageReference "libjpeg" */;
+			package = 226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */;
 			productName = libjpeg;
 		};
-		F50000012F16000000000004 /* libjxl */ = {
+		226343EE2F55B7E60017941C /* jxl */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F40000012F16000000000004 /* XCRemoteSwiftPackageReference "libjxl-Xcode" */;
-			productName = libjxl;
+			package = 226343ED2F55B7E60017941C /* XCRemoteSwiftPackageReference "libjxl-cocoa" */;
+			productName = jxl;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
