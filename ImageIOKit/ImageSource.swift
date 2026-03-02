@@ -197,8 +197,12 @@ public final class ImageSource {
         return UIImage(cgImage: cgImage)
     }
 
-    /// Decodes a JXL image via libjxl's callback decoder and scales it
-    /// down to fit within the given bounding size.
+    /// Decodes a JXL image via libjxl's DC-only progressive decode and scales
+    /// it down to fit within the given bounding size.
+    ///
+    /// For VarDCT images, only the DC coefficients (1/8th resolution) are decoded,
+    /// saving ~98% of decode memory. The small result is then scaled to the exact
+    /// target size via CGContext.
     private func makeJXLThumbnail(fittingSize size: CGSize) -> UIImage? {
         let decoder: JXLDecoder?
         if let url {
@@ -210,8 +214,8 @@ public final class ImageSource {
         }
 
         guard let decoder,
-              let pixelBuffer = try? decoder.decode(),
-              let fullImage = pixelBuffer.makeCGImage() else {
+              let pixelBuffer = try? decoder.decodeThumbnail(fittingSize: size),
+              let dcImage = pixelBuffer.makeCGImage() else {
             return nil
         }
 
@@ -219,16 +223,16 @@ public final class ImageSource {
         let imageWidth = CGFloat(pixelBuffer.width)
         let imageHeight = CGFloat(pixelBuffer.height)
         let scale = min(size.width / imageWidth, size.height / imageHeight)
-        // If the image already fits, return it directly
+        // If the DC image already fits, return it directly
         if scale >= 1.0 {
-            return UIImage(cgImage: fullImage)
+            return UIImage(cgImage: dcImage)
         }
 
         let targetWidth = Int((imageWidth * scale).rounded())
         let targetHeight = Int((imageHeight * scale).rounded())
 
         // Scale via CGContext
-        guard let colorSpace = fullImage.colorSpace,
+        guard let colorSpace = dcImage.colorSpace,
               let ctx = CGContext(
                 data: nil,
                 width: targetWidth,
@@ -241,7 +245,7 @@ public final class ImageSource {
             return nil
         }
         ctx.interpolationQuality = .high
-        ctx.draw(fullImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
+        ctx.draw(dcImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
         guard let scaled = ctx.makeImage() else { return nil }
         return UIImage(cgImage: scaled)
     }

@@ -156,4 +156,96 @@ final class JXLDecoderTests: XCTestCase {
             XCTAssertThrowsError(try decoder.decode())
         }
     }
+
+    // MARK: - Thumbnail Decode (DC-Only Progressive)
+
+    func testDecodeThumbnailProducesSmallBuffer() throws {
+        let decoder = try XCTUnwrap(JXLDecoder(url: jxlURL()))
+        let fullSize = decoder.imageSize
+        let pixelBuffer = try decoder.decodeThumbnail(fittingSize: CGSize(width: 200, height: 200))
+
+        // Output should be ~1/8th of full dimensions
+        let expectedWidth = (fullSize.width + 7) / 8
+        let expectedHeight = (fullSize.height + 7) / 8
+        XCTAssertEqual(pixelBuffer.width, expectedWidth,
+            "Thumbnail width \(pixelBuffer.width) should be \(expectedWidth) (1/8th of \(fullSize.width))")
+        XCTAssertEqual(pixelBuffer.height, expectedHeight,
+            "Thumbnail height \(pixelBuffer.height) should be \(expectedHeight) (1/8th of \(fullSize.height))")
+        XCTAssertEqual(pixelBuffer.pixelFormat, .rgba8)
+    }
+
+    func testDecodeThumbnailPixelsAreReasonable() throws {
+        let decoder = try XCTUnwrap(JXLDecoder(url: jxlURL()))
+        let pixelBuffer = try decoder.decodeThumbnail(fittingSize: CGSize(width: 200, height: 200))
+
+        let points = [
+            (0, 0),
+            (pixelBuffer.width / 2, pixelBuffer.height / 2),
+            (pixelBuffer.width - 1, 0),
+            (0, pixelBuffer.height - 1),
+            (pixelBuffer.width - 1, pixelBuffer.height - 1),
+        ]
+
+        var allZero = true
+        var allMax = true
+        for (x, y) in points {
+            let p = pixelBuffer.pixel(at: x, y: y)
+            if p.r != 0 || p.g != 0 || p.b != 0 { allZero = false }
+            if p.r != 255 || p.g != 255 || p.b != 255 { allMax = false }
+        }
+
+        XCTAssertFalse(allZero, "All sampled pixels are black — thumbnail decode likely failed")
+        XCTAssertFalse(allMax, "All sampled pixels are white — thumbnail decode likely failed")
+    }
+
+    func testDecodeThumbnailUsesLessMemoryThanFullDecode() throws {
+        let url = jxlURL()
+        let decoder = try XCTUnwrap(JXLDecoder(url: url))
+        let fullSize = decoder.imageSize
+        let fullRawBitmap = Int64(fullSize.width) * Int64(fullSize.height) * 4
+
+        let before = physicalFootprint()
+        let pixelBuffer = try decoder.decodeThumbnail(fittingSize: CGSize(width: 200, height: 200))
+        let after = physicalFootprint()
+        let delta = after - before
+
+        // Thumbnail buffer should be ~1/64th of full bitmap
+        let thumbnailRawBitmap = Int64(pixelBuffer.width) * Int64(pixelBuffer.height) * 4
+        XCTAssertLessThan(thumbnailRawBitmap, fullRawBitmap / 32,
+            "Thumbnail buffer \(formatBytes(thumbnailRawBitmap)) should be much smaller than full bitmap \(formatBytes(fullRawBitmap))")
+
+        // Peak memory delta should be significantly less than a full decode
+        XCTAssertLessThan(delta, fullRawBitmap,
+            "Memory delta \(formatBytes(delta)) should be less than full bitmap \(formatBytes(fullRawBitmap))")
+    }
+
+    func testDecodeThumbnailFallsBackForModularJXL() throws {
+        let url = ImageSampleData.urlForPNGDerivedJXL()
+        let decoder = try XCTUnwrap(JXLDecoder(url: url))
+        let pixelBuffer = try decoder.decodeThumbnail(fittingSize: CGSize(width: 200, height: 200))
+
+        // Should still produce valid output via fallback (full decode with subsampling)
+        XCTAssertGreaterThan(pixelBuffer.width, 0)
+        XCTAssertGreaterThan(pixelBuffer.height, 0)
+
+        // Dimensions should be ~1/8th of full image
+        let fullSize = decoder.imageSize
+        let expectedWidth = (fullSize.width + 7) / 8
+        let expectedHeight = (fullSize.height + 7) / 8
+        XCTAssertEqual(pixelBuffer.width, expectedWidth)
+        XCTAssertEqual(pixelBuffer.height, expectedHeight)
+    }
+
+    func testDecodeThumbnailFallsBackToFullDecodeForLargeSize() throws {
+        let decoder = try XCTUnwrap(JXLDecoder(url: jxlURL()))
+        let fullSize = decoder.imageSize
+
+        // Request a thumbnail larger than 1/8th resolution — should get full decode
+        let largeSize = CGSize(width: fullSize.width, height: fullSize.height)
+        let pixelBuffer = try decoder.decodeThumbnail(fittingSize: largeSize)
+
+        // Full decode path returns the original dimensions
+        XCTAssertEqual(pixelBuffer.width, fullSize.width)
+        XCTAssertEqual(pixelBuffer.height, fullSize.height)
+    }
 }
