@@ -59,8 +59,7 @@ public final class ImageSource {
     ///
     /// Multipliers are calibrated empirically per format against ImageIO:
     /// - **JPEG**: ~0.5x — no alpha, compact internal representation
-    /// - **PNG/WebP/HEIC/AVIF**: ~1.5x — moderate decompression overhead
-    /// - **JXL**: ~4x — VarDCT requires float32 working buffers
+    /// - **PNG/WebP/HEIC/AVIF/JPEG-XL**: ~1.25x — moderate decompression overhead
     ///
     /// Use this to decide whether to decode images concurrently or serially
     /// (e.g. compare against `os_proc_available_memory()`).
@@ -68,8 +67,7 @@ public final class ImageSource {
         let bitmapBytes = Int(imageSize.width) * Int(imageSize.height) * 4
         let multiplier: Double = switch fileFormat {
         case .jpeg:   0.5
-        case .jpegXL: 4.0
-        default:      1.5
+        default:      1.25
         }
         return Int(Double(bitmapBytes) * multiplier)
     }
