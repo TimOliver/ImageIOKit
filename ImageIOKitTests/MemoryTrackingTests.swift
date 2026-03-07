@@ -206,9 +206,9 @@ final class MemoryTrackingTests: XCTestCase {
         XCTAssertGreaterThan(Int64(png.estimatedDecodeMemory), bitmap)
         XCTAssertLessThan(Int64(png.estimatedDecodeMemory), bitmap * 2)
 
-        // JXL: 4.0x → between 3x and 5x
-        XCTAssertGreaterThan(Int64(jxl.estimatedDecodeMemory), bitmap * 3)
-        XCTAssertLessThan(Int64(jxl.estimatedDecodeMemory), bitmap * 5)
+        // JXL: 1.5x → between 1x and 2x
+        XCTAssertGreaterThan(Int64(jxl.estimatedDecodeMemory), bitmap)
+        XCTAssertLessThan(Int64(jxl.estimatedDecodeMemory), bitmap * 2)
     }
 
     // MARK: - Performance Memory Metrics (XCTMemoryMetric)

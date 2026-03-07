@@ -334,31 +334,4 @@ final class ImageSourceDecodeTests: XCTestCase {
             }
         }
     }
-
-    // MARK: - JPEG Reconstruction
-
-    func testReconstructJPEGOnlyForJXL() {
-        // Non-JXL formats should return nil
-        let nonJXL: [ImageSampleData.Format] = [.jpeg, .png, .webp, .heic, .avif]
-        for format in nonJXL {
-            autoreleasepool {
-                let source = makeSource(for: format)
-                XCTAssertNil(source.reconstructJPEG(),
-                             "\(format) should not support JPEG reconstruction")
-            }
-        }
-    }
-
-    func testReconstructJPEGForJXL() {
-        let source = makeSource(for: .jpegXL)
-        let jpegData = source.reconstructJPEG()
-        // May be nil if the JXL wasn't derived from JPEG — either result is valid
-        if let jpegData {
-            // Verify it's valid JPEG (starts with FFD8FF)
-            XCTAssertGreaterThan(jpegData.count, 3)
-            XCTAssertEqual(jpegData[0], 0xFF)
-            XCTAssertEqual(jpegData[1], 0xD8)
-            XCTAssertEqual(jpegData[2], 0xFF)
-        }
-    }
 }

@@ -21,14 +21,13 @@
 		222654382F062FCD00A76F85 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
 		2226543B2F06514500A76F85 /* ImageFileFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2226543A2F06514500A76F85 /* ImageFileFormatTests.swift */; };
 		2257603B2F069111004F10C1 /* ApplePark.avif in Resources */ = {isa = PBXBuildFile; fileRef = 222654362F062FCD00A76F85 /* ApplePark.avif */; };
-		226343EC2F55B7DD0017941C /* libjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EB2F55B7DD0017941C /* libjpeg */; };
 		226343EF2F55B7E60017941C /* jxl in Frameworks */ = {isa = PBXBuildFile; productRef = 226343EE2F55B7E60017941C /* jxl */; };
+		226344002F56D500017941C0 /* turbojpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 226344012F56D500017941C0 /* turbojpeg */; };
 		226343F52F55CBC00017941C /* ApplePark-JPG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F32F55CBC00017941C /* ApplePark-JPG.jxl */; };
 		226343F62F55CBC00017941C /* ApplePark-PNG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F42F55CBC00017941C /* ApplePark-PNG.jxl */; };
 		226343F72F55CBC00017941C /* ApplePark-JPG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F32F55CBC00017941C /* ApplePark-JPG.jxl */; };
 		226343F82F55CBC00017941C /* ApplePark-PNG.jxl in Resources */ = {isa = PBXBuildFile; fileRef = 226343F42F55CBC00017941C /* ApplePark-PNG.jxl */; };
 		22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61002D3A045C007AFCF3 /* ImageSource.swift */; };
-		22DB61052D3A078A007AFCF3 /* CGImage+Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */; };
 		22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
 		22DB610E2D3A5155007AFCF3 /* ApplePark.webp in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610B2D3A5155007AFCF3 /* ApplePark.webp */; };
 		22DB610F2D3A5155007AFCF3 /* ApplePark.heic in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61082D3A5155007AFCF3 /* ApplePark.heic */; };
@@ -83,7 +82,6 @@
 		226343F32F55CBC00017941C /* ApplePark-JPG.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ApplePark-JPG.jxl"; sourceTree = "<group>"; };
 		226343F42F55CBC00017941C /* ApplePark-PNG.jxl */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ApplePark-PNG.jxl"; sourceTree = "<group>"; };
 		22DB61002D3A045C007AFCF3 /* ImageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageSource.swift; sourceTree = "<group>"; };
-		22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGImage+Encoding.swift"; sourceTree = "<group>"; };
 		22DB61082D3A5155007AFCF3 /* ApplePark.heic */ = {isa = PBXFileReference; lastKnownFileType = file; path = ApplePark.heic; sourceTree = "<group>"; };
 		22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ApplePark.jpeg; sourceTree = "<group>"; };
 		22DB610A2D3A5155007AFCF3 /* ApplePark.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ApplePark.png; sourceTree = "<group>"; };
@@ -114,7 +112,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				226343EC2F55B7DD0017941C /* libjpeg in Frameworks */,
+				226344002F56D500017941C0 /* turbojpeg in Frameworks */,
 				226343EF2F55B7E60017941C /* jxl in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -242,7 +240,6 @@
 			isa = PBXGroup;
 			children = (
 				F10000012F1800000000000B /* ImageSource+Encoding.swift */,
-				22DB61042D3A078A007AFCF3 /* CGImage+Encoding.swift */,
 				F10000012F18000000000006 /* ImageEncoderError.swift */,
 			);
 			path = Encoding;
@@ -274,7 +271,7 @@
 			);
 			name = ImageIOKitExample;
 			packageProductDependencies = (
-				226343EB2F55B7DD0017941C /* libjpeg */,
+				226344012F56D500017941C0 /* turbojpeg */,
 				226343EE2F55B7E60017941C /* jxl */,
 			);
 			productName = ImageIOKit;
@@ -382,7 +379,6 @@
 			files = (
 				22DB61142D3B6053007AFCF3 /* ImageFileFormat.swift in Sources */,
 				221D5F0A29EBD708006E60AB /* ViewController.swift in Sources */,
-				22DB61052D3A078A007AFCF3 /* CGImage+Encoding.swift in Sources */,
 				221D5F0629EBD708006E60AB /* AppDelegate.swift in Sources */,
 				22DB61012D3A045C007AFCF3 /* ImageSource.swift in Sources */,
 				221D5F0829EBD708006E60AB /* SceneDelegate.swift in Sources */,
@@ -714,15 +710,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		226343EB2F55B7DD0017941C /* libjpeg */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */;
-			productName = libjpeg;
-		};
 		226343EE2F55B7E60017941C /* jxl */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 226343ED2F55B7E60017941C /* XCRemoteSwiftPackageReference "libjxl-cocoa" */;
 			productName = jxl;
+		};
+		226344012F56D500017941C0 /* turbojpeg */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */;
+			productName = turbojpeg;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

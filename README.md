@@ -11,7 +11,7 @@ ImageIOKit supports **JPEG**, **PNG**, **WebP**, **HEIC**, **AVIF**, and **JPEG 
 ## Features
 
 - **Multi-format decoding** — Full-resolution, thumbnailed, and cropped decodes from a single `ImageSource` API.
-- **JPEG region decode** — Decode arbitrary sub-regions of JPEG files without loading the entire image into memory (via libjpeg `crop_scanline`).
+- **JPEG region decode** — Decode arbitrary sub-regions of JPEG files without loading the entire image into memory (via TurboJPEG cropped decode).
 - **JPEG XL reconstruction** — Losslessly reconstruct the original JPEG bitstream from JXL-from-JPEG files, with zero quality loss and no decode overhead.
 - **Zero-decode encoding** — Encode and transcode via `CGImageDestinationAddImageFromSource`, copying compressed data directly from source to destination when no pixel-level transformation (e.g. alpha stripping) is needed.
 - **Image conditioning** — Convert any supported format to JPEG on disk in a single call, giving every image shrink-on-load thumbnailing and region decode for free.
@@ -23,7 +23,7 @@ ImageIOKit supports **JPEG**, **PNG**, **WebP**, **HEIC**, **AVIF**, and **JPEG 
 ## Requirements
 
 - iOS 18.0+
-- Swift 5.9+
+- Swift 6.0+
 - Xcode 16.0+
 
 ## Installation
@@ -153,7 +153,7 @@ ImageSource (facade)
 ├── Decoding (ImageSource+Decoding)
 │   ├── Thumbnails via CGImageSourceCreateThumbnailAtIndex
 │   ├── Full decode via CGImageSourceCreateImageAtIndex
-│   ├── JPEG region decode via JPEGRegionDecoder (libjpeg crop_scanline)
+│   ├── JPEG region decode via JPEGRegionDecoder (TurboJPEG cropping)
 │   └── JXL thumbnail via JXLDecoder (libjxl DC-only progressive decode)
 ├── Encoding (ImageSource+Encoding)
 │   ├── Zero-decode encode via CGImageDestinationAddImageFromSource
@@ -173,7 +173,7 @@ While ImageIO handles the vast majority of decode/encode operations, two C libra
 
 | Library | Purpose | Import |
 |---------|---------|--------|
-| [libjpeg-turbo](https://github.com/TimOliver/libjpeg-turbo-cocoa) | JPEG sub-region decode (`crop_scanline`) | `import jpeglib` |
+| [libjpeg-turbo](https://github.com/TimOliver/libjpeg-turbo-cocoa) | JPEG sub-region decode (`tj3SetCroppingRegion`) | `import turbojpeg` |
 | [libjxl](https://github.com/TimOliver/libjxl-cocoa) | JXL → JPEG lossless reconstruction, DC-only thumbnail decode | `import jxl` |
 
 ## Credits

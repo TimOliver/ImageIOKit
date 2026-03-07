@@ -113,7 +113,7 @@ public final class ImageSource {
     ///                              This can be manually deferred until calling `loadImageData` in performance sensitive circumstances.
     /// - Return: Returns a new image source instance.
     ///           If `loadImmediately` is true, and the image data is invalid, `nil` is returned instead.
-    init?(data: Data, loadImmediately: Bool = true) {
+    public init?(data: Data, loadImmediately: Bool = true) {
         self.data = data
         if loadImmediately, !loadImageData() { return nil }
     }
@@ -124,7 +124,7 @@ public final class ImageSource {
     ///                              This can be manually deferred until calling `loadImageData` in performance sensitive circumstances.
     /// - Return: Returns a new image source instance.
     ///           If `loadImmediately` is true, and the image data is invalid, `nil` is returned instead.
-    init?(url: URL, loadImmediately: Bool = true) {
+    public init?(url: URL, loadImmediately: Bool = true) {
         self.url = url
         if loadImmediately, !loadImageData() { return nil }
     }

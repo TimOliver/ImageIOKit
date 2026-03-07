@@ -109,8 +109,10 @@ extension ImageSource {
     /// - Returns: The decoded region as a UIImage, or nil on failure.
     public func decodeRegion(_ rect: CGRect, targetSize: CGSize? = nil) -> UIImage? {
         guard isLoaded else { return nil }
+        let clampedRect = rect.intersection(CGRect(origin: .zero, size: imageSize))
+        guard !clampedRect.isEmpty else { return nil }
 
-        // JPEG: use libjpeg native region decode
+        // JPEG: use TurboJPEG native region decode
         if fileFormat == .jpeg {
             let regionDecoder: JPEGRegionDecoder?
             if let url {
@@ -118,23 +120,38 @@ extension ImageSource {
             } else if let data {
                 regionDecoder = JPEGRegionDecoder(data: data)
             } else {
-                return nil
+                regionDecoder = nil
             }
 
-            guard let regionDecoder,
-                  let pixelBuffer = try? regionDecoder.decodeRegion(cropRect: rect, targetSize: targetSize),
-                  let cgImage = pixelBuffer.makeCGImage() else { return nil }
-            return UIImage(cgImage: cgImage)
+            if let regionDecoder,
+               let pixelBuffer = try? regionDecoder.decodeRegion(cropRect: clampedRect, targetSize: targetSize),
+               let cgImage = pixelBuffer.makeCGImage() {
+                guard let targetSize else { return UIImage(cgImage: cgImage) }
+                let fitSize = SoftwareScaler.fittingSize(
+                    for: CGSize(width: cgImage.width, height: cgImage.height),
+                    in: targetSize
+                )
+                if Int(fitSize.width) == cgImage.width, Int(fitSize.height) == cgImage.height {
+                    return UIImage(cgImage: cgImage)
+                }
+                guard let scaled = try? renderToSize(cgImage, size: fitSize) else { return nil }
+                return UIImage(cgImage: scaled)
+            }
+            // Fall through to ImageIO crop path when native region decode is unavailable.
         }
 
         // All other formats: full decode via ImageIO + CGImage.cropping
         guard let fullImage = decodeFullCGImage() else { return nil }
-
-        // Clamp the rect to the image bounds
-        let clampedRect = rect.intersection(CGRect(origin: .zero, size: imageSize))
         guard !clampedRect.isEmpty,
               let cropped = fullImage.cropping(to: clampedRect) else { return nil }
-        return UIImage(cgImage: cropped)
+
+        guard let targetSize else { return UIImage(cgImage: cropped) }
+        let fitSize = SoftwareScaler.fittingSize(
+            for: CGSize(width: cropped.width, height: cropped.height),
+            in: targetSize
+        )
+        guard let scaled = try? renderToSize(cropped, size: fitSize) else { return nil }
+        return UIImage(cgImage: scaled)
     }
 }
 
@@ -189,7 +206,52 @@ extension ImageSource {
         cropRect: CGRect? = nil,
         pixelFormat: PixelBuffer.PixelFormat = .rgba8
     ) throws -> PixelBuffer {
-        guard let cgImageSource, isLoaded else {
+        guard isLoaded else {
+            throw ImageDecoderError.invalidData
+        }
+
+        // JPEG crop path: use TurboJPEG native region decode.
+        if fileFormat == .jpeg, let cropRect {
+            let regionDecoder: JPEGRegionDecoder?
+            if let url {
+                regionDecoder = JPEGRegionDecoder(url: url)
+            } else if let data {
+                regionDecoder = JPEGRegionDecoder(data: data)
+            } else {
+                regionDecoder = nil
+            }
+
+            if let regionDecoder,
+               var regionBuffer = try? regionDecoder.decodeRegion(
+                    cropRect: cropRect,
+                    targetSize: targetSize,
+                    pixelFormat: .rgba8
+               ) {
+                if let targetSize {
+                    let fitSize = SoftwareScaler.fittingSize(
+                        for: CGSize(width: regionBuffer.width, height: regionBuffer.height),
+                        in: targetSize
+                    )
+                    if Int(fitSize.width) != regionBuffer.width || Int(fitSize.height) != regionBuffer.height {
+                        guard let cgImage = regionBuffer.makeCGImage() else {
+                            throw ImageDecoderError.decodeFailed("Failed to create CGImage from JPEG region buffer")
+                        }
+                        let scaledImage = try renderToSize(cgImage, size: fitSize)
+                        regionBuffer = try renderToPixelBuffer(scaledImage, pixelFormat: .rgba8)
+                    }
+                }
+
+                guard pixelFormat != .rgba8 else { return regionBuffer }
+
+                guard let cgImage = regionBuffer.makeCGImage() else {
+                    throw ImageDecoderError.decodeFailed("Failed to create CGImage from JPEG region buffer")
+                }
+                return try renderToPixelBuffer(cgImage, pixelFormat: pixelFormat)
+            }
+            // Fall through to full decode + crop when native region decode is unavailable.
+        }
+
+        guard let cgImageSource else {
             throw ImageDecoderError.invalidData
         }
 
