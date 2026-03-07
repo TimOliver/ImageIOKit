@@ -110,7 +110,7 @@ let data = try source.transcode(to: .jpeg)
 Conditioning converts any image to JPEG on disk, optionally downscaling oversized images. The resulting JPEG is optimized for efficient partial decoding and thumbnailing.
 
 ```swift
-let conditioned = try source.condition(maxDimension: 4096, to: outputURL, quality: 0.85)
+let conditioned = try source.writeConditionedJPEG(maxDimension: 4096, to: outputURL, quality: 0.85)
 // conditioned is a new ImageSource pointing at the JPEG file
 // If the source was already a small-enough JPEG, returns `self` (no work done)
 ```

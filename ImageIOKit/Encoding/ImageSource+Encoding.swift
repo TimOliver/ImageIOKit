@@ -24,7 +24,7 @@ public extension ImageSource {
     ///   - format: The target image file format.
     ///   - quality: Compression quality from 0.0 (smallest file) to 1.0 (best quality). Default is 0.85.
     /// - Returns: The encoded image data.
-    func encode(as format: ImageFileFormat,
+    func encoded(as format: ImageFileFormat,
                 quality: Double = 0.85) throws -> Data {
         let data = NSMutableData()
         guard let dest = CGImageDestinationCreateWithData(data, format.uniformTypeIdentifier, 1, nil) else {
@@ -68,7 +68,7 @@ public extension ImageSource {
     }
 }
 
-// MARK: - ImageSource condition / transcode
+// MARK: - ImageSource conditioning / transcode
 
 public extension ImageSource {
 
@@ -89,9 +89,9 @@ public extension ImageSource {
     ///                   before encoding. Defaults to 4096.
     ///   - url: The file URL to write the conditioned JPEG to.
     ///   - quality: Compression quality from 0.0 (smallest) to 1.0 (best). Default is 0.85.
-    func condition(maxDimension: Int = 4096,
-                   to url: URL,
-                   quality: Double = 0.85) throws -> ImageSource {
+    func writeConditionedJPEG(maxDimension: Int = 4096,
+                              to url: URL,
+                              quality: Double = 0.85) throws -> ImageSource {
         let maxDim = CGFloat(maxDimension)
         let longEdge = max(imageSize.width, imageSize.height)
 
@@ -190,7 +190,7 @@ public extension ImageSource {
     ///   - format: The target image file format.
     ///   - quality: Compression quality from 0.0 (smallest) to 1.0 (best). Default is 0.85.
     /// - Returns: The transcoded image data.
-    func transcode(to format: ImageFileFormat,
+    func transcoded(to format: ImageFileFormat,
                    quality: Double = 0.85) throws -> Data {
         // Fast path: JXL → JPEG via lossless bitstream reconstruction
         if format == .jpeg, fileFormat == .jpegXL,
@@ -198,7 +198,7 @@ public extension ImageSource {
             return jpegData
         }
 
-        return try encode(as: format, quality: quality)
+        return try encoded(as: format, quality: quality)
     }
 
     // MARK: - JPEG Reconstruction
