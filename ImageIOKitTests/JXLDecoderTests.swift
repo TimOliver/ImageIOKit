@@ -7,7 +7,11 @@
 
 import XCTest
 import Darwin.Mach
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 final class JXLDecoderTests: XCTestCase {
 
@@ -247,5 +251,52 @@ final class JXLDecoderTests: XCTestCase {
         // Full decode path returns the original dimensions
         XCTAssertEqual(pixelBuffer.width, fullSize.width)
         XCTAssertEqual(pixelBuffer.height, fullSize.height)
+    }
+}
+
+extension JXLDecoderTests {
+    func testTransparentJXLPremultipliesBothFullAndThumbnailOutput() throws {
+        for premultiplied in [false, true] {
+            let data = SyntheticImage.jxl(premultiplied: premultiplied)
+            let decoder = try XCTUnwrap(JXLDecoder(data: data))
+            for buffer in [try decoder.decode(), try decoder.decodeThumbnail(fittingSize: CGSize(width: 2, height: 2))] {
+                let pixel = buffer.pixel(at: 0, y: 0)
+                XCTAssertEqual(pixel.r, 128)
+                XCTAssertEqual(pixel.g, 0)
+                XCTAssertEqual(pixel.b, 0)
+                XCTAssertEqual(pixel.a, 128)
+                XCTAssertEqual(buffer.makeCGImage()?.alphaInfo, .premultipliedLast)
+            }
+            let source = try XCTUnwrap(ImageSource(data: data))
+            let reference = try source.decode()
+            let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 2, height: 2)))
+            XCTAssertEqual(thumbnail.size, CGSize(width: 2, height: 2))
+            XCTAssertEqual(reference.pixel(at: 0, y: 0).r, 128)
+        }
+    }
+
+    func testJXLDecodingAcceptsSlicedDataAndRejectsShortInputs() throws {
+        let data = SyntheticImage.jxl()
+        var prefixed = Data([1, 2, 3])
+        prefixed.append(data)
+        let slice = prefixed.dropFirst(3)
+        XCTAssertEqual(slice.startIndex, 3)
+        let decoder = try XCTUnwrap(JXLDecoder(data: slice))
+        XCTAssertEqual(decoder.imageSize.width, 16)
+        XCTAssertEqual(try decoder.decode().pixel(at: 15, y: 15).r, 128)
+        for count in 1..<min(15, data.count) {
+            let truncated = try XCTUnwrap(JXLDecoder(data: Data(data.prefix(count))))
+            XCTAssertThrowsError(try truncated.decode())
+        }
+    }
+
+    func testJPEGReconstructionMatchesForURLAndSlicedInput() throws {
+        let url = jxlURL()
+        let expected = try XCTUnwrap(JXLReconstructor(url: url)?.reconstructJPEG())
+        var data = Data([0, 1, 2])
+        data.append(try Data(contentsOf: url))
+        let actual = try XCTUnwrap(JXLReconstructor(data: data.dropFirst(3))?.reconstructJPEG())
+        XCTAssertEqual(actual, expected)
+        XCTAssertEqual(ImageSource(data: actual)?.fileFormat, .jpeg)
     }
 }

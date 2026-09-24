@@ -4,7 +4,11 @@
 //
 
 import XCTest
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 final class PixelBufferTests: XCTestCase {
 

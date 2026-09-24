@@ -6,7 +6,11 @@
 //
 
 import XCTest
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 /// Tests related to the ImageSource class
 final class ImageSourceTests: XCTestCase {

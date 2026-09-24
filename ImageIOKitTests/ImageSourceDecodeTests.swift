@@ -4,7 +4,11 @@
 //
 
 import XCTest
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 /// Comprehensive tests for ImageSource decode paths across all formats.
 final class ImageSourceDecodeTests: XCTestCase {
@@ -333,5 +337,102 @@ final class ImageSourceDecodeTests: XCTestCase {
                 XCTFail("Expected invalidData, got \(decoderError)")
             }
         }
+    }
+}
+
+extension ImageSourceDecodeTests {
+    func testRectangularBoundsAcrossDecodePaths() throws {
+        for jpeg in [false, true] {
+            let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(jpeg: jpeg)))
+            let target = CGSize(width: 100, height: 300)
+            let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: target))
+            XCTAssertEqual(thumbnail.size, CGSize(width: 100, height: 50))
+            for crop in [nil, CGRect(x: 0, y: 0, width: 400, height: 200)] as [CGRect?] {
+                for format in [PixelBuffer.PixelFormat.rgba8, .rgb8, .gray8, .grayAlpha8] {
+                    let output = try source.decode(targetSize: target, cropRect: crop, pixelFormat: format)
+                    XCTAssertEqual(output.width, 100)
+                    XCTAssertEqual(output.height, 50)
+                    XCTAssertEqual(output.pixelFormat, format)
+                }
+            }
+            let region = try XCTUnwrap(source.decodeRegion(CGRect(x: 0, y: 0, width: 400, height: 200), targetSize: target))
+            XCTAssertEqual(region.size, thumbnail.size)
+        }
+    }
+
+    func testInvalidTargetsAreRejectedWithoutCrashing() throws {
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(jpeg: true)))
+        let crop = CGRect(x: 0, y: 0, width: 100, height: 100)
+        for value in [CGFloat.nan, .infinity, -1, 0, 0.5] {
+            let target = CGSize(width: value, height: 20)
+            XCTAssertThrowsError(try source.decode(targetSize: target))
+            XCTAssertThrowsError(try source.decode(targetSize: target, cropRect: crop))
+            XCTAssertNil(source.makeThumbnail(fittingSize: target))
+            XCTAssertNil(source.decodeRegion(crop, targetSize: target))
+        }
+    }
+
+    func testAllEXIFOrientationsHaveConsistentPixelsAndCropCoordinates() throws {
+        let original = try XCTUnwrap(ImageSource(data: SyntheticImage.data(jpeg: true, quadrants: true))).decode()
+        let originalCorners = [(10, 10), (390, 10), (10, 190), (390, 190)].map { original.pixel(at: $0.0, y: $0.1) }
+        let mappings = [[0,1,2,3], [1,0,3,2], [3,2,1,0], [2,3,0,1],
+                        [0,2,1,3], [2,0,3,1], [3,1,2,0], [1,3,0,2]]
+        for orientation in UInt32(1)...8 {
+            let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(jpeg: true, orientation: orientation, quadrants: true)))
+            let size = orientation >= 5 ? CGSize(width: 200, height: 400) : CGSize(width: 400, height: 200)
+            XCTAssertEqual(source.imageSize, size)
+            let full = try XCTUnwrap(source.decodeFullImage())
+            XCTAssertEqual(full.size, size)
+            XCTAssertEqual(full.imageOrientation, .up)
+            let raw = try source.decode()
+            let points = [(10, 10), (raw.width - 10, 10), (10, raw.height - 10), (raw.width - 10, raw.height - 10)]
+            for (index, point) in points.enumerated() {
+                let actual = raw.pixel(at: point.0, y: point.1)
+                let expected = originalCorners[mappings[Int(orientation - 1)][index]]
+                XCTAssertEqual(Int(actual.r), Int(expected.r), accuracy: 2, "orientation \(orientation)")
+                XCTAssertEqual(Int(actual.g), Int(expected.g), accuracy: 2, "orientation \(orientation)")
+                XCTAssertEqual(Int(actual.b), Int(expected.b), accuracy: 2, "orientation \(orientation)")
+            }
+            let crop = try source.decode(cropRect: CGRect(x: 8, y: 8, width: 16, height: 16))
+            XCTAssertEqual(crop.pixel(at: 2, y: 2).r, raw.pixel(at: 10, y: 10).r)
+            let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 100, height: 100)))
+            XCTAssertEqual(thumbnail.size, orientation >= 5 ? CGSize(width: 50, height: 100) : CGSize(width: 100, height: 50))
+        }
+    }
+
+    func testWideGamutJPEGRegionMatchesFullDecode() throws {
+        let data = SyntheticImage.data(jpeg: true, displayP3: true)
+        let source = try XCTUnwrap(ImageSource(data: data))
+        let full = try source.decode()
+        let native = try XCTUnwrap(JPEGRegionDecoder(data: data)).decodeRegion(cropRect: CGRect(x: 10, y: 10, width: 60, height: 60))
+        XCTAssertEqual(native.colorSpace.name, CGColorSpace.displayP3)
+        let region = try source.decode(cropRect: CGRect(x: 10, y: 10, width: 60, height: 60))
+        XCTAssertEqual(region.colorSpace.name, CGColorSpace.sRGB)
+        let a = full.pixel(at: 20, y: 20), b = region.pixel(at: 10, y: 10)
+        XCTAssertEqual(Int(a.r), Int(b.r), accuracy: 2)
+        XCTAssertEqual(Int(a.g), Int(b.g), accuracy: 2)
+        XCTAssertEqual(Int(a.b), Int(b.b), accuracy: 2)
+    }
+
+    func testNoDecodePathUpscalesSmallImages() throws {
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(width: 40, height: 20, jpeg: true)))
+        let bounds = CGSize(width: 400, height: 400)
+        XCTAssertEqual(source.makeThumbnail(fittingSize: bounds)?.size, CGSize(width: 40, height: 20))
+        let full = try source.decode(targetSize: bounds)
+        let crop = try source.decode(targetSize: bounds, cropRect: CGRect(x: 0, y: 0, width: 40, height: 20))
+        XCTAssertEqual(full.width, 40)
+        XCTAssertEqual(crop.width, 40)
+    }
+
+    func testDecodeMemoryEstimatesIncludeOutputAndConversion() throws {
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(jpeg: true)))
+        XCTAssertGreaterThan(source.estimatedDecodeMemory, try source.decode().dataSize)
+        let target = CGSize(width: 100, height: 100)
+        let small = try source.estimatedDecodeMemory(targetSize: target)
+        XCTAssertLessThan(small, source.estimatedDecodeMemory)
+        let gray = try source.estimatedDecodeMemory(targetSize: target, pixelFormat: .gray8)
+        let grayAlpha = try source.estimatedDecodeMemory(targetSize: target, pixelFormat: .grayAlpha8)
+        XCTAssertGreaterThan(grayAlpha, gray)
+        XCTAssertThrowsError(try source.estimatedDecodeMemory(targetSize: .zero))
     }
 }

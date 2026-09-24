@@ -51,7 +51,8 @@ public final class ImageSource {
     /// this property can be used to check this state to manually load the headers or not.
     public private(set) var isLoaded: Bool = false
 
-    /// The pixel dimensions of this image. (Will default to .zero before the image is loaded)
+    /// Display-oriented pixel dimensions, after applying EXIF rotation or mirroring.
+    /// Defaults to `.zero` before the image is loaded.
     public private(set) var imageSize: CGSize = .zero
 
     /// Whether this image has an alpha channel or not.
@@ -67,27 +68,35 @@ public final class ImageSource {
     public private(set) var fileFormat: ImageFileFormat?
 
     /// Whether this source supports sub-region decode without decoding the full image.
-    /// Only JPEG sources support this (via libjpeg crop_scanline).
+    /// Upright JPEG sources support this via TurboJPEG. Rotated or mirrored
+    /// sources currently use ImageIO's orientation-normalizing fallback.
     public var isRegionDecodable: Bool {
-        fileFormat == .jpeg
+        fileFormat == .jpeg && orientation == .up
     }
 
-    /// Estimated peak bytes required for a full-resolution decode of this image,
-    /// including both the output bitmap and ImageIO's transient decompression buffers.
-    ///
-    /// Multipliers are calibrated empirically per format against ImageIO:
-    /// - **JPEG**: ~0.5x — no alpha, compact internal representation
-    /// - **PNG/WebP/HEIC/AVIF/JPEG-XL**: ~1.25x — moderate decompression overhead
-    ///
-    /// Use this to decide whether to decode images concurrently or serially
-    /// (e.g. compare against `os_proc_available_memory()`).
+    /// Planning estimate for a full-resolution RGBA decode. Not a hard memory limit;
+    /// codec working memory and system caches vary with the image and OS.
     public var estimatedDecodeMemory: Int {
-        let bitmapBytes = Int(imageSize.width) * Int(imageSize.height) * 4
-        let multiplier: Double = switch fileFormat {
-        case .jpeg:   0.5
-        default:      1.25
-        }
-        return Int(Double(bitmapBytes) * multiplier)
+        (try? estimatedDecodeMemory(targetSize: nil)) ?? Int.max
+    }
+
+    /// Estimates additional bytes for `decode(targetSize:cropRect:pixelFormat:)`.
+    /// Includes the output, rendering intermediates, and a full-resolution codec
+    /// allowance even for thumbnails/regions, since codecs can fall back to full decode.
+    /// Excludes compressed input and previously cached images. Returns zero before loading.
+    public func estimatedDecodeMemory(targetSize: CGSize? = nil, cropRect: CGRect? = nil,
+                                      pixelFormat: PixelBuffer.PixelFormat = .rgba8) throws -> Int {
+        guard isLoaded else { return 0 }
+        let crop = try cropRect.map { try SoftwareScaler.clampedCrop($0, in: imageSize) }
+        let output = try SoftwareScaler.outputSize(for: crop?.size ?? imageSize, fitting: targetSize)
+        let sourcePixels = Double(imageSize.width) * Double(imageSize.height)
+        let outputPixels = Double(output.width) * Double(output.height)
+        let codecBytesPerPixel: Double = fileFormat == .jpeg ? 8 : 16
+        let conversionBytes: Double = (pixelFormat == .rgb8 || pixelFormat == .grayAlpha8) ? 4 : 0
+        let bytes = sourcePixels * codecBytesPerPixel
+            + outputPixels * (Double(pixelFormat.bytesPerPixel) + conversionBytes)
+        guard bytes.isFinite, bytes < Double(Int.max) else { return Int.max }
+        return Int(bytes.rounded(.up))
     }
 
     // MARK: - Internal Properties
@@ -95,10 +104,10 @@ public final class ImageSource {
     /// The underlying CGImageSource.
     var cgImageSource: CGImageSource?
 
-    /// Cached full-resolution CGImage. Statically defined so NSCache can
-    /// manage it and purge under memory pressure. Shared across
-    /// all threads
-    static let fullDecodeCacheKey = "fullDecode" as NSString
+    private(set) var orientation: CGImagePropertyOrientation = .up
+
+    /// Per-source cache; its key is a Sendable value in Swift 6.
+    static let fullDecodeCacheKey = "fullDecode"
     let fullDecodeCache: NSCache<NSString, CGImage> = {
         let cache = NSCache<NSString, CGImage>()
         cache.countLimit = 1
@@ -140,10 +149,8 @@ public final class ImageSource {
         let source: CGImageSource?
         if let url = self.url {
             source = CGImageSourceCreateWithURL(url as CFURL, nil)
-            self.fileFormat = ImageFileFormat.detect(from: url)
         } else if let data = self.data {
             source = CGImageSourceCreateWithData(data as CFData, nil)
-            self.fileFormat = ImageFileFormat.detect(from: data)
         } else {
             fatalError("ImageSource: A load was attempted without a valid image data or URL object.")
         }
@@ -159,15 +166,18 @@ public final class ImageSource {
         let height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
         guard width > 0, height > 0 else { return false }
 
-        // Detect format from UTI if not already detected via magic bytes
-        if self.fileFormat == nil, let uti = CGImageSourceGetType(source) as String? {
+        // ImageIO's parsed source type is authoritative, regardless of filename.
+        if let uti = CGImageSourceGetType(source) as String? {
             self.fileFormat = ImageFileFormat.allCases.first {
                 ($0.uniformTypeIdentifier as String) == uti
             }
         }
 
         self.cgImageSource = source
-        self.imageSize = CGSize(width: width, height: height)
+        self.orientation = CGImagePropertyOrientation(rawValue:
+            (properties[kCGImagePropertyOrientation] as? UInt32) ?? 1) ?? .up
+        let swapsAxes = orientation.rawValue >= 5
+        self.imageSize = CGSize(width: swapsAxes ? height : width, height: swapsAxes ? width : height)
         self.hasAlpha = properties[kCGImagePropertyHasAlpha] as? Bool ?? false
 
         if let colorModelString = properties[kCGImagePropertyColorModel] as? String {

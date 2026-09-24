@@ -11,7 +11,7 @@ import CoreGraphics
 
 public final class PixelBuffer {
 
-    /// The pixel data layout of the buffer.
+    /// The pixel data layout of the buffer. Alpha-bearing formats use premultiplied color.
     public enum PixelFormat {
         case rgba8    // 4 bytes per pixel, R-G-B-A order
         case rgb8     // 3 bytes per pixel, R-G-B order
@@ -47,6 +47,9 @@ public final class PixelBuffer {
     /// The pixel format of the data.
     public let pixelFormat: PixelFormat
 
+    /// The color space of the stored components. RGB buffers default to sRGB.
+    public let colorSpace: CGColorSpace
+
     /// Raw pointer to the pixel data. Valid for the lifetime of this object.
     public let data: UnsafeMutableRawPointer
 
@@ -64,13 +67,16 @@ public final class PixelBuffer {
     ///   - bytesPerRow: Stride of each row in bytes.
     ///   - pixelFormat: The layout of pixel components.
     ///   - data: Pointer to C-allocated pixel memory. Ownership transfers to this buffer.
-    ///   - deallocator: Called on deinit to free the data. Defaults to `free()`.
+    ///   - colorSpace: The color space matching the stored components.
+    ///   - deallocator: Called on deinit. Defaults to Swift pointer `deallocate()`.
     public init(width: Int, height: Int, bytesPerRow: Int, pixelFormat: PixelFormat,
-                data: UnsafeMutableRawPointer, deallocator: @escaping (UnsafeMutableRawPointer) -> Void = { $0.deallocate() }) {
+                data: UnsafeMutableRawPointer, colorSpace: CGColorSpace? = nil,
+                deallocator: @escaping (UnsafeMutableRawPointer) -> Void = { $0.deallocate() }) {
         self.width = width
         self.height = height
         self.bytesPerRow = bytesPerRow
         self.pixelFormat = pixelFormat
+        self.colorSpace = colorSpace ?? Self.defaultColorSpace(for: pixelFormat)
         self.data = data
         self.deallocator = deallocator
     }
@@ -80,13 +86,20 @@ public final class PixelBuffer {
     ///   - width: Image width in pixels.
     ///   - height: Image height in pixels.
     ///   - pixelFormat: The layout of pixel components.
-    public convenience init(width: Int, height: Int, pixelFormat: PixelFormat) {
+    public convenience init(width: Int, height: Int, pixelFormat: PixelFormat, colorSpace: CGColorSpace? = nil) {
         let bytesPerRow = width * pixelFormat.bytesPerPixel
         let size = bytesPerRow * height
         let data = UnsafeMutableRawPointer.allocate(byteCount: size, alignment: 16)
         data.initializeMemory(as: UInt8.self, repeating: 0, count: size)
         self.init(width: width, height: height, bytesPerRow: bytesPerRow,
-                  pixelFormat: pixelFormat, data: data)
+                  pixelFormat: pixelFormat, data: data, colorSpace: colorSpace)
+    }
+
+    static func defaultColorSpace(for format: PixelFormat) -> CGColorSpace {
+        switch format {
+        case .rgba8, .rgb8: return CGColorSpace(name: CGColorSpace.sRGB)!
+        case .gray8, .grayAlpha8: return CGColorSpaceCreateDeviceGray()
+        }
     }
 
     deinit {
@@ -104,21 +117,16 @@ extension PixelBuffer {
         let bitsPerComponent = 8
         let bitsPerPixel = pixelFormat.bytesPerPixel * 8
 
-        let colorSpace: CGColorSpace
         let bitmapInfo: CGBitmapInfo
 
         switch pixelFormat {
         case .rgba8:
-            colorSpace = CGColorSpaceCreateDeviceRGB()
             bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
         case .rgb8:
-            colorSpace = CGColorSpaceCreateDeviceRGB()
             bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
         case .gray8:
-            colorSpace = CGColorSpaceCreateDeviceGray()
             bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue)
         case .grayAlpha8:
-            colorSpace = CGColorSpaceCreateDeviceGray()
             bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
         }
 

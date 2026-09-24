@@ -6,7 +6,11 @@
 //
 
 import XCTest
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 /// Unit tests related to the ImageFileFormat enum.
 final class ImageFileFormatTests: XCTestCase {
@@ -57,5 +61,40 @@ final class ImageFileFormatTests: XCTestCase {
                 XCTAssertTrue(ImageFileFormat.isValidFileFormat(data: data))
             }
         }
+    }
+}
+
+extension ImageFileFormatTests {
+    private func ftyp(major: String, compatible: [String], extended: Bool = false) -> Data {
+        let length = (extended ? 24 : 16) + compatible.count * 4
+        var bytes: [UInt8] = [0, 0, 0, UInt8(extended ? 1 : length)] + Array("ftyp".utf8)
+        if extended { bytes += [0, 0, 0, 0, 0, 0, 0, UInt8(length)] }
+        bytes += Array(major.utf8) + [0, 0, 0, 0]
+        for brand in compatible { bytes += Array(brand.utf8) }
+        return Data(bytes)
+    }
+
+    func testHEIFFamilyDetectionUsesBrands() {
+        XCTAssertEqual(ImageFileFormat.detect(from: ftyp(major: "avif", compatible: ["avif", "mif1", "miaf", "MA1A", "MA1B"])), .avif)
+        XCTAssertEqual(ImageFileFormat.detect(from: ftyp(major: "mif1", compatible: ["miaf", "avif"])), .avif)
+        XCTAssertEqual(ImageFileFormat.detect(from: ftyp(major: "heic", compatible: [])), .heic)
+        XCTAssertEqual(ImageFileFormat.detect(from: ftyp(major: "mif1", compatible: ["heic"], extended: true)), .heic)
+        XCTAssertEqual(ImageFileFormat.detect(from: ftyp(major: "avis", compatible: [], extended: true)), .avif)
+        XCTAssertNil(ImageFileFormat.detect(from: ftyp(major: "mp42", compatible: ["mp41"])))
+        XCTAssertNil(ImageFileFormat.detect(from: ftyp(major: "avif", compatible: ["mif1"]).dropLast()))
+    }
+
+    func testFormatDetectionWorksWithNonzeroDataIndices() {
+        let data = Data([0, 1, 2, 0xff, 0xd8, 0xff]).dropFirst(3)
+        XCTAssertEqual(ImageFileFormat.detect(from: data), .jpeg)
+    }
+
+    func testImageSourceTrustsContentOverExtension() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try SyntheticImage.data().write(to: url)
+        let source = try XCTUnwrap(ImageSource(url: url))
+        XCTAssertEqual(source.fileFormat, .png)
+        XCTAssertFalse(source.isRegionDecodable)
     }
 }

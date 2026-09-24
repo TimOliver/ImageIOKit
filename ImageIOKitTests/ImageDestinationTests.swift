@@ -4,7 +4,11 @@
 //
 
 import XCTest
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 final class ImageDestinationTests: XCTestCase {
 
@@ -106,9 +110,9 @@ final class ImageDestinationTests: XCTestCase {
         // JPEG that fits within maxDimension should pass through unchanged
         let maxDim = Int(max(source.imageSize.width, source.imageSize.height)) + 1000
         let conditioned = try source.writeConditionedJPEG(maxDimension: maxDim, to: outputURL)
-        // Should return the same source (passthrough)
-        XCTAssertTrue(conditioned === source,
-                       "JPEG within bounds should pass through without re-encode")
+        XCTAssertEqual(conditioned.url, outputURL)
+        XCTAssertEqual(try Data(contentsOf: outputURL), try Data(contentsOf: XCTUnwrap(source.url)),
+                       "JPEG within bounds should be copied without re-encoding")
     }
 
     func testConditionNonJPEGConvertsToJPEG() throws {
@@ -191,5 +195,40 @@ final class ImageDestinationTests: XCTestCase {
         XCTAssertGreaterThan(underflow.count, 0)
         let overflow = try source.encoded(as: .jpeg, quality: 1.5)
         XCTAssertGreaterThan(overflow.count, 0)
+    }
+}
+
+extension ImageDestinationTests {
+    func testConditionJPEGDataWritesExactBytesAndOverwritesDestination() throws {
+        let dir = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let bytes = SyntheticImage.data(jpeg: true)
+        let source = try XCTUnwrap(ImageSource(data: bytes))
+        let url = dir.appendingPathComponent("copied.jpg")
+        try Data([0, 1, 2]).write(to: url)
+        let written = try source.writeConditionedJPEG(to: url, quality: 0.1)
+        XCTAssertEqual(written.url, url)
+        XCTAssertEqual(try Data(contentsOf: url), bytes)
+        XCTAssertEqual(written.imageSize, source.imageSize)
+    }
+
+    func testConditionJPEGSupportsIdenticalSourceAndDestination() throws {
+        let dir = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let bytes = SyntheticImage.data(jpeg: true)
+        let url = dir.appendingPathComponent("same.jpg")
+        try bytes.write(to: url)
+        let source = try XCTUnwrap(ImageSource(url: url))
+        let written = try source.writeConditionedJPEG(to: url)
+        XCTAssertEqual(written.url, url)
+        XCTAssertEqual(try Data(contentsOf: url), bytes)
+    }
+
+    func testConditionJPEGPropagatesWriteFailure() throws {
+        let dir = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(jpeg: true)))
+        XCTAssertThrowsError(try source.writeConditionedJPEG(to: dir.appendingPathComponent("missing/output.jpg")))
+        XCTAssertThrowsError(try source.writeConditionedJPEG(maxDimension: 0, to: dir.appendingPathComponent("invalid.jpg")))
     }
 }

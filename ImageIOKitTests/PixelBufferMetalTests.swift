@@ -5,7 +5,11 @@
 
 import XCTest
 import Metal
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 final class PixelBufferMetalTests: XCTestCase {
 

@@ -75,17 +75,18 @@ struct JPEGRegionDecoder {
             throw ImageDecoderError.unsupportedOperation
         }
 
-        let clampedRect = cropRect.standardized.intersection(
-            CGRect(x: 0, y: 0, width: imageWidth, height: imageHeight)
-        )
-        guard !clampedRect.isEmpty else {
-            throw ImageDecoderError.invalidOptions("Crop rect \(cropRect) is out of bounds")
-        }
+        let clampedRect = try SoftwareScaler.clampedCrop(cropRect,
+            in: CGSize(width: imageWidth, height: imageHeight))
+        let outputSize = try SoftwareScaler.outputSize(for: clampedRect.size, fitting: targetSize)
 
         guard let handle = tj3Init(Int32(TJINIT_DECOMPRESS.rawValue)) else {
             throw ImageDecoderError.decodeFailed("Failed to initialize TurboJPEG decompressor")
         }
         defer { tj3Destroy(handle) }
+
+        guard tj3Set(handle, Int32(TJPARAM_SAVEMARKERS.rawValue), 4) == 0 else {
+            throw ImageDecoderError.decodeFailed(Self.lastTurboJPEGError(handle))
+        }
 
         let headerStatus: Int32 = imageData.withUnsafeBytes { bufferPtr in
             guard let baseAddress = bufferPtr.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return -1 }
@@ -95,10 +96,12 @@ struct JPEGRegionDecoder {
             throw ImageDecoderError.invalidData
         }
 
+        let colorSpace = try Self.readColorSpace(handle)
+
         let scaleFactor = JPEGRegionDecoder.bestScaleFactor(
             imageWidth: Int(clampedRect.width),
             imageHeight: Int(clampedRect.height),
-            for: targetSize
+            for: outputSize
         )
         guard tj3SetScalingFactor(handle, scaleFactor) == 0 else {
             throw ImageDecoderError.decodeFailed(Self.lastTurboJPEGError(handle))
@@ -154,7 +157,7 @@ struct JPEGRegionDecoder {
         let decodeBuffer = PixelBuffer(
             width: decodeRect.width,
             height: decodeRect.height,
-            pixelFormat: .rgba8
+            pixelFormat: .rgba8, colorSpace: colorSpace
         )
         let decodeStatus: Int32 = imageData.withUnsafeBytes { bufferPtr in
             guard let baseAddress = bufferPtr.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return -1 }
@@ -181,7 +184,7 @@ struct JPEGRegionDecoder {
         let finalBuffer = PixelBuffer(
             width: postCropOffset.width,
             height: postCropOffset.height,
-            pixelFormat: .rgba8
+            pixelFormat: .rgba8, colorSpace: colorSpace
         )
         let bytesPerPixel = 4
 
@@ -220,6 +223,7 @@ struct JPEGRegionDecoder {
 
         for index in 0..<Int(count) {
             let factor = factors[index]
+            guard factor.num <= factor.denom else { continue }
             let scaledW = scaledDimension(imageWidth, factor)
             let scaledH = scaledDimension(imageHeight, factor)
             guard scaledW >= targetWidth, scaledH >= targetHeight else { continue }
@@ -282,5 +286,21 @@ struct JPEGRegionDecoder {
             return "TurboJPEG operation failed"
         }
         return String(cString: message)
+    }
+
+    private static func readColorSpace(_ handle: tjhandle) throws -> CGColorSpace {
+        var bytes: UnsafeMutablePointer<UInt8>?
+        var count = 0
+        guard tj3GetICCProfile(handle, &bytes, &count) == 0 else {
+            throw ImageDecoderError.decodeFailed(lastTurboJPEGError(handle))
+        }
+        guard let bytes else { return PixelBuffer.defaultColorSpace(for: .rgba8) }
+        defer { tj3Free(bytes) }
+        guard let space = CGColorSpace(iccData: Data(bytes: bytes, count: count) as CFData),
+              space.model == .rgb else {
+            // Let ImageIO handle profiles that do not describe TurboJPEG's RGB output.
+            throw ImageDecoderError.unsupportedOperation
+        }
+        return space
     }
 }

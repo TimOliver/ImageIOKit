@@ -28,7 +28,8 @@ enum SoftwareScaler {
 
         let bpp = source.pixelFormat.bytesPerPixel
         let destBytesPerRow = cropWidth * bpp
-        let dest = PixelBuffer(width: cropWidth, height: cropHeight, pixelFormat: source.pixelFormat)
+        let dest = PixelBuffer(width: cropWidth, height: cropHeight, pixelFormat: source.pixelFormat,
+                               colorSpace: source.colorSpace)
 
         for row in 0..<cropHeight {
             let srcOffset = (y + row) * source.bytesPerRow + x * bpp
@@ -50,5 +51,31 @@ enum SoftwareScaler {
                         boundingSize.height / imageSize.height)
         return CGSize(width: (imageSize.width * scale).rounded(.down),
                       height: (imageSize.height * scale).rounded(.down))
+    }
+
+    /// Validates sizes before converting floating-point API inputs to integers.
+    static func outputSize(for imageSize: CGSize, fitting target: CGSize?) throws -> CGSize {
+        guard let target else { return imageSize }
+        guard target.width.isFinite, target.height.isFinite,
+              target.width >= 1, target.height >= 1,
+              target.width < CGFloat(Int.max), target.height < CGFloat(Int.max) else {
+            throw ImageDecoderError.invalidOptions("Target dimensions must be finite and at least one pixel")
+        }
+        let bounds = CGSize(width: min(imageSize.width, target.width.rounded(.down)),
+                            height: min(imageSize.height, target.height.rounded(.down)))
+        let fit = fittingSize(for: imageSize, in: bounds)
+        return CGSize(width: max(1, fit.width), height: max(1, fit.height))
+    }
+
+    static func clampedCrop(_ rect: CGRect, in size: CGSize) throws -> CGRect {
+        guard rect.origin.x.isFinite, rect.origin.y.isFinite,
+              rect.width.isFinite, rect.height.isFinite else {
+            throw ImageDecoderError.invalidOptions("Crop coordinates must be finite")
+        }
+        let crop = rect.standardized.integral.intersection(CGRect(origin: .zero, size: size))
+        guard !crop.isEmpty, !crop.isNull else {
+            throw ImageDecoderError.invalidOptions("Crop rect is out of bounds")
+        }
+        return crop
     }
 }

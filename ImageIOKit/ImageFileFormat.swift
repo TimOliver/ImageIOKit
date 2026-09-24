@@ -39,8 +39,12 @@ public enum ImageFileFormat: CaseIterable, Sendable {
         case .png: return [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]]
         case .webp: return [[0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00,
                             0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38]]
-        case .heic: return [[0x00, 0x00, 0x00, 0x24, 0x66, 0x74, 0x79, 0x70]]
-        case .avif: return [[0x00, 0x00, 0x00, 0x00, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66]]
+        case .heic: return ["heic", "heix", "hevc", "hevx", "mif1", "msf1"].map {
+            [0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70] + Array($0.utf8)
+        }
+        case .avif: return ["avif", "avis"].map {
+            [0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70] + Array($0.utf8)
+        }
         case .jpegXL: return [[0xFF, 0x0A], [0x00, 0x00, 0x00, 0x0C, 0x4A,
                                              0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A]]
         }
@@ -70,7 +74,7 @@ public enum ImageFileFormat: CaseIterable, Sendable {
         case .webp:   return UTType.webP.identifier as CFString
         case .heic:   return UTType.heic.identifier as CFString
         case .avif:   return "public.avif" as CFString
-        case .jpegXL: return "public.jxl" as CFString
+        case .jpegXL: return "public.jpeg-xl" as CFString
         }
     }
 }
@@ -107,23 +111,50 @@ extension ImageFileFormat {
     /// - Parameter data: Compressed image file data.
     /// - Returns: The detected format, or `nil` if unrecognized.
     public static func detect(from data: Data) -> ImageFileFormat? {
-        let magicNumberMatchedBlock: (([UInt8]) -> Bool) = { magicNumber in
-            let magicNumberLength = magicNumber.count
-            if data.count < magicNumberLength { return false }
-            let buffer = data.prefix(magicNumber.count)
-            for index in 0..<magicNumberLength {
-                let byte = magicNumber[index]
-                if byte == 0x00 { continue } // Treat 0 values as wildcards
-                if byte != buffer[index] {
-                    return false
+        data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            for format in allCases where format != .heic && format != .avif {
+                for signature in format.magicNumbers where bytes.count >= signature.count {
+                    if signature.enumerated().allSatisfy({ index, byte in byte == 0 || bytes[index] == byte }) {
+                        return format
+                    }
                 }
             }
-            return true
+            // ISO BMFF brands identify HEIF-family codecs; box sizes do not.
+            func uint32(_ offset: Int) -> UInt64 {
+                (0..<4).reduce(UInt64(0)) { ($0 << 8) | UInt64(bytes[offset + $1]) }
+            }
+            func brand(_ offset: Int) -> String {
+                String(bytes: bytes[offset..<(offset + 4)], encoding: .ascii) ?? ""
+            }
+            var offset = 0
+            while bytes.count - offset >= 8 {
+                var length = uint32(offset)
+                var header = 8
+                if length == 1 {
+                    guard bytes.count - offset >= 16 else { return nil }
+                    length = (uint32(offset + 8) << 32) | uint32(offset + 12)
+                    header = 16
+                } else if length == 0 {
+                    length = UInt64(bytes.count - offset)
+                }
+                guard length >= header, length <= UInt64(bytes.count - offset) else { return nil }
+                let end = offset + Int(length)
+                if brand(offset + 4) == "ftyp" {
+                    guard Int(length) >= header + 8, (Int(length) - header) % 4 == 0 else { return nil }
+                    var brands = [brand(offset + header)]
+                    var position = offset + header + 8 // Skip the minor version.
+                    while position < end {
+                        brands.append(brand(position))
+                        position += 4
+                    }
+                    if brands.contains(where: { $0 == "avif" || $0 == "avis" }) { return .avif }
+                    let heifBrands = ["heic", "heix", "hevc", "hevx", "mif1", "msf1"]
+                    return brands.contains(where: heifBrands.contains) ? .heic : nil
+                }
+                offset = end
+            }
+            return nil
         }
-
-        return ImageFileFormat.allCases.first(where: { format in
-            format.magicNumbers.contains(where: magicNumberMatchedBlock)
-        })
     }
 
     /// Detects the image format from a file URL's extension.

@@ -1,0 +1,14 @@
+name: Library Tests
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  swift-package:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Swift 6 Package in Release Mode
+        run: bash scripts/test-package.sh

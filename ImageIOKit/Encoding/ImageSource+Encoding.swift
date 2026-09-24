@@ -2,8 +2,7 @@
 //  ImageSource+Encoding.swift
 //  ImageIOKit
 //
-//  Encode/write extensions on ImageSource using CGImageDestinationAddImageFromSource
-//  for zero-decode stream copies when possible. Also hosts condition/transcode.
+//  ImageIO encoding, conditioned JPEG writing, and lossless JXL reconstruction.
 //
 
 import Foundation
@@ -16,9 +15,8 @@ public extension ImageSource {
 
     /// Encode to the specified format.
     ///
-    /// When the source format is compatible with the target (e.g. no alpha strip
-    /// needed), the image data is copied directly via `CGImageDestinationAddImageFromSource`
-    /// without a full decode/re-encode roundtrip.
+    /// ImageIO manages decoding and encoding through `CGImageDestinationAddImageFromSource`
+    /// when no explicit alpha conversion is required. This is not a byte-preserving copy.
     ///
     /// - Parameters:
     ///   - format: The target image file format.
@@ -44,8 +42,7 @@ public extension ImageSource {
 
     /// Encode and write to disk.
     ///
-    /// When the source format is compatible with the target, the image data is
-    /// copied directly without a full decode/re-encode roundtrip.
+    /// ImageIO manages the conversion; this can decode and re-encode the image.
     ///
     /// - Parameters:
     ///   - url: The file URL to write to.
@@ -74,13 +71,14 @@ public extension ImageSource {
 
     /// Produces a JPEG file optimized for efficient partial decoding.
     ///
-    /// - If the source is already JPEG and fits within `maxDimension`, returns
-    ///   the original source unchanged (no work done).
+    /// - If the source is already JPEG and fits within `maxDimension`, writes
+    ///   a byte-identical copy without re-encoding (quality is ignored).
     /// - For JXL-from-JPEG sources that fit within `maxDimension`, writes the
     ///   losslessly reconstructed JPEG to `url` (zero quality loss).
     /// - Otherwise, decodes at a resolution capped to `maxDimension`
     ///   (preserving aspect ratio), encodes as JPEG, and writes to `url`.
     ///
+    /// Always returns a source pointing to the destination file on success.
     /// The caller decides where to write and when to clean up.
     ///
     /// - Parameters:
@@ -92,12 +90,23 @@ public extension ImageSource {
     func writeConditionedJPEG(maxDimension: Int = 4096,
                               to url: URL,
                               quality: Double = 0.85) throws -> ImageSource {
+        guard isLoaded, maxDimension > 0, url.isFileURL else {
+            throw ImageEncoderError.encodeFailed("Conditioning requires a loaded source, a positive dimension, and a file URL")
+        }
         let maxDim = CGFloat(maxDimension)
         let longEdge = max(imageSize.width, imageSize.height)
 
-        // Fast path: already JPEG and fits — no work needed
+        // Copy compressed bytes atomically, including when the destination is the source.
         if fileFormat == .jpeg && longEdge <= maxDim {
-            return self
+            let compressed: Data
+            if let data { compressed = data }
+            else if let sourceURL = self.url { compressed = try Data(contentsOf: sourceURL, options: .mappedIfSafe) }
+            else { throw ImageEncoderError.encodeFailed("Missing JPEG source") }
+            try compressed.write(to: url, options: .atomic)
+            guard let written = ImageSource(url: url) else {
+                throw ImageEncoderError.encodeFailed("Failed to load copied JPEG")
+            }
+            return written
         }
 
         // JXL → lossless JPEG reconstruction avoids the expensive full JXL decode.
@@ -105,7 +114,7 @@ public extension ImageSource {
         if fileFormat == .jpegXL, let jpegData = reconstructJPEGfromJPEGXL() {
             if longEdge <= maxDim {
                 // Fits — write reconstructed JPEG directly
-                try jpegData.write(to: url)
+                try jpegData.write(to: url, options: .atomic)
                 guard let conditioned = ImageSource(url: url) else {
                     throw ImageEncoderError.encodeFailed("Failed to load conditioned JPEG from JXL reconstruction")
                 }
@@ -231,7 +240,7 @@ private extension ImageSource {
     func addImage(to dest: CGImageDestination,
                   format: ImageFileFormat,
                   properties: [CFString: Any]) throws {
-        // Fast path: no alpha strip needed — copy directly from source without decoding
+        // Let ImageIO manage conversion when no explicit alpha strip is needed.
         if !format.isOpaque || !hasAlpha, let source = cgImageSource {
             CGImageDestinationAddImageFromSource(dest, source, 0, properties as CFDictionary)
             return

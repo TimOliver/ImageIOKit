@@ -10,7 +10,11 @@
 
 import XCTest
 import Darwin.Mach
+#if SWIFT_PACKAGE
+@testable import ImageIOKit
+#else
 @testable import ImageIOKitExample
+#endif
 
 final class MemoryTrackingTests: XCTestCase {
 
@@ -117,7 +121,7 @@ final class MemoryTrackingTests: XCTestCase {
     // MARK: - JPEG Decode is Memory-Efficient
 
     /// JPEG decode should be the most memory-efficient format due to its
-    /// simple decompression and the 0.5x multiplier on estimatedDecodeMemory.
+    /// simple decompression.
     func testJPEGDecodeIsMemoryEfficient() {
         let source = makeSource(for: .jpeg)
         let bitmap = rawBitmapSize(for: source)
@@ -192,23 +196,17 @@ final class MemoryTrackingTests: XCTestCase {
 
     /// Validates that estimatedDecodeMemory is reasonable relative to
     /// the raw bitmap size and the format multipliers.
-    func testEstimatedDecodeMemoryMultipliers() {
+    func testEstimatedDecodeMemoryIncludesOutputAndWorkingStorage() {
         let jpeg = makeSource(for: .jpeg)
         let png = makeSource(for: .png)
         let jxl = makeSource(for: .jpegXL)
 
         let bitmap = rawBitmapSize(for: jpeg)
 
-        // JPEG: 0.5x → less than 1x raw bitmap
-        XCTAssertLessThan(Int64(jpeg.estimatedDecodeMemory), bitmap)
-
-        // PNG: 1.5x → between 1x and 2x
+        XCTAssertGreaterThan(Int64(jpeg.estimatedDecodeMemory), bitmap)
         XCTAssertGreaterThan(Int64(png.estimatedDecodeMemory), bitmap)
-        XCTAssertLessThan(Int64(png.estimatedDecodeMemory), bitmap * 2)
-
-        // JXL: 1.5x → between 1x and 2x
         XCTAssertGreaterThan(Int64(jxl.estimatedDecodeMemory), bitmap)
-        XCTAssertLessThan(Int64(jxl.estimatedDecodeMemory), bitmap * 2)
+        XCTAssertGreaterThan(png.estimatedDecodeMemory, jpeg.estimatedDecodeMemory)
     }
 
     // MARK: - Performance Memory Metrics (XCTMemoryMetric)

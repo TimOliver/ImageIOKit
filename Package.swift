@@ -19,7 +19,14 @@ let package = Package(
                 .product(name: "turbojpeg", package: "libjpeg-turbo-cocoa"),
                 .product(name: "jxl", package: "libjxl-cocoa"),
             ],
-            path: "ImageIOKit"
+            path: "ImageIOKit",
+            linkerSettings: [.linkedLibrary("c++")]
+        ),
+        .testTarget(
+            name: "ImageIOKitTests",
+            dependencies: ["ImageIOKit", .product(name: "jxl", package: "libjxl-cocoa")],
+            path: "ImageIOKitTests",
+            resources: [.copy("SampleImages")]
         ),
     ]
 )
