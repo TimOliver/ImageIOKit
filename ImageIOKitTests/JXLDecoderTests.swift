@@ -255,6 +255,90 @@ final class JXLDecoderTests: XCTestCase {
 }
 
 extension JXLDecoderTests {
+    private func thumbnailTestSource(_ data: Data) throws -> ImageSource {
+        let source = ImageSource(data: data)
+        if #unavailable(iOS 18.0) {
+            try XCTSkipIf(source == nil,
+                          "Older ImageIO cannot read this synthetic JXL's metadata; native alpha/orientation tests cover its pixels")
+        }
+        return try XCTUnwrap(source)
+    }
+
+    func testRawThumbnailRetainsRoundedThumbnailSampling() throws {
+        let pixels: [UInt8] = (0..<35 * 25).flatMap { index in
+            index % 7 < 3 ? [UInt8(255), 0, 0, 255] : [0, 0, 255, 255]
+        }
+        let source = try thumbnailTestSource(SyntheticImage.jxl(width: 35, height: 25, rgba: pixels))
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 16, height: 11))?.cgImage)
+        XCTAssertEqual(thumbnail.width, 15)
+        XCTAssertEqual(thumbnail.height, 11)
+        let expected = PixelBuffer(width: 16, height: 11, pixelFormat: .rgba8)
+        let context = try XCTUnwrap(CGContext(data: expected.data, width: 16, height: 11,
+            bitsPerComponent: 8, bytesPerRow: expected.bytesPerRow, space: expected.colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.interpolationQuality = .high
+        context.draw(thumbnail, in: CGRect(x: 0, y: 0, width: 16, height: 11))
+        let actual = try source.decode(targetSize: CGSize(width: 16, height: 16))
+        XCTAssertEqual(actual.width, 16)
+        XCTAssertEqual(actual.height, 11)
+        XCTAssertEqual(memcmp(actual.data, expected.data, expected.dataSize), 0)
+    }
+
+    func testRawGrayscaleThumbnailRetainsSRGBConversionBeforeGray() throws {
+        let p3 = try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+        let icc = try XCTUnwrap(p3.copyICCData()) as Data
+        let pixels: [UInt8] = Array(repeating: [255, 0, 0, 255], count: 32 * 16).flatMap { $0 }
+        let source = try thumbnailTestSource(SyntheticImage.jxl(width: 32, height: 16, rgba: pixels, icc: icc))
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 8, height: 4))?.cgImage)
+        XCTAssertEqual(thumbnail.colorSpace?.name, CGColorSpace.sRGB)
+        let expected = PixelBuffer(width: 8, height: 4, pixelFormat: .gray8)
+        let context = try XCTUnwrap(CGContext(data: expected.data, width: 8, height: 4,
+            bitsPerComponent: 8, bytesPerRow: expected.bytesPerRow, space: expected.colorSpace,
+            bitmapInfo: CGImageAlphaInfo.none.rawValue))
+        context.interpolationQuality = .high
+        context.draw(thumbnail, in: CGRect(x: 0, y: 0, width: 8, height: 4))
+        let actual = try source.decode(targetSize: CGSize(width: 8, height: 8), pixelFormat: .gray8)
+        XCTAssertEqual(actual.width, 8)
+        XCTAssertEqual(actual.height, 4)
+        XCTAssertEqual(memcmp(actual.data, expected.data, expected.dataSize), 0)
+    }
+
+    func testRawThumbnailPreservesOrientationAlphaAndRequestedLayout() throws {
+        let mappings = [[0, 1, 2, 3], [1, 0, 3, 2], [3, 2, 1, 0], [2, 3, 0, 1],
+                        [0, 2, 1, 3], [2, 0, 3, 1], [3, 1, 2, 0], [1, 3, 0, 2]]
+        let pixels: [UInt8] = (0..<32 * 16).flatMap { index in
+            index % 32 < 16 ? [UInt8(128), 0, 0, 128] : [0, 255, 0, 255]
+        }
+        for orientation in UInt32(1)...8 {
+            let data = SyntheticImage.jxl(premultiplied: true, width: 32, height: 16,
+                                          orientation: orientation, rgba: pixels)
+            let source = try thumbnailTestSource(data)
+            for format in [PixelBuffer.PixelFormat.rgba8, .rgb8, .grayAlpha8] {
+                let buffer = try source.decode(targetSize: CGSize(width: 8, height: 8), pixelFormat: format)
+                XCTAssertEqual(buffer.width, orientation >= 5 ? 4 : 8)
+                XCTAssertEqual(buffer.height, orientation >= 5 ? 8 : 4)
+                XCTAssertEqual(buffer.pixelFormat, format)
+                XCTAssertEqual(buffer.colorSpace, PixelBuffer.defaultColorSpace(for: format))
+                let corners = [(0, 0), (buffer.width - 1, 0),
+                               (0, buffer.height - 1), (buffer.width - 1, buffer.height - 1)]
+                for (corner, point) in corners.enumerated() {
+                    let isRed = mappings[Int(orientation - 1)][corner] % 2 == 0
+                    let pixel = buffer.pixel(at: point.0, y: point.1)
+                    if format == .grayAlpha8 {
+                        XCTAssertEqual(pixel.r, isRed ? 38 : 149)
+                        XCTAssertEqual(pixel.g, pixel.r)
+                        XCTAssertEqual(pixel.b, pixel.r)
+                    } else {
+                        XCTAssertEqual(pixel.r, isRed ? 128 : 0)
+                        XCTAssertEqual(pixel.g, isRed ? 0 : 255)
+                        XCTAssertEqual(pixel.b, 0)
+                    }
+                    XCTAssertEqual(pixel.a, format.hasAlpha && isRed ? 128 : 255)
+                }
+            }
+        }
+    }
+
     func testTransparentJXLPremultipliesBothFullAndThumbnailOutput() throws {
         for premultiplied in [false, true] {
             let data = SyntheticImage.jxl(premultiplied: premultiplied)

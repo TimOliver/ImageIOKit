@@ -82,7 +82,18 @@ extension ImageSource {
             }
             image = cropped
         } else if targetSize != nil {
-            image = try thumbnailCGImage(fitting: size)
+            if fileFormat == .jpegXL {
+                // Preserve display-thumbnail fitting and sRGB normalization. Reuse its
+                // buffer when the final size/layout matches instead of rendering a copy.
+                let thumbnailSize = try SoftwareScaler.outputSize(for: imageSize, fitting: size)
+                if let buffer = nativeJXLThumbnail(fitting: thumbnailSize) {
+                    let thumbnail = try finish(buffer, size: thumbnailSize, pixelFormat: .rgba8)
+                    return try finish(thumbnail, size: size, pixelFormat: pixelFormat)
+                }
+                image = try imageIOThumbnail(fitting: thumbnailSize)
+            } else {
+                image = try thumbnailCGImage(fitting: size)
+            }
         } else {
             guard let full = decodeFullCGImage() else {
                 throw ImageDecoderError.decodeFailed("Failed to decode full image")
@@ -102,14 +113,17 @@ private extension ImageSource {
            let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
             return image
         }
-        if fileFormat == .jpegXL {
-            let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
-            if let buffer = try? decoder?.decodeThumbnail(fittingSize: size),
-               let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
-                return image
-            }
+        if let buffer = nativeJXLThumbnail(fitting: size),
+           let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
+            return image
         }
         return try imageIOThumbnail(fitting: size)
+    }
+
+    func nativeJXLThumbnail(fitting size: CGSize) -> PixelBuffer? {
+        guard fileFormat == .jpegXL else { return nil }
+        let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
+        return try? decoder?.decodeThumbnail(fittingSize: size)
     }
 
     func nativeWebP(targetSize: CGSize?, cropRect: CGRect? = nil) throws -> PixelBuffer? {
