@@ -24,9 +24,14 @@ ImageIOKit supports **JPEG**, **PNG**, **WebP**, **HEIC**, **AVIF**, and **JPEG 
 
 ## Requirements
 
-- iOS 18.0+
+- iOS 16.0+ (the minimum supported by the bundled libjpeg-turbo and libjxl dependencies)
 - Swift 6.0+
 - Xcode 16.0+
+
+Individual formats also depend on the operating system's ImageIO support. In particular,
+the public `ImageSource` facade still uses ImageIO to read JPEG XL metadata; linking
+libjxl does not by itself enable JPEG XL on older operating systems. Check
+`ImageFileFormat.isSupportedByOSVersion` before offering a format.
 
 ## Installation
 
@@ -98,7 +103,23 @@ All decoded images are upright. Crop rectangles use upright pixel coordinates wi
 
 WebP thumbnails and raw pixel buffers use libwebp for upright still images. Supported crops are applied before native scaling. Animation, rotated/mirrored images, unsupported ICC profiles, and lossy crops with odd x/y origins retain ImageIO fallbacks. Full-image `CGImage`/`UIImage` decoding continues to use ImageIO. WebP cropping is not random-access tile decoding: lossless and alpha images can still require source-sized working storage, so `isRegionDecodable` remains false for WebP and memory estimates retain their full-resolution allowance.
 
+JPEG XL thumbnails use the approximately 1/8-resolution DC preview when it is large enough. Larger thumbnails average 2×2 or 4×4 pixel blocks in libjxl's output callbacks before the final resize, avoiding a full-resolution output bitmap when at least 2× reduction is possible. This filtering preserves orientation, color profiles, and premultiplied alpha; it is not pixel-identical to resizing a full decode. The codec still processes full image detail above the DC limit and can require source-sized working storage. See the [iPad JXL measurements](docs/benchmarks/2026-09-26-jxl-improvements.md).
+
 ### Encoding and Transcoding
+
+To cache a downsampled page, encode the decoded buffer directly. This reuses its pixels, including the optimized JXL/WebP thumbnail paths:
+
+```swift
+let pixels = try source.decode(targetSize: CGSize(width: 2048, height: 2048))
+// Display pixels.makeCGImage(), and write from your decoding/cache queue.
+try pixels.write(to: cacheURL, as: .png) // Lossless compression; retains alpha.
+// Or use JPEG for a smaller lossy cache:
+try pixels.write(to: jpegCacheURL, as: .jpeg) // Defaults to quality 0.95.
+```
+
+`PixelBuffer.write` is synchronous and retains the buffer's color profile. JPEG composites transparency over black. It writes a sibling temporary file and atomically replaces the destination after successful encoding; the parent directory must already exist. Do not mutate the pixels while writing. Encoder availability depends on ImageIO on the device. Keep the archive originals for zooming beyond the cached resolution.
+
+See the [iPad disk-cache benchmark](docs/benchmarks/2026-09-26-disk-cache.md) for PNG versus JPEG quality, size, write time, reload time, and source-downsampling memory on oversized publisher comic pages.
 
 ```swift
 // Encode to a format using ImageIO
@@ -171,7 +192,7 @@ ImageSource (facade)
 │   ├── Full decode via CGImageSourceCreateImageAtIndex
 │   ├── JPEG region decode via JPEGRegionDecoder (TurboJPEG cropping)
 │   ├── WebP thumbnails and raw buffers via WebPImageDecoder (native scaling/cropping)
-│   └── JXL thumbnail via JXLDecoder (libjxl DC-only progressive decode)
+│   └── JXL thumbnail via JXLDecoder (DC preview or filtered output callbacks)
 ├── Encoding (ImageSource+Encoding)
 │   ├── ImageIO encode via CGImageDestinationAddImageFromSource
 │   ├── Alpha-strip fallback via CGImage.strippingAlpha()
@@ -191,7 +212,7 @@ While ImageIO handles most decode/encode operations, three C libraries provide a
 | Library | Purpose | Import |
 |---------|---------|--------|
 | [libjpeg-turbo](https://github.com/TimOliver/libjpeg-turbo-cocoa) | JPEG sub-region decode (`tj3SetCroppingRegion`) | `import turbojpeg` |
-| [libjxl](https://github.com/TimOliver/libjxl-cocoa) | JXL → JPEG lossless reconstruction, DC-only thumbnail decode | `import jxl` |
+| [libjxl](https://github.com/TimOliver/libjxl-cocoa) | JXL → JPEG lossless reconstruction, DC and filtered thumbnail decode | `import jxl` |
 | [libwebp](https://github.com/TimOliver/WebP-Cocoa) | Still-image scaling/cropping, premultiplied output, ICC extraction; decoder-only `WebPDecoding` product | `import WebPDecoder`, `import WebPDemux` |
 
 ## Testing

@@ -300,3 +300,121 @@ extension JXLDecoderTests {
         XCTAssertEqual(ImageSource(data: actual)?.fileFormat, .jpeg)
     }
 }
+
+
+extension JXLDecoderTests {
+    // A request above the DC limit must not produce a full-resolution output buffer.
+    func testIntermediateThumbnailIsReducedAndAveragesFineDetail() throws {
+        let pixels = (0..<16 * 16).flatMap { i -> [UInt8] in
+            let value: UInt8 = (i % 16 + i / 16) % 2 == 0 ? 255 : 0
+            return [value, value, value, 255]
+        }
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(rgba: pixels)))
+        for bound in [4, 8] {
+            let output = try decoder.decodeThumbnail(fittingSize: CGSize(width: bound, height: bound))
+            XCTAssertEqual(output.width, bound)
+            XCTAssertEqual(output.height, bound)
+            XCTAssertLessThanOrEqual(output.dataSize, bound * bound * 4)
+            for y in 0..<output.height {
+                for x in 0..<output.width {
+                    let pixel = output.pixel(at: x, y: y)
+                    XCTAssertEqual(Int(pixel.r), 128, accuracy: 1)
+                    XCTAssertEqual(pixel.r, pixel.g)
+                    XCTAssertEqual(pixel.r, pixel.b)
+                    XCTAssertEqual(pixel.a, 255)
+                }
+            }
+        }
+    }
+
+    func testIntermediateThumbnailRetainsWideGamutProfile() throws {
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+        let icc = try XCTUnwrap(space.copyICCData()) as Data
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(icc: icc)))
+        let full = try decoder.decode()
+        let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4))
+        XCTAssertEqual(thumbnail.width, 4)
+        XCTAssertEqual(thumbnail.colorSpace.name, CGColorSpace.displayP3)
+        XCTAssertEqual(thumbnail.colorSpace, full.colorSpace)
+        XCTAssertEqual(thumbnail.pixel(at: 0, y: 0).r, full.pixel(at: 0, y: 0).r)
+    }
+
+    func testIntermediateThumbnailIncludesPartialEdgesAndPremultipliesBeforeFiltering() throws {
+        // 9x7 reduces to 3x2 with 4x4 boxes. Only the partial right/bottom boxes are red.
+        var pixels: [UInt8] = []
+        for y in 0..<7 {
+            for x in 0..<9 {
+                pixels += (x == 8 || y >= 4) ? [255, 0, 0, 255] : [0, 0, 255, 0]
+            }
+        }
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(width: 9, height: 7, rgba: pixels)))
+        let output = try decoder.decodeThumbnail(fittingSize: CGSize(width: 3, height: 2))
+        XCTAssertEqual(output.width, 3)
+        XCTAssertEqual(output.height, 2)
+        let transparent = output.pixel(at: 0, y: 0)
+        XCTAssertEqual(transparent.r, 0)
+        XCTAssertEqual(transparent.b, 0)
+        XCTAssertEqual(transparent.a, 0)
+        let edge = output.pixel(at: output.width - 1, y: output.height - 1)
+        XCTAssertEqual(edge.r, 255)
+        XCTAssertEqual(edge.a, 255)
+    }
+}
+
+extension JXLDecoderTests {
+    func testBoxFilterHandlesConcurrentFragmentedRowsAndPartialBoxes() {
+        // Deliberately split every source row inside a box and deliver rows backwards.
+        final class Delivery: @unchecked Sendable {
+            let filter = JXLBoxDownsampler(width: 9, height: 7, factor: 4, premultiply: true,
+                                          colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
+        }
+        let delivery = Delivery()
+        DispatchQueue.concurrentPerform(iterations: 7) { index in
+            let y = 6 - index
+            let row: [UInt8] = (0..<9).flatMap { x in
+                x % 2 == 0 ? [UInt8(255), 0, 0, 255] : [0, 0, 255, 0]
+            }
+            row.withUnsafeBytes { pixels in
+                delivery.filter.consume(x: 3, y: y, count: 6, pixels: pixels.baseAddress!.advanced(by: 12))
+                delivery.filter.consume(x: 0, y: y, count: 3, pixels: pixels.baseAddress!)
+            }
+        }
+        let result = delivery.filter.finish()
+        XCTAssertEqual(result.width, 3)
+        XCTAssertEqual(result.height, 2)
+        for y in 0..<2 {
+            for x in 0..<3 {
+                let pixel = result.pixel(at: x, y: y)
+                XCTAssertEqual(pixel.r, x == 2 ? 255 : 128)
+                XCTAssertEqual(pixel.g, 0)
+                XCTAssertEqual(pixel.b, 0)
+                XCTAssertEqual(pixel.a, pixel.r)
+            }
+        }
+    }
+
+    func testIntermediateThumbnailPreservesAlphaAndOrientation() throws {
+        for orientation in UInt32(1)...8 {
+            for associated in [false, true] {
+                let pixels: [UInt8] = (0..<32 * 16).flatMap { i in
+                    i % 32 < 16 ? [UInt8(associated ? 128 : 255), 0, 0, 128] : [0, 255, 0, 255]
+                }
+                let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(premultiplied: associated,
+                    width: 32, height: 16, orientation: orientation, rgba: pixels)))
+                let full = try decoder.decode()
+                let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 8, height: 8))
+                XCTAssertEqual(thumbnail.width, orientation >= 5 ? 4 : 8)
+                XCTAssertEqual(thumbnail.height, orientation >= 5 ? 8 : 4)
+                for y in 0..<thumbnail.height {
+                    for x in 0..<thumbnail.width {
+                        let actual = thumbnail.pixel(at: x, y: y)
+                        let expected = full.pixel(at: x * 4, y: y * 4)
+                        XCTAssertEqual(actual.r, expected.r)
+                        XCTAssertEqual(actual.g, expected.g)
+                        XCTAssertEqual(actual.a, expected.a)
+                    }
+                }
+            }
+        }
+    }
+}

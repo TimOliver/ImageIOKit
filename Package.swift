@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "ImageIOKit",
-    platforms: [.iOS(.v18)],
+    platforms: [.iOS(.v16)],
     products: [
         .library(name: "ImageIOKit", targets: ["ImageIOKit"]),
     ],

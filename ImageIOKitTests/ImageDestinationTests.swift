@@ -4,6 +4,7 @@
 //
 
 import XCTest
+import ImageIO
 #if SWIFT_PACKAGE
 @testable import ImageIOKit
 #else
@@ -11,6 +12,112 @@ import XCTest
 #endif
 
 final class ImageDestinationTests: XCTestCase {
+
+    func testPixelBufferPNGPreservesPaddedPixelsAndAlpha() throws {
+        let directory = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let memory = UnsafeMutableRawPointer.allocate(byteCount: 32, alignment: 16)
+        memory.initializeMemory(as: UInt8.self, repeating: 99, count: 32)
+        let buffer = PixelBuffer(width: 3, height: 2, bytesPerRow: 16, pixelFormat: .rgba8, data: memory)
+        let rows: [[UInt8]] = [[255, 0, 0, 255, 0, 128, 0, 128, 0, 0, 0, 0],
+                              [0, 0, 255, 255, 64, 64, 64, 128, 255, 255, 255, 255]]
+        for y in 0..<2 {
+            rows[y].withUnsafeBytes { memory.advanced(by: y * 16).copyMemory(from: $0.baseAddress!, byteCount: 12) }
+        }
+        let original = Data(bytes: buffer.data, count: buffer.dataSize)
+        let url = directory.appendingPathComponent("page.png")
+        try buffer.write(to: url, as: .png)
+        let source = try XCTUnwrap(ImageSource(url: url))
+        XCTAssertEqual(source.imageSize, CGSize(width: 3, height: 2))
+        let reloaded = try source.decode()
+        for y in 0..<2 {
+            for x in 0..<3 {
+                let expected = buffer.pixel(at: x, y: y), actual = reloaded.pixel(at: x, y: y)
+                XCTAssertEqual(actual.r, expected.r)
+                XCTAssertEqual(actual.g, expected.g)
+                XCTAssertEqual(actual.b, expected.b)
+                XCTAssertEqual(actual.a, expected.a)
+            }
+        }
+        XCTAssertEqual(Data(bytes: buffer.data, count: buffer.dataSize), original)
+    }
+
+    func testPixelBufferJPEGFlattensAlphaOverBlack() throws {
+        let directory = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let buffer = PixelBuffer(width: 32, height: 32, pixelFormat: .rgba8)
+        let pixels = buffer.data.assumingMemoryBound(to: UInt8.self)
+        for i in 0..<(32 * 32) {
+            pixels[i * 4] = 128; pixels[i * 4 + 3] = 128
+        }
+        let url = directory.appendingPathComponent("page.jpg")
+        try buffer.write(to: url, as: .jpeg)
+        let source = try XCTUnwrap(ImageSource(url: url))
+        XCTAssertEqual(source.fileFormat, .jpeg)
+        XCTAssertFalse(source.hasAlpha)
+        let pixel = try source.decode().pixel(at: 16, y: 16)
+        XCTAssertEqual(Int(pixel.r), 128, accuracy: 2)
+        XCTAssertEqual(Int(pixel.g), 0, accuracy: 2)
+        XCTAssertEqual(Int(pixel.b), 0, accuracy: 2)
+        XCTAssertEqual(pixel.a, 255)
+        XCTAssertEqual(buffer.pixel(at: 16, y: 16).a, 128)
+    }
+
+    func testPixelBufferJPEGFlattensGrayscaleAlphaOverBlack() throws {
+        let directory = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let buffer = PixelBuffer(width: 16, height: 16, pixelFormat: .grayAlpha8)
+        let pixels = buffer.data.assumingMemoryBound(to: UInt8.self)
+        for i in 0..<(16 * 16) { pixels[i * 2] = 64; pixels[i * 2 + 1] = 128 }
+        let url = directory.appendingPathComponent("gray.jpg")
+        try buffer.write(to: url, as: .jpeg, quality: 1)
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))
+        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        XCTAssertEqual(image.colorSpace?.model, .monochrome)
+        let gray = PixelBuffer(width: 16, height: 16, pixelFormat: .gray8)
+        let context = try XCTUnwrap(CGContext(data: gray.data, width: 16, height: 16, bitsPerComponent: 8,
+            bytesPerRow: gray.bytesPerRow, space: buffer.colorSpace, bitmapInfo: CGImageAlphaInfo.none.rawValue))
+        context.draw(image, in: CGRect(x: 0, y: 0, width: 16, height: 16))
+        XCTAssertEqual(Int(gray.pixel(at: 8, y: 8).r), 64, accuracy: 2)
+    }
+
+    func testPixelBufferWriterRetainsProfileAndSupportsEveryLayout() throws {
+        let directory = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let p3 = try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+        for format: PixelBuffer.PixelFormat in [.rgba8, .rgb8, .gray8, .grayAlpha8] {
+            let rgb = format == .rgb8 || format == .rgba8
+            let buffer = PixelBuffer(width: 8, height: 4, pixelFormat: format, colorSpace: rgb ? p3 : nil)
+            memset(buffer.data, 255, buffer.dataSize)
+            let url = directory.appendingPathComponent("\(format).png")
+            try buffer.write(to: url, as: .png)
+            let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))
+            let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+            XCTAssertEqual(image.width, 8)
+            XCTAssertEqual(image.height, 4)
+            if rgb { XCTAssertEqual(image.colorSpace?.name, CGColorSpace.displayP3) }
+            let pixel = try XCTUnwrap(ImageSource(url: url)).decode().pixel(at: 0, y: 0)
+            XCTAssertEqual(pixel.r, 255)
+            XCTAssertEqual(pixel.a, 255)
+        }
+    }
+
+    func testPixelBufferWriteReplacesFileAndCleansUpOnFailure() throws {
+        let directory = makeTempDir()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("page")
+        let sentinel = Data("old cache".utf8)
+        try sentinel.write(to: url)
+        let buffer = PixelBuffer(width: 4, height: 3, pixelFormat: .rgba8)
+        XCTAssertThrowsError(try buffer.write(to: url, as: .jpeg, quality: .nan))
+        XCTAssertEqual(try Data(contentsOf: url), sentinel)
+        try buffer.write(to: url, as: .png)
+        XCTAssertEqual(ImageSource(url: url)?.fileFormat, .png)
+        XCTAssertThrowsError(try buffer.write(to: directory, as: .png))
+        XCTAssertThrowsError(try buffer.write(to: directory.appendingPathComponent("missing/page.png"), as: .png))
+        XCTAssertThrowsError(try buffer.write(to: URL(string: "https://example.com/page.png")!, as: .png))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["page"])
+    }
 
     // MARK: - Helpers
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F20000012F28000000000001 /* PixelBuffer+Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F28000000000001 /* PixelBuffer+Encoding.swift */; };
 		F20000012F27000000000001 /* WebPImageDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F27000000000001 /* WebPImageDecoder.swift */; };
 		A20000012F27000000000001 /* WebPImageDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F27000000000001 /* WebPImageDecoderTests.swift */; };
 		A20000012F27000000000002 /* WebP in Resources */ = {isa = PBXBuildFile; fileRef = A10000012F27000000000002 /* WebP */; };
@@ -68,6 +69,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F10000012F28000000000001 /* PixelBuffer+Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PixelBuffer+Encoding.swift"; sourceTree = "<group>"; };
 		F10000012F27000000000001 /* WebPImageDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageDecoder.swift; sourceTree = "<group>"; };
 		A10000012F27000000000001 /* WebPImageDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageDecoderTests.swift; sourceTree = "<group>"; };
 		A10000012F27000000000002 /* WebP */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebP; sourceTree = "<group>"; };
@@ -251,6 +253,7 @@
 			isa = PBXGroup;
 			children = (
 				F10000012F1800000000000B /* ImageSource+Encoding.swift */,
+				F10000012F28000000000001 /* PixelBuffer+Encoding.swift */,
 				F10000012F18000000000006 /* ImageEncoderError.swift */,
 			);
 			path = Encoding;
@@ -401,6 +404,7 @@
 				F20000012F18000000000004 /* ImageDecoderError.swift in Sources */,
 				F20000012F1800000000000A /* ImageSource+Decoding.swift in Sources */,
 				F20000012F1800000000000B /* ImageSource+Encoding.swift in Sources */,
+				F20000012F28000000000001 /* PixelBuffer+Encoding.swift in Sources */,
 				F20000012F18000000000006 /* ImageEncoderError.swift in Sources */,
 				F20000012F18000000000009 /* JPEGRegionDecoder.swift in Sources */,
 				F2000001201800000000000A /* JXLReconstructor.swift in Sources */,
@@ -511,7 +515,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -569,7 +573,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

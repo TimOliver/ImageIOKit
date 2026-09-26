@@ -87,12 +87,14 @@ enum SyntheticImage {
         return data as Data
     }
 
-    static func jxl(premultiplied: Bool = false) -> Data {
+    static func jxl(premultiplied: Bool = false, width: Int = 16, height: Int = 16,
+                    orientation: UInt32 = 1, rgba: [UInt8]? = nil, icc: Data? = nil) -> Data {
         let encoder = JxlEncoderCreate(nil)!
         defer { JxlEncoderDestroy(encoder) }
         var info = JxlBasicInfo()
         JxlEncoderInitBasicInfo(&info)
-        info.xsize = 16; info.ysize = 16
+        info.xsize = UInt32(width); info.ysize = UInt32(height)
+        info.orientation = JxlOrientation(rawValue: orientation)
         info.bits_per_sample = 8; info.num_color_channels = 3
         info.num_extra_channels = 1; info.alpha_bits = 8
         info.alpha_premultiplied = premultiplied ? 1 : 0
@@ -102,14 +104,22 @@ enum SyntheticImage {
         JxlEncoderInitExtraChannelInfo(JXL_CHANNEL_ALPHA, &alpha)
         alpha.alpha_premultiplied = premultiplied ? 1 : 0
         precondition(JxlEncoderSetExtraChannelInfo(encoder, 0, &alpha) == JXL_ENC_SUCCESS)
-        var color = JxlColorEncoding()
-        JxlColorEncodingSetToSRGB(&color, 0)
-        precondition(JxlEncoderSetColorEncoding(encoder, &color) == JXL_ENC_SUCCESS)
+        if let icc {
+            let status = icc.withUnsafeBytes {
+                JxlEncoderSetICCProfile(encoder, $0.baseAddress!.assumingMemoryBound(to: UInt8.self), $0.count)
+            }
+            precondition(status == JXL_ENC_SUCCESS)
+        } else {
+            var color = JxlColorEncoding()
+            JxlColorEncodingSetToSRGB(&color, 0)
+            precondition(JxlEncoderSetColorEncoding(encoder, &color) == JXL_ENC_SUCCESS)
+        }
         let settings = JxlEncoderFrameSettingsCreate(encoder, nil)!
         precondition(JxlEncoderSetFrameLossless(settings, 1) == JXL_ENC_SUCCESS)
         var format = JxlPixelFormat(num_channels: 4, data_type: JXL_TYPE_UINT8, endianness: JXL_NATIVE_ENDIAN, align: 0)
         let pixel: [UInt8] = [premultiplied ? 128 : 255, 0, 0, 128]
-        let pixels = Array(repeating: pixel, count: 256).flatMap { $0 }
+        let pixels = rgba ?? Array(repeating: pixel, count: width * height).flatMap { $0 }
+        precondition(pixels.count == width * height * 4)
         let status = pixels.withUnsafeBytes { JxlEncoderAddImageFrame(settings, &format, $0.baseAddress, $0.count) }
         precondition(status == JXL_ENC_SUCCESS)
         JxlEncoderCloseInput(encoder)

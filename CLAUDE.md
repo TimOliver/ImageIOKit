@@ -1,17 +1,18 @@
 # ImageIOKit
 
 ## Target
-- iOS 18+, Swift 6 package; an Xcode example app also compiles the sources.
+- iOS 16+, Swift 6 package; an Xcode example app also compiles the sources. libjpeg-turbo and libjxl currently require iOS 16; lowering to iOS 15 also requires compatible dependency builds.
 - Image decoding and conversion building blocks for a comic reader.
 - Callers manage scheduling and page caching externally.
 
 ## Architecture
 - `ImageSource` wraps ImageIO for metadata, full decode, thumbnails, and encoding.
 - `JPEGRegionDecoder` uses TurboJPEG cropped decode and DCT scaling. It retains embedded RGB ICC profiles; ImageIO handles unsupported profiles and rotated/mirrored source regions.
-- `JXLDecoder` uses libjxl callbacks for full and DC-resolution decoding, retains output color profiles, and normalizes alpha to premultiplied components.
+- `JXLDecoder` uses libjxl callbacks for full, DC-resolution, and filtered thumbnail decoding, retains output color profiles, and normalizes alpha to premultiplied components.
 - `JXLReconstructor` reconstructs the original JPEG bitstream from JPEG-derived JXL.
 - `WebPImageDecoder` uses libwebp's decoder-only product for scaled still-image pixels, retaining RGB ICC profiles and emitting premultiplied RGBA directly into `PixelBuffer`. ImageIO handles animation, transformed images, unsupported profiles, and odd-origin lossy crops.
 - `PixelBuffer` owns pixel storage and its color space. `makeCGImage()` retains the buffer without copying; `makeTexture(device:)` copies its components to Metal.
+- `PixelBuffer.write(to:as:quality:)` encodes existing pixels with ImageIO at default quality 0.95 and atomically replaces the destination after finalizing a sibling temporary file. It preserves profiles, keeps PNG alpha, and composites JPEG alpha over black; callers own scheduling and must not mutate pixels during the synchronous write.
 - `SoftwareScaler` centralizes aspect fitting and crop validation.
 
 
@@ -19,7 +20,7 @@
 - `ImageSource` — public facade wrapping `CGImageSource`. `decode(targetSize:cropRect:pixelFormat:)` for full/thumbnail/cropped decode into `PixelBuffer`. `isRegionDecodable` indicates JPEG sources that support native sub-region decode. Caches full-resolution `CGImage` via `NSCache` (purgeable under memory pressure). `estimatedDecodeMemory` for memory budgeting. Supports Xcode Quick Look via `debugQuickLookObject()`.
 - `ImageSource+Encoding` — `encode(as:quality:)` and `write(to:as:quality:)` via `CGImageDestination` with zero-decode fast path. `writeConditionedJPEG(maxDimension:to:quality:)` and `transcoded(to:quality:)` for conditioning/transcoding workflows. `reconstructJPEGfromJPEGXL()` for lossless JXL → JPEG bitstream reconstruction.
 - `JPEGRegionDecoder` — libjpeg `crop_scanline` for JPEG-only tile decode (`import turbojpeg`)
-- `JXLDecoder` — libjxl scanline-callback decode into `PixelBuffer`. DC-only thumbnail path via `JXL_DEC_FRAME_PROGRESSION` for ~1/8th resolution at ~2% memory cost (`import jxl`)
+- `JXLDecoder` — libjxl scanline-callback decode into `PixelBuffer`. DC-only thumbnails via `JXL_DEC_FRAME_PROGRESSION` at approximately 1/8th resolution; 2×2/4×4 box filtering for larger thumbnails avoids a full-resolution output bitmap when possible. Codec working storage can still scale with source dimensions (`import jxl`).
 - `JXLReconstructor` — libjxl JPEG bitstream reconstruction for JXL-from-JPEG sources (`import jxl`)
 - `PixelBuffer` — C-allocated pixel data with zero-copy `CGImage` via retained `CGDataProvider`. Supports 4 formats: `rgba8`, `rgb8`, `gray8`, `grayAlpha8`. Metal texture creation via `makeTexture(device:)`.
 - `SoftwareScaler` — crop and aspect-ratio fitting utility for `PixelBuffer`.
@@ -54,4 +55,3 @@
 - The Xcode `ImageIOKitTests` scheme runs the same tests against the example target.
 - Regression fixtures cover EXIF orientations, rectangular bounds, ICC profiles, JXL alpha, sliced data, container brands, and conditioned writes.
 - libjxl synthetic fixture encoding requires the C++ runtime in test targets.
-
