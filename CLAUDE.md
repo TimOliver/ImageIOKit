@@ -24,8 +24,8 @@ Image decode library for a comic reader app.
 ## Key Classes
 - `ImageSource` — public facade wrapping `CGImageSource`. `decode(targetSize:cropRect:pixelFormat:)` for full/thumbnail/cropped decode into `PixelBuffer`. `isRegionDecodable` indicates JPEG sources that support native sub-region decode. Caches full-resolution `CGImage` via `NSCache` (purgeable under memory pressure). `estimatedDecodeMemory` for memory budgeting. Supports Xcode Quick Look via `debugQuickLookObject()`.
 - `ImageSource+Encoding` — `encode(as:quality:)` and `write(to:as:quality:)` via `CGImageDestination` with zero-decode fast path. `writeConditionedJPEG(maxDimension:to:quality:)` and `transcoded(to:quality:)` for conditioning/transcoding workflows. `reconstructJPEGfromJPEGXL()` for lossless JXL → JPEG bitstream reconstruction.
-- `CGImage+Encoding` — internal `strippingAlpha()` helper for encoding alpha sources to opaque formats.
-- `JPEGRegionDecoder` — libjpeg `crop_scanline` for JPEG-only tile decode (`import jpeglib`)
+- `JPEGRegionDecoder` — libjpeg `crop_scanline` for JPEG-only tile decode (`import turbojpeg`)
+- `JXLDecoder` — libjxl scanline-callback decode into `PixelBuffer`. DC-only thumbnail path via `JXL_DEC_FRAME_PROGRESSION` for ~1/8th resolution at ~2% memory cost (`import jxl`)
 - `JXLReconstructor` — libjxl JPEG bitstream reconstruction for JXL-from-JPEG sources (`import jxl`)
 - `PixelBuffer` — C-allocated pixel data with zero-copy `CGImage` via retained `CGDataProvider`. Supports 4 formats: `rgba8`, `rgb8`, `gray8`, `grayAlpha8`. Metal texture creation via `makeTexture(device:)`.
 - `SoftwareScaler` — crop and aspect-ratio fitting utility for `PixelBuffer`.
@@ -36,5 +36,5 @@ Image decode library for a comic reader app.
 - Use integer arithmetic for BT.601 luminance (`299*R + 587*G + 114*B`) to avoid floating-point boundary errors
 
 ## SPM Dependencies
-- `libjpeg-turbo` (TimOliver/libjpeg-turbo-cocoa ≥ 3.1.3) — precompiled libjpeg-turbo xcframework; `import jpeglib`, product `libjpeg`
+- `libjpeg-turbo` (TimOliver/libjpeg-turbo-cocoa ≥ 3.1.3) — precompiled libjpeg-turbo xcframework; `import turbojpeg`, product `turbojpeg`
 - `libjxl` (TimOliver/libjxl-cocoa ≥ 0.11.2) — precompiled libjxl xcframework; `import jxl`, product `jxl`

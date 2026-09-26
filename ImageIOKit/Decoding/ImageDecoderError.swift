@@ -6,7 +6,7 @@
 import Foundation
 
 /// Errors produced by image decode operations.
-public enum ImageDecoderError: Error {
+public enum ImageDecoderError: Error, Sendable {
     /// The input data is not a valid image.
     case invalidData
     /// The decode operation failed. The associated string provides details.

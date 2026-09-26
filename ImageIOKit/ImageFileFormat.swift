@@ -9,7 +9,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 /// A list of all supported image file formats, and their respective metadata
-public enum ImageFileFormat: CaseIterable {
+public enum ImageFileFormat: CaseIterable, Sendable {
     case jpeg
     case png
     case webp

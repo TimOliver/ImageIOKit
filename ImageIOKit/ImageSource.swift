@@ -13,7 +13,7 @@ import ImageIO
 import UIKit
 
 /// The types of color modes in which an image may be encoded.
-public enum ImageColorModel {
+public enum ImageColorModel: Sendable {
     case rgb
     case grayscale
     case cmyk
