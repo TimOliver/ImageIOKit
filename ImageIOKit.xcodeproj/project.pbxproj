@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		F20000012F27000000000001 /* WebPImageDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F27000000000001 /* WebPImageDecoder.swift */; };
+		A20000012F27000000000001 /* WebPImageDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F27000000000001 /* WebPImageDecoderTests.swift */; };
+		A20000012F27000000000002 /* WebP in Resources */ = {isa = PBXBuildFile; fileRef = A10000012F27000000000002 /* WebP */; };
 		B20000012F27000000000001 /* WebPDecoding in Frameworks */ = {isa = PBXBuildFile; productRef = B10000012F27000000000001 /* WebPDecoding */; };
 		221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
 		221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */; };
@@ -67,6 +69,8 @@
 
 /* Begin PBXFileReference section */
 		F10000012F27000000000001 /* WebPImageDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageDecoder.swift; sourceTree = "<group>"; };
+		A10000012F27000000000001 /* WebPImageDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageDecoderTests.swift; sourceTree = "<group>"; };
+		A10000012F27000000000002 /* WebP */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebP; sourceTree = "<group>"; };
 		2215AF7D2F51E2FC00D773B7 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		221D5F0229EBD708006E60AB /* ImageIOKitExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageIOKitExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		221D5F0529EBD708006E60AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -180,6 +184,7 @@
 				A10000012F26000000000009 /* PixelBufferMetalTests.swift */,
 				A10000012F2600000000000A /* SoftwareScalerTests.swift */,
 				A10000012F2600000000000B /* JXLDecoderTests.swift */,
+				A10000012F27000000000001 /* WebPImageDecoderTests.swift */,
 			);
 			path = ImageIOKitTests;
 			sourceTree = "<group>";
@@ -216,6 +221,7 @@
 				22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */,
 				22DB610A2D3A5155007AFCF3 /* ApplePark.png */,
 				22DB610B2D3A5155007AFCF3 /* ApplePark.webp */,
+				A10000012F27000000000002 /* WebP */,
 			);
 			path = SampleImages;
 			sourceTree = "<group>";
@@ -367,6 +373,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000012F27000000000002 /* WebP in Resources */,
 				222654382F062FCD00A76F85 /* ApplePark.avif in Resources */,
 				22DB610D2D3A5155007AFCF3 /* ApplePark.png in Resources */,
 				22DB610E2D3A5155007AFCF3 /* ApplePark.webp in Resources */,
@@ -417,6 +424,7 @@
 				A20000012F26000000000009 /* PixelBufferMetalTests.swift in Sources */,
 				A20000012F2600000000000A /* SoftwareScalerTests.swift in Sources */,
 				A20000012F2600000000000B /* JXLDecoderTests.swift in Sources */,
+				A20000012F27000000000001 /* WebPImageDecoderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

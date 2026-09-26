@@ -43,6 +43,10 @@ public final class ImageSampleData {
         resourceURL.appendingPathComponent("ApplePark-PNG.jxl")
     }
 
+    static func urlForWebPFixture(_ name: String) -> URL {
+        resourceURL.appendingPathComponent("WebP/\(name).webp")
+    }
+
     private static var resourceURL: URL {
 #if SWIFT_PACKAGE
         return Bundle.module.resourceURL!.appendingPathComponent("SampleImages")
