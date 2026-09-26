@@ -1,0 +1,40 @@
+--- a/ImageIOKit/Internal/JXLDecoder.swift
++++ b/ImageIOKit/Internal/JXLDecoder.swift
+@@ -69 +69,3 @@
+-            guard let runner = JxlThreadParallelRunnerCreate(nil, JxlThreadParallelRunnerDefaultNumWorkerThreads()) else {
++            let resizable = JXLProbe.resizable
++            let threads = JXLProbe.threads < 0 ? JxlThreadParallelRunnerDefaultNumWorkerThreads() : JXLProbe.threads
++            guard let runner = resizable ? JxlResizableParallelRunnerCreate(nil) : JxlThreadParallelRunnerCreate(nil, threads) else {
+@@ -72 +74,6 @@
+-            defer { JxlThreadParallelRunnerDestroy(runner) }
++            if resizable { JxlResizableParallelRunnerSetThreads(runner, threads) }
++            defer {
++                if resizable { JxlResizableParallelRunnerDestroy(runner) }
++                else { JxlThreadParallelRunnerDestroy(runner) }
++            }
++            let parallel: JxlParallelRunner = resizable ? JxlResizableParallelRunner : JxlThreadParallelRunner
+@@ -83 +90 @@
+-            guard JxlDecoderSetParallelRunner(decoder, JxlThreadParallelRunner, runner) == JXL_DEC_SUCCESS,
++            guard JxlDecoderSetParallelRunner(decoder, parallel, runner) == JXL_DEC_SUCCESS,
+@@ -264,0 +272,12 @@
++
++// Temporary benchmark instrumentation, never part of the production library.
++enum JXLProbe {
++    // Changed only between synchronous operations/batches by the probe.
++    nonisolated(unsafe) static var resizable = false
++    nonisolated(unsafe) static var threads = -1
++    private static let lock = NSLock()
++    nonisolated(unsafe) private static var bytes = 0
++    static func recordAllocation(_ count: Int) { lock.lock(); bytes += count; lock.unlock() }
++    static func resetAllocations() { lock.lock(); bytes = 0; lock.unlock() }
++    static var allocatedBytes: Int { lock.lock(); defer { lock.unlock() }; return bytes }
++}
+--- a/ImageIOKit/PixelBuffer/PixelBuffer.swift
++++ b/ImageIOKit/PixelBuffer/PixelBuffer.swift
+@@ -91,0 +92 @@
++        JXLProbe.recordAllocation(size)
+--- a/ImageIOKit/Decoding/ImageSource+Decoding.swift
++++ b/ImageIOKit/Decoding/ImageSource+Decoding.swift
+@@ -107 +107 @@
+-private extension ImageSource {
++extension ImageSource {

@@ -105,6 +105,8 @@ WebP thumbnails and raw pixel buffers use libwebp for upright still images. Supp
 
 JPEG XL thumbnails use the approximately 1/8-resolution DC preview when it is large enough. Larger thumbnails average 2×2 or 4×4 pixel blocks in libjxl's output callbacks before the final resize, avoiding a full-resolution output bitmap when at least 2× reduction is possible. This filtering preserves orientation, color profiles, and premultiplied alpha; it is not pixel-identical to resizing a full decode. The codec still processes full image detail above the DC limit and can require source-sized working storage. See the [iPad JXL measurements](docs/benchmarks/2026-09-26-jxl-improvements.md).
 
+Raw JXL thumbnails reuse the fitted pixel buffer when the final size, layout and color space match, avoiding a redundant redraw. The [buffer-reuse and threading benchmark](docs/benchmarks/2026-09-27-jxl-latency.md) measures the allocation saving and explains why the existing thread default is retained.
+
 ### Encoding and Transcoding
 
 To cache a downsampled page, encode the decoded buffer directly. This reuses its pixels, including the optimized JXL/WebP thumbnail paths:
