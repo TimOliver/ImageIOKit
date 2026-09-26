@@ -1,5 +1,5 @@
 {
-  "originHash" : "0c4d4c7db6c30ef5c14dfb6d3189c1d26378f1eebfdbd890b5dd9ceddd5da2a1",
+  "originHash" : "98aa9c0e6d9c66aced5673e83390b8ac7a5482922012e9c453e7ff0630c86028",
   "pins" : [
     {
       "identity" : "libjpeg-turbo-cocoa",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "149f109940c3651b41f8ccba8fbf6a247b6be705",
         "version" : "0.11.2"
+      }
+    },
+    {
+      "identity" : "webp-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/TimOliver/WebP-Cocoa.git",
+      "state" : {
+        "revision" : "eafbd610910f579e183be5d21bf8dfac48ee87f7",
+        "version" : "1.6.1"
       }
     }
   ],

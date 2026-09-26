@@ -54,13 +54,18 @@ extension ImageSource {
     /// - Parameters:
     ///   - targetSize: Bounding box for the output, preserving aspect ratio without upscaling.
     ///   - cropRect: Region in upright display pixels, rounded outward and clamped to `imageSize`.
-    ///     Upright JPEGs use native region decode; other inputs use full decode then crop.
+    ///     Upright JPEGs and supported still WebP crops use native decoding;
+    ///     other inputs use full decode then crop.
     ///   - pixelFormat: Desired output layout. Opaque formats composite transparency over black.
     public func decode(targetSize: CGSize? = nil, cropRect: CGRect? = nil,
                        pixelFormat: PixelBuffer.PixelFormat = .rgba8) throws -> PixelBuffer {
         guard isLoaded else { throw ImageDecoderError.invalidData }
         let crop = try cropRect.map { try SoftwareScaler.clampedCrop($0, in: imageSize) }
         let size = try SoftwareScaler.outputSize(for: crop?.size ?? imageSize, fitting: targetSize)
+
+        if let buffer = try nativeWebP(targetSize: targetSize, cropRect: crop) {
+            return try finish(buffer, size: size, pixelFormat: pixelFormat)
+        }
 
         if isRegionDecodable, let crop {
             let decoder = url.flatMap { JPEGRegionDecoder(url: $0) }
@@ -93,6 +98,10 @@ private extension ImageSource {
     func thumbnailCGImage(fitting bounds: CGSize) throws -> CGImage {
         guard isLoaded else { throw ImageDecoderError.invalidData }
         let size = try SoftwareScaler.outputSize(for: imageSize, fitting: bounds)
+        if let buffer = try nativeWebP(targetSize: bounds),
+           let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
+            return image
+        }
         if fileFormat == .jpegXL {
             let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
             if let buffer = try? decoder?.decodeThumbnail(fittingSize: size),
@@ -101,6 +110,17 @@ private extension ImageSource {
             }
         }
         return try imageIOThumbnail(fitting: size)
+    }
+
+    func nativeWebP(targetSize: CGSize?, cropRect: CGRect? = nil) throws -> PixelBuffer? {
+        guard fileFormat == .webp, orientation == .up else { return nil }
+        let decoder = url.flatMap { WebPImageDecoder(url: $0) } ?? data.flatMap { WebPImageDecoder(data: $0) }
+        guard let decoder, decoder.imageSize == imageSize else { return nil }
+        do {
+            return try decoder.decode(targetSize: targetSize, cropRect: cropRect)
+        } catch ImageDecoderError.unsupportedOperation {
+            return nil
+        }
     }
 
     func imageIOThumbnail(fitting size: CGSize) throws -> CGImage {

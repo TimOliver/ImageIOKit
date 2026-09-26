@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F20000012F27000000000001 /* WebPImageDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000012F27000000000001 /* WebPImageDecoder.swift */; };
+		B20000012F27000000000001 /* WebPDecoding in Frameworks */ = {isa = PBXBuildFile; productRef = B10000012F27000000000001 /* WebPDecoding */; };
 		221C5ABB2F09226A00CC2C9F /* ApplePark.png in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610A2D3A5155007AFCF3 /* ApplePark.png */; };
 		221C5ABC2F09226A00CC2C9F /* ApplePark.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 22DB61092D3A5155007AFCF3 /* ApplePark.jpeg */; };
 		221C5ABD2F09226A00CC2C9F /* ApplePark.webp in Resources */ = {isa = PBXBuildFile; fileRef = 22DB610B2D3A5155007AFCF3 /* ApplePark.webp */; };
@@ -64,6 +66,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F10000012F27000000000001 /* WebPImageDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageDecoder.swift; sourceTree = "<group>"; };
 		2215AF7D2F51E2FC00D773B7 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		221D5F0229EBD708006E60AB /* ImageIOKitExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageIOKitExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		221D5F0529EBD708006E60AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -114,6 +117,7 @@
 			files = (
 				226344002F56D500017941C0 /* turbojpeg in Frameworks */,
 				226343EF2F55B7E60017941C /* jxl in Frameworks */,
+				B20000012F27000000000001 /* WebPDecoding in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,6 +224,7 @@
 			isa = PBXGroup;
 			children = (
 				F1000001201800000000000C /* JXLDecoder.swift */,
+				F10000012F27000000000001 /* WebPImageDecoder.swift */,
 				F10000012F18000000000009 /* JPEGRegionDecoder.swift */,
 				F1000001201800000000000A /* JXLReconstructor.swift */,
 				F1000001201800000000000B /* SoftwareScaler.swift */,
@@ -273,6 +278,7 @@
 			packageProductDependencies = (
 				226344012F56D500017941C0 /* turbojpeg */,
 				226343EE2F55B7E60017941C /* jxl */,
+				B10000012F27000000000001 /* WebPDecoding */,
 			);
 			productName = ImageIOKit;
 			productReference = 221D5F0229EBD708006E60AB /* ImageIOKitExample.app */;
@@ -327,6 +333,7 @@
 			packageReferences = (
 				226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */,
 				226343ED2F55B7E60017941C /* XCRemoteSwiftPackageReference "libjxl-cocoa" */,
+				B30000012F27000000000001 /* XCRemoteSwiftPackageReference "WebP-Cocoa" */,
 			);
 			productRefGroup = 221D5F0329EBD708006E60AB /* Products */;
 			projectDirPath = "";
@@ -392,6 +399,7 @@
 				F2000001201800000000000A /* JXLReconstructor.swift in Sources */,
 				F2000001201800000000000B /* SoftwareScaler.swift in Sources */,
 				F2000001201800000000000C /* JXLDecoder.swift in Sources */,
+				F20000012F27000000000001 /* WebPImageDecoder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -693,6 +701,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B30000012F27000000000001 /* XCRemoteSwiftPackageReference "WebP-Cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TimOliver/WebP-Cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.1;
+			};
+		};
 		226343EA2F55B7DD0017941C /* XCRemoteSwiftPackageReference "libjpeg-turbo-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/TimOliver/libjpeg-turbo-cocoa.git";
@@ -712,6 +728,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B10000012F27000000000001 /* WebPDecoding */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B30000012F27000000000001 /* XCRemoteSwiftPackageReference "WebP-Cocoa" */;
+			productName = WebPDecoding;
+		};
 		226343EE2F55B7E60017941C /* jxl */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 226343ED2F55B7E60017941C /* XCRemoteSwiftPackageReference "libjxl-cocoa" */;
