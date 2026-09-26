@@ -119,7 +119,7 @@ try pixels.write(to: jpegCacheURL, as: .jpeg) // Defaults to quality 0.95.
 
 `PixelBuffer.write` is synchronous and retains the buffer's color profile. JPEG composites transparency over black. It writes a sibling temporary file and atomically replaces the destination after successful encoding; the parent directory must already exist. Do not mutate the pixels while writing. Encoder availability depends on ImageIO on the device. Keep the archive originals for zooming beyond the cached resolution.
 
-See the [iPad disk-cache benchmark](docs/benchmarks/2026-09-26-disk-cache.md) for PNG versus JPEG quality, size, write time, reload time, and source-downsampling memory on oversized publisher comic pages.
+See the [iPad disk-cache benchmark](docs/benchmarks/2026-09-26-disk-cache.md) for PNG versus JPEG quality, size, write time, reload time, and source-downsampling memory on oversized publisher comic pages. The [real JXL comic benchmark](docs/benchmarks/2026-09-27-real-jxl.md) covers per-page decode latency, concurrency and caching at typical comic dimensions.
 
 ```swift
 // Encode to a format using ImageIO
