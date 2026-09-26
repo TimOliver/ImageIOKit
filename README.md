@@ -12,6 +12,7 @@ ImageIOKit supports **JPEG**, **PNG**, **WebP**, **HEIC**, **AVIF**, and **JPEG 
 
 - **Multi-format decoding** — Full-resolution, thumbnailed, and cropped decodes from a single `ImageSource` API.
 - **JPEG region decode** — Decode arbitrary sub-regions of JPEG files without loading the entire image into memory (via TurboJPEG cropped decode).
+- **Native WebP scaling** — Decode still WebP images directly into smaller pixel buffers via libwebp, with premultiplied alpha and ICC color management.
 - **JPEG XL reconstruction** — Losslessly reconstruct the original JPEG bitstream from JXL-from-JPEG files, with zero quality loss and no decode overhead.
 - **ImageIO encoding** — Encode and transcode via `CGImageDestinationAddImageFromSource`. ImageIO manages conversion; cross-format encoding can require decoding and re-encoding.
 - **Image conditioning** — Convert any supported format to JPEG on disk in a single call, giving every image shrink-on-load thumbnailing and region decode for free.
@@ -95,6 +96,8 @@ let region = source.decodeRegion(CGRect(x: 0, y: 0, width: 256, height: 256))
 
 All decoded images are upright. Crop rectangles use upright pixel coordinates with a top-left origin and are rounded outward and clamped to `imageSize`. Target sizes are bounding boxes: both dimensions are respected, aspect ratio is preserved (subject to pixel rounding), and small images are not upscaled. Rotated or mirrored JPEG regions currently use the full-decode fallback; `isRegionDecodable` reports whether native region decode is available.
 
+WebP thumbnails and raw pixel buffers use libwebp for upright still images. Supported crops are applied before native scaling. Animation, rotated/mirrored images, unsupported ICC profiles, and lossy crops with odd x/y origins retain ImageIO fallbacks. Full-image `CGImage`/`UIImage` decoding continues to use ImageIO. WebP cropping is not random-access tile decoding: lossless and alpha images can still require source-sized working storage, so `isRegionDecodable` remains false for WebP and memory estimates retain their full-resolution allowance.
+
 ### Encoding and Transcoding
 
 ```swift
@@ -167,6 +170,7 @@ ImageSource (facade)
 │   ├── Thumbnails via CGImageSourceCreateThumbnailAtIndex
 │   ├── Full decode via CGImageSourceCreateImageAtIndex
 │   ├── JPEG region decode via JPEGRegionDecoder (TurboJPEG cropping)
+│   ├── WebP thumbnails and raw buffers via WebPImageDecoder (native scaling/cropping)
 │   └── JXL thumbnail via JXLDecoder (libjxl DC-only progressive decode)
 ├── Encoding (ImageSource+Encoding)
 │   ├── ImageIO encode via CGImageDestinationAddImageFromSource
@@ -182,18 +186,21 @@ ImageSource (facade)
 
 ### C Library Carve-outs
 
-While ImageIO handles the vast majority of decode/encode operations, two C libraries are used for capabilities ImageIO does not provide:
+While ImageIO handles most decode/encode operations, three C libraries provide additional codec controls:
 
 | Library | Purpose | Import |
 |---------|---------|--------|
 | [libjpeg-turbo](https://github.com/TimOliver/libjpeg-turbo-cocoa) | JPEG sub-region decode (`tj3SetCroppingRegion`) | `import turbojpeg` |
 | [libjxl](https://github.com/TimOliver/libjxl-cocoa) | JXL → JPEG lossless reconstruction, DC-only thumbnail decode | `import jxl` |
+| [libwebp](https://github.com/TimOliver/WebP-Cocoa) | Still-image scaling/cropping, premultiplied output, ICC extraction; decoder-only `WebPDecoding` product | `import WebPDecoder`, `import WebPDemux` |
 
 ## Testing
 
 Run `bash scripts/test-package.sh` to build and test the actual Swift 6 package in Release mode using an installed iPhone simulator. An explicit Xcode destination can be supplied as the first argument. The same tests also run through the `ImageIOKitTests` Xcode scheme.
 
 Tests include small generated fixtures for all EXIF orientations, rectangular bounds, wide-gamut JPEG regions, associated and unassociated JXL alpha, format signatures, and conditioned-file writes, alongside the existing photo and memory tests. CI runs the package suite independently of the example app.
+
+WebP fixtures cover lossy/lossless pixels, transparency, animation fallbacks, ICC profiles, and exact crop coordinates. Regenerate the synthetic files with `bash scripts/generate-webp-fixtures.sh` using libwebp 1.6.0 command-line tools; test executables do not link the encoder.
 
 ## Credits
 

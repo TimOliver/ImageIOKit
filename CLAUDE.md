@@ -10,6 +10,7 @@
 - `JPEGRegionDecoder` uses TurboJPEG cropped decode and DCT scaling. It retains embedded RGB ICC profiles; ImageIO handles unsupported profiles and rotated/mirrored source regions.
 - `JXLDecoder` uses libjxl callbacks for full and DC-resolution decoding, retains output color profiles, and normalizes alpha to premultiplied components.
 - `JXLReconstructor` reconstructs the original JPEG bitstream from JPEG-derived JXL.
+- `WebPImageDecoder` uses libwebp's decoder-only product for scaled still-image pixels, retaining RGB ICC profiles and emitting premultiplied RGBA directly into `PixelBuffer`. ImageIO handles animation, transformed images, unsupported profiles, and odd-origin lossy crops.
 - `PixelBuffer` owns pixel storage and its color space. `makeCGImage()` retains the buffer without copying; `makeTexture(device:)` copies its components to Metal.
 - `SoftwareScaler` centralizes aspect fitting and crop validation.
 
@@ -36,6 +37,7 @@
 - libjxl input pointers must remain valid until the decoder releases input or is destroyed. Keep processing and destruction within `Data.withUnsafeBytes`.
 - Callback context uses stable allocated storage, destroyed after the decoder and before the thread runner.
 - TurboJPEG ICC buffers must be released using `tj3Free`.
+- WebP demux chunk pointers borrow compressed input; extraction and decoding stay inside `Data.withUnsafeBytes`. Output storage is caller-owned. Lossless/alpha working memory can still scale with source dimensions.
 
 
 ## SPM Dependencies
