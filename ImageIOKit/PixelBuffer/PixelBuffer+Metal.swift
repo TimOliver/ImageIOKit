@@ -57,3 +57,19 @@ extension PixelBuffer {
         return texture
     }
 }
+
+extension PixelBuffer {
+
+    /// A texture sharing this buffer's GPU-visible storage, with no copy, or `nil` if the buffer
+    /// was not allocated with `withMetalStorage(on:_:)` for `device`. The texture keeps the
+    /// storage alive; writes to `data` afterwards are visible to the GPU.
+    func makeTextureSharingStorage(device: MTLDevice) -> MTLTexture? {
+        guard let storage = metalStorage, storage.device === device,
+              let format = pixelFormat.metalPixelFormat else { return nil }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: format, width: width, height: height, mipmapped: false)
+        descriptor.usage = .shaderRead
+        descriptor.storageMode = storage.storageMode
+        return storage.makeTexture(descriptor: descriptor, offset: 0, bytesPerRow: bytesPerRow)
+    }
+}

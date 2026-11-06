@@ -112,6 +112,39 @@ enum SyntheticImage {
         return data as Data
     }
 
+    /// Grayscale JPEG with a horizontal gradient. A non-nil `space` other than device gray embeds its profile.
+    static func grayJPEG(width: Int = 64, height: Int = 48, space: CGColorSpace = CGColorSpaceCreateDeviceGray()) -> Data {
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: space, bitmapInfo: CGImageAlphaInfo.none.rawValue)!
+        for x in 0..<width {
+            context.setFillColor(gray: CGFloat(x) / CGFloat(max(1, width - 1)), alpha: 1)
+            context.fill(CGRect(x: x, y: 0, width: 1, height: height))
+        }
+        let data = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, context.makeImage()!,
+                                   [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary)
+        precondition(CGImageDestinationFinalize(destination))
+        return data as Data
+    }
+
+    /// sRGB JPEG of alternating 1 px black and white columns, for resampling and aliasing checks.
+    static func stripedJPEG(width: Int = 1600, height: Int = 800) -> Data {
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.setFillColor(gray: 0, alpha: 1)
+        for x in stride(from: 0, to: width, by: 2) { context.fill(CGRect(x: x, y: 0, width: 1, height: height)) }
+        let data = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, context.makeImage()!,
+                                   [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary)
+        precondition(CGImageDestinationFinalize(destination))
+        return data as Data
+    }
+
     static func jxl(premultiplied: Bool = false, width: Int = 16, height: Int = 16,
                     orientation: UInt32 = 1, rgba: [UInt8]? = nil, icc: Data? = nil,
                     container: Bool = false, grayscale: Bool = false) -> Data {
@@ -149,6 +182,42 @@ enum SyntheticImage {
         precondition(pixels.count == width * height * 4)
         let samples = grayscale ? stride(from: 0, to: pixels.count, by: 4).flatMap { [pixels[$0], pixels[$0 + 3]] } : pixels
         let status = samples.withUnsafeBytes { JxlEncoderAddImageFrame(settings, &format, $0.baseAddress, $0.count) }
+        precondition(status == JXL_ENC_SUCCESS)
+        JxlEncoderCloseInput(encoder)
+        let output = UnsafeMutablePointer<UInt8>.allocate(capacity: 65536)
+        defer { output.deallocate() }
+        var next: UnsafeMutablePointer<UInt8>? = output
+        var available = 65536
+        precondition(JxlEncoderProcessOutput(encoder, &next, &available) == JXL_ENC_SUCCESS)
+        return Data(bytes: output, count: 65536 - available)
+    }
+
+    /// Lossless sRGB-gray JXL. `pixels` holds one (gray) or two (gray, unassociated alpha) bytes per pixel.
+    static func grayJXL(width: Int, height: Int, hasAlpha: Bool = false, pixels: [UInt8]) -> Data {
+        let channels = hasAlpha ? 2 : 1
+        precondition(pixels.count == width * height * channels)
+        let encoder = JxlEncoderCreate(nil)!
+        defer { JxlEncoderDestroy(encoder) }
+        var info = JxlBasicInfo()
+        JxlEncoderInitBasicInfo(&info)
+        info.xsize = UInt32(width); info.ysize = UInt32(height)
+        info.bits_per_sample = 8; info.num_color_channels = 1
+        info.num_extra_channels = hasAlpha ? 1 : 0; info.alpha_bits = hasAlpha ? 8 : 0
+        info.uses_original_profile = 1
+        precondition(JxlEncoderSetBasicInfo(encoder, &info) == JXL_ENC_SUCCESS)
+        if hasAlpha {
+            var alpha = JxlExtraChannelInfo()
+            JxlEncoderInitExtraChannelInfo(JXL_CHANNEL_ALPHA, &alpha)
+            precondition(JxlEncoderSetExtraChannelInfo(encoder, 0, &alpha) == JXL_ENC_SUCCESS)
+        }
+        var color = JxlColorEncoding()
+        JxlColorEncodingSetToSRGB(&color, 1)
+        precondition(JxlEncoderSetColorEncoding(encoder, &color) == JXL_ENC_SUCCESS)
+        let settings = JxlEncoderFrameSettingsCreate(encoder, nil)!
+        precondition(JxlEncoderSetFrameLossless(settings, 1) == JXL_ENC_SUCCESS)
+        var format = JxlPixelFormat(num_channels: UInt32(channels), data_type: JXL_TYPE_UINT8,
+                                    endianness: JXL_NATIVE_ENDIAN, align: 0)
+        let status = pixels.withUnsafeBytes { JxlEncoderAddImageFrame(settings, &format, $0.baseAddress, $0.count) }
         precondition(status == JXL_ENC_SUCCESS)
         JxlEncoderCloseInput(encoder)
         let output = UnsafeMutablePointer<UInt8>.allocate(capacity: 65536)

@@ -4,6 +4,8 @@
 //
 
 import XCTest
+import ImageIO
+import UniformTypeIdentifiers
 #if SWIFT_PACKAGE
 @testable import ImageIOKit
 #else
@@ -383,7 +385,9 @@ extension ImageSourceDecodeTests {
             XCTAssertEqual(source.imageSize, size)
             let full = try XCTUnwrap(source.decodeFullImage())
             XCTAssertEqual(full.size, size)
+            #if canImport(UIKit)
             XCTAssertEqual(full.imageOrientation, .up)
+            #endif
             let raw = try source.decode()
             let points = [(10, 10), (raw.width - 10, 10), (10, raw.height - 10), (raw.width - 10, raw.height - 10)]
             for (index, point) in points.enumerated() {
@@ -412,6 +416,97 @@ extension ImageSourceDecodeTests {
         XCTAssertEqual(Int(a.r), Int(b.r), accuracy: 2)
         XCTAssertEqual(Int(a.g), Int(b.g), accuracy: 2)
         XCTAssertEqual(Int(a.b), Int(b.b), accuracy: 2)
+    }
+
+    // ImageIO writes sRGB JPEGs without a profile; libjpeg-turbo reports that as a warning.
+    func testUntaggedRGBJPEGUsesNativeRegionDecode() throws {
+        let data = SyntheticImage.data(jpeg: true, quadrants: true)
+        // ImageIO still reports an inferred sRGB profile name; check that no ICC marker is embedded.
+        XCTAssertNil(data.range(of: Data("ICC_PROFILE".utf8)))
+        let crop = CGRect(x: 190, y: 90, width: 20, height: 20)
+        let native = try XCTUnwrap(JPEGRegionDecoder(data: data)).decodeRegion(cropRect: crop)
+        XCTAssertEqual(native.colorSpace.name, CGColorSpace.sRGB)
+        let full = try XCTUnwrap(ImageSource(data: data)).decode()
+        for (x, y) in [(2, 2), (17, 2), (2, 17), (17, 17)] {
+            let a = full.pixel(at: 190 + x, y: 90 + y), b = native.pixel(at: x, y: y)
+            XCTAssertEqual(Int(a.r), Int(b.r), accuracy: 3)
+            XCTAssertEqual(Int(a.g), Int(b.g), accuracy: 3)
+            XCTAssertEqual(Int(a.b), Int(b.b), accuracy: 3)
+        }
+    }
+
+    // Untagged grayscale stays on ImageIO, which interprets it as gray gamma 2.2.
+    func testUntaggedGrayJPEGRegionFallsBackToImageIO() throws {
+        let context = CGContext(data: nil, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)!
+        context.setFillColor(gray: 0.25, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
+        let data = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, try XCTUnwrap(context.makeImage()), nil)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+
+        let decoder = try XCTUnwrap(JPEGRegionDecoder(data: data as Data))
+        XCTAssertThrowsError(try decoder.decodeRegion(cropRect: CGRect(x: 8, y: 8, width: 16, height: 16))) {
+            guard case ImageDecoderError.unsupportedOperation = $0 else {
+                return XCTFail("Expected unsupportedOperation, got \($0)")
+            }
+        }
+        let source = try XCTUnwrap(ImageSource(data: data as Data))
+        let region = try source.decode(cropRect: CGRect(x: 8, y: 8, width: 16, height: 16))
+        let full = try source.decode()
+        XCTAssertEqual(Int(region.pixel(at: 4, y: 4).r), Int(full.pixel(at: 12, y: 12).r), accuracy: 1)
+    }
+
+    // Grayscale JPEGs can decode straight to one channel with TurboJPEG, tagged as ImageIO tags them.
+    func testGrayJPEGDecodesToSingleChannelNatively() throws {
+        let untagged = SyntheticImage.grayJPEG()
+        XCTAssertNil(untagged.range(of: Data("ICC_PROFILE".utf8)))
+        let linear = try XCTUnwrap(CGColorSpace(name: CGColorSpace.linearGray))
+        let tagged = SyntheticImage.grayJPEG(space: linear)
+        XCTAssertNotNil(tagged.range(of: Data("ICC_PROFILE".utf8)), "fixture should embed a gray profile")
+
+        for data in [untagged, tagged] {
+            let crop = CGRect(x: 0, y: 0, width: 64, height: 48)
+            let native = try XCTUnwrap(JPEGRegionDecoder(data: data)).decodeRegion(cropRect: crop, pixelFormat: .gray8)
+            XCTAssertEqual(native.pixelFormat, .gray8)
+            XCTAssertEqual(native.colorSpace.model, .monochrome)
+            let reference = try XCTUnwrap(CGImageSourceCreateWithData(data as CFData, nil)
+                .flatMap { CGImageSourceCreateImageAtIndex($0, 0, nil) })
+            XCTAssertEqual(native.colorSpace.name, data == untagged ? CGColorSpace.genericGrayGamma2_2 : reference.colorSpace?.name)
+            // Same pixels as ImageIO's own decode of the gray data.
+            let referenceBytes = try XCTUnwrap(reference.dataProvider?.data)
+            let bytes = CFDataGetBytePtr(referenceBytes)!
+            let out = native.data.assumingMemoryBound(to: UInt8.self)
+            for (x, y) in [(0, 0), (20, 10), (40, 30), (63, 47)] {
+                XCTAssertEqual(Int(out[y * native.bytesPerRow + x]), Int(bytes[y * reference.bytesPerRow + x]), accuracy: 1)
+            }
+        }
+
+        // Color JPEGs are never decoded to gray natively; ImageIO handles that conversion.
+        let color = try XCTUnwrap(JPEGRegionDecoder(data: SyntheticImage.data(jpeg: true)))
+        XCTAssertThrowsError(try color.decodeRegion(cropRect: CGRect(x: 0, y: 0, width: 10, height: 10), pixelFormat: .gray8)) {
+            guard case ImageDecoderError.unsupportedOperation = $0 else { return XCTFail("Expected unsupportedOperation, got \($0)") }
+        }
+    }
+
+    // Large reductions must filter rather than skip samples. 1 px stripes reduced 16x should
+    // average to an even mid-gray; aliasing shows up as large swings between output pixels.
+    func testLargeJPEGReductionsDoNotAlias() throws {
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.stripedJPEG()))
+
+        let target = CGSize(width: 100, height: 50)
+        for format in [PixelBuffer.PixelFormat.rgba8, .gray8] {
+            let output = try source.decode(targetSize: target, pixelFormat: format)
+            XCTAssertEqual(output.width, 100)
+            XCTAssertEqual(output.height, 50)
+            let values = (0..<output.width).map { Int(output.pixel(at: $0, y: 25).r) }
+            let spread = (values.max() ?? 0) - (values.min() ?? 0)
+            XCTAssertLessThanOrEqual(spread, 24, "\(format) output aliases: \(values)")
+            XCTAssertEqual(Double(values.reduce(0, +)) / Double(values.count), 128, accuracy: 24)
+        }
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: target))
+        XCTAssertEqual(thumbnail.size, target)
     }
 
     func testNoDecodePathUpscalesSmallImages() throws {

@@ -7,8 +7,37 @@ permissions:
 
 jobs:
   swift-package:
+    name: iOS Simulator (Release)
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      # Sample images are stored in Git LFS. Cache them so each run does not
+      # spend LFS bandwidth re-downloading unchanged fixtures.
+      - name: List LFS objects
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
+      - name: Restore LFS cache
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+      - name: Fetch LFS objects
+        run: git lfs pull
       - name: Test Swift 6 Package in Release Mode
         run: bash scripts/test-package.sh
+
+  macos-package:
+    name: macOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: List LFS objects
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
+      - name: Restore LFS cache
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+      - name: Fetch LFS objects
+        run: git lfs pull
+      - name: Test Package Natively
+        run: swift test

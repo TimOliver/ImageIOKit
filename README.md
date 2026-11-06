@@ -17,14 +17,14 @@ ImageIOKit supports **JPEG**, **PNG**, **WebP**, **HEIC**, **AVIF**, and **JPEG 
 - **ImageIO encoding** — Encode and transcode via `CGImageDestinationAddImageFromSource`. ImageIO manages conversion; cross-format encoding can require decoding and re-encoding.
 - **Image conditioning** — Convert any supported format to JPEG on disk in a single call, giving every image shrink-on-load thumbnailing and region decode for free.
 - **Raw pixel access** — Decode into `PixelBuffer` (C-allocated, zero-copy `CGImage` via retained `CGDataProvider`) in 4 pixel formats: RGBA, RGB, Grayscale, and Grayscale+Alpha.
-- **Metal texture support** — Create `MTLTexture` directly from a `PixelBuffer`.
+- **Metal texture support** — Decode straight to a screen-sized `MTLTexture`, with the final resample done by a Metal Performance Shaders Lanczos pass, or create a texture from any `PixelBuffer`.
 - **Memory budgeting** — Operation-specific estimates include output pixels, rendering intermediates, and codec working storage to help schedule concurrent decodes.
 - **Consistent pixels** — Decodes apply EXIF orientation; raw RGB buffers use sRGB and premultiplied alpha. JPEG region decoding respects embedded ICC profiles.
 - **Purgeable caching** — Full-resolution `CGImage` results are cached via `NSCache` and automatically evicted under memory pressure.
 
 ## Requirements
 
-- iOS 16.0+ (the minimum supported by the bundled libjpeg-turbo and libjxl dependencies)
+- iOS 16.0+ or macOS 13.0+ (the minimums supported by the bundled libjpeg-turbo and libjxl dependencies)
 - Swift 6.0+
 - Xcode 16.0+
 
@@ -68,6 +68,15 @@ let memorySource = ImageSource(data: imageData)
 let deferredSource = ImageSource(url: imageURL, loadImmediately: false)
 deferredSource?.loadImageData()
 ```
+
+`ImageSource(data:)` never copies the compressed bytes: ImageIO and the native decoders read the `Data` in place, including slices. For archive entries stored without compression (common in CBZ files, since JPEGs gain almost nothing from deflate), memory-map the archive and pass the entry's sub-range. The compressed page then costs no memory footprint at all:
+
+```swift
+let archive = try Data(contentsOf: archiveURL, options: .alwaysMapped)
+let page = ImageSource(data: archive[entryOffset..<(entryOffset + entryLength)])
+```
+
+Deflated entries must be inflated into memory first; inflating a typical page takes about 1 ms.
 
 ### Reading Image Metadata
 
@@ -165,6 +174,18 @@ let cgImage = buffer.makeCGImage()
 let texture = buffer.makeTexture(device: mtlDevice)
 ```
 
+### Metal Textures
+
+`makeTexture(fitting:pixelFormat:using:)` decodes to the codec's nearest reduced size (ImageIO JPEG subsampling, TurboJPEG DCT scaling on Mac, JPEG XL DC or box-filtered output, or libwebp's exact scaling) and finishes the fit with one GPU Lanczos pass. Formats without a reduced-size decode, and rotated JPEGs, use `decode(targetSize:pixelFormat:)` and upload the result.
+
+```swift
+// Create once and share; it holds the command queue and resampling kernel.
+let scaler = TextureScaler(device: mtlDevice)!
+
+// rgba8Unorm with premultiplied sRGB components, or r8Unorm for .gray8.
+let texture = try await source.makeTexture(fitting: screenPixelSize, pixelFormat: .gray8, using: scaler)
+```
+
 ### Memory Budgeting
 
 ```swift
@@ -221,7 +242,7 @@ While ImageIO handles most decode/encode operations, three C libraries provide a
 
 ## Testing
 
-Run `bash scripts/test-package.sh` to build and test the actual Swift 6 package in Release mode using an installed iPhone simulator. An explicit Xcode destination can be supplied as the first argument. The same tests also run through the `ImageIOKitTests` Xcode scheme.
+Run `swift test` on a Mac to test the package natively. Run `bash scripts/test-package.sh` to build and test the actual Swift 6 package in Release mode using an installed iPhone simulator. An explicit Xcode destination can be supplied as the first argument. The same tests also run through the `ImageIOKitTests` Xcode scheme.
 
 Tests include small generated fixtures for all EXIF orientations, rectangular bounds, wide-gamut JPEG regions, associated and unassociated JXL alpha, format signatures, and conditioned-file writes, alongside the existing photo and memory tests. CI runs the package suite independently of the example app.
 

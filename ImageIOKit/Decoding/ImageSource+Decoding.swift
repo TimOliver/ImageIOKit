@@ -6,29 +6,28 @@
 import Foundation
 import CoreGraphics
 import ImageIO
-import UIKit
 
 extension ImageSource {
 
     /// Returns an upright thumbnail fitting both bounds, without upscaling.
-    public func makeThumbnail(fittingSize size: CGSize) -> UIImage? {
+    public func makeThumbnail(fittingSize size: CGSize) -> PlatformImage? {
         guard let image = try? thumbnailCGImage(fitting: size) else { return nil }
-        return UIImage(cgImage: image)
+        return PlatformImage.wrapping(image)
     }
 
     /// Decodes a region in upright display-pixel coordinates (origin at top left).
     /// The crop is rounded outward to whole pixels and clamped to `imageSize`.
     /// `targetSize` is an optional bounding box; results are never upscaled.
-    public func decodeRegion(_ rect: CGRect, targetSize: CGSize? = nil) -> UIImage? {
+    public func decodeRegion(_ rect: CGRect, targetSize: CGSize? = nil) -> PlatformImage? {
         guard let buffer = try? decode(targetSize: targetSize, cropRect: rect),
               let image = buffer.makeCGImage() else { return nil }
-        return UIImage(cgImage: image)
+        return PlatformImage.wrapping(image)
     }
 
     /// Decodes the full image with its orientation applied to the pixels.
-    public func decodeFullImage() -> UIImage? {
+    public func decodeFullImage() -> PlatformImage? {
         guard let image = decodeFullCGImage() else { return nil }
-        return UIImage(cgImage: image)
+        return PlatformImage.wrapping(image)
     }
 
     /// Returns an upright full-resolution image. The result is cached and purgeable.
@@ -88,18 +87,13 @@ extension ImageSource {
             }
             image = cropped
         } else if targetSize != nil {
-            if fileFormat == .jpegXL {
-                // Preserve display-thumbnail fitting and sRGB normalization. Reuse its
-                // buffer when the final size/layout matches instead of rendering a copy.
-                let thumbnailSize = try SoftwareScaler.outputSize(for: imageSize, fitting: size)
-                if let buffer = nativeJXLThumbnail(fitting: thumbnailSize) {
-                    let thumbnail = try finish(buffer, size: thumbnailSize, pixelFormat: .rgba8)
-                    return try finish(thumbnail, size: size, pixelFormat: pixelFormat)
-                }
-                image = try imageIOThumbnail(fitting: thumbnailSize)
-            } else {
-                image = try thumbnailCGImage(fitting: size)
+            // Native thumbnails are finished directly in the requested format; ImageIO
+            // thumbnails are fitted by the single render below rather than rendered twice.
+            if let buffer = nativeJXLThumbnail(size: size, pixelFormat: pixelFormat) {
+                return try finish(buffer, size: size, pixelFormat: pixelFormat)
             }
+            image = try imageIOSubsampledImage(covering: size)
+                ?? imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
         } else {
             guard let full = decodeFullCGImage() else {
                 throw ImageDecoderError.decodeFailed("Failed to decode full image")
@@ -110,7 +104,8 @@ extension ImageSource {
     }
 }
 
-private extension ImageSource {
+// Internal helpers, shared with the GPU texture path.
+extension ImageSource {
 
     func thumbnailCGImage(fitting bounds: CGSize) throws -> CGImage {
         guard isLoaded else { throw ImageDecoderError.invalidData }
@@ -119,17 +114,20 @@ private extension ImageSource {
            let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
             return image
         }
-        if let buffer = nativeJXLThumbnail(fitting: size),
+        if let buffer = nativeJXLThumbnail(size: size, pixelFormat: .rgba8),
            let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
             return image
         }
         return try imageIOThumbnail(fitting: size)
     }
 
-    func nativeJXLThumbnail(fitting size: CGSize) -> PixelBuffer? {
+    /// Decodes JXL thumbnails natively, or returns `nil` to fall back to ImageIO.
+    /// Grayscale requests keep grayscale sources in one or two channels.
+    func nativeJXLThumbnail(size: CGSize, pixelFormat: PixelBuffer.PixelFormat) -> PixelBuffer? {
         guard fileFormat == .jpegXL else { return nil }
         let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
-        return try? decoder?.decodeThumbnail(fittingSize: size)
+        let prefersGray = pixelFormat == .gray8 || pixelFormat == .grayAlpha8
+        return try? decoder?.decodeThumbnail(fittingSize: size, prefersGrayscale: prefersGray)
     }
 
     func nativeWebP(targetSize: CGSize?, cropRect: CGRect? = nil) throws -> PixelBuffer? {
@@ -143,21 +141,57 @@ private extension ImageSource {
         }
     }
 
+    /// Returns an upright ImageIO thumbnail fitted to `size`, rendering only if ImageIO overshoots.
     func imageIOThumbnail(fitting size: CGSize) throws -> CGImage {
+        if let subsampled = imageIOSubsampledImage(covering: size),
+           let result = try render(subsampled, size: size, pixelFormat: .rgba8).makeCGImage() {
+            return result
+        }
+        let image = try imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
+        if image.width <= Int(size.width), image.height <= Int(size.height) { return image }
+        guard let result = try render(image, size: size, pixelFormat: .rgba8).makeCGImage() else {
+            throw ImageDecoderError.decodeFailed("Failed to create fitted thumbnail")
+        }
+        return result
+    }
+
+    /// For reductions of 4x or more, decodes upright JPEGs at the largest ImageIO subsample factor
+    /// (1/4 or 1/8) that still covers `size`, leaving the final resample to CoreGraphics. On iOS,
+    /// ImageIO's own thumbnail resampling aliases at large reductions; subsampled decoding still
+    /// uses the fast decoder. Smaller reductions keep the thumbnail path, which measured as good
+    /// and slightly faster there.
+    /// Other formats return `nil`: ImageIO cannot subsample them, so a full decode would replace
+    /// the thumbnail path's low-memory streaming. Oriented sources also return `nil`, since a
+    /// plain image decode does not apply EXIF transforms.
+    /// `factors` lists the subsample factors to try, largest first; include 1 to allow a full decode.
+    func imageIOSubsampledImage(covering size: CGSize, factors: [Int] = [8, 4]) -> CGImage? {
+        guard fileFormat == .jpeg, orientation == .up, let cgImageSource else { return nil }
+        let width = Int(imageSize.width), height = Int(imageSize.height)
+        let target = (width: Int(size.width), height: Int(size.height))
+        guard let factor = factors.first(where: { width / $0 >= target.width && height / $0 >= target.height }) else {
+            return nil
+        }
+        let options: [CFString: Any] = [
+            kCGImageSourceSubsampleFactor: factor,
+            kCGImageSourceShouldCacheImmediately: true
+        ]
+        guard let image = CGImageSourceCreateImageAtIndex(cgImageSource, 0, options as CFDictionary),
+              image.width >= target.width, image.height >= target.height else { return nil }
+        return image
+    }
+
+    /// Returns ImageIO's upright thumbnail, which may differ from the fitted size by a pixel.
+    func imageIOThumbnailImage(maxPixelSize: CGFloat) throws -> CGImage {
         guard let cgImageSource else { throw ImageDecoderError.invalidData }
         let options: [CFString: Any] = [
-            kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height),
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true
         ]
         guard let image = CGImageSourceCreateThumbnailAtIndex(cgImageSource, 0, options as CFDictionary) else {
             throw ImageDecoderError.decodeFailed("Failed to create ImageIO thumbnail")
         }
-        if image.width <= Int(size.width), image.height <= Int(size.height) { return image }
-        guard let result = try render(image, size: size, pixelFormat: .rgba8).makeCGImage() else {
-            throw ImageDecoderError.decodeFailed("Failed to create fitted thumbnail")
-        }
-        return result
+        return image
     }
 
     func finish(_ buffer: PixelBuffer, size: CGSize, pixelFormat: PixelBuffer.PixelFormat) throws -> PixelBuffer {

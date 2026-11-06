@@ -1,18 +1,19 @@
 # ImageIOKit
 
 ## Target
-- iOS 16+, Swift 6 package; an Xcode example app also compiles the sources. libjpeg-turbo and libjxl currently require iOS 16; lowering to iOS 15 also requires compatible dependency builds.
+- iOS 16+ and macOS 13+, Swift 6 package; an Xcode example app (iOS) also compiles the sources. `UIImage`-returning APIs use `PlatformImage` (`NSImage` on macOS). libjpeg-turbo and libjxl currently require iOS 16; lowering to iOS 15 also requires compatible dependency builds.
 - Image decoding and conversion building blocks for a comic reader.
 - Callers manage scheduling and page caching externally.
 
 ## Architecture
-- `ImageSource` wraps ImageIO for metadata, full decode, thumbnails, and encoding.
-- `JPEGRegionDecoder` uses TurboJPEG cropped decode and DCT scaling. It retains embedded RGB ICC profiles; ImageIO handles unsupported profiles and rotated/mirrored source regions.
-- `JXLDecoder` uses libjxl callbacks for full, DC-resolution, and filtered thumbnail decoding, retains output color profiles, and normalizes alpha to premultiplied components.
+- `ImageSource` wraps ImageIO for metadata, full decode, thumbnails, and encoding. Upright JPEGs reduced 4× or more decode at an ImageIO 1/4 or 1/8 subsample factor and resample once with CoreGraphics, because iOS ImageIO thumbnails alias at large reductions.
+- `JPEGRegionDecoder` uses TurboJPEG cropped decode and DCT scaling. It retains embedded RGB ICC profiles, and decodes grayscale JPEGs straight to `gray8` when asked, keeping gray profiles and tagging untagged gray as gray gamma 2.2 as ImageIO does. ImageIO handles unsupported profiles, color JPEGs requested as gray, and rotated/mirrored source regions.
+- `JXLDecoder` uses libjxl callbacks for full, DC-resolution, and filtered thumbnail decoding, retains output color profiles (tagging nominal sRGB output with the named sRGB space so CoreGraphics skips color matching), and normalizes alpha to premultiplied components. Grayscale sources decode to `gray8`/`grayAlpha8` when the caller requests a gray format.
 - `JXLReconstructor` reconstructs the original JPEG bitstream from JPEG-derived JXL.
 - `WebPImageDecoder` uses libwebp's decoder-only product for scaled still-image pixels, retaining RGB ICC profiles and emitting premultiplied RGBA directly into `PixelBuffer`. ImageIO handles animation, transformed images, unsupported profiles, and odd-origin lossy crops.
 - `PixelBuffer` owns pixel storage and its color space. `makeCGImage()` retains the buffer without copying; `makeTexture(device:)` copies its components to Metal.
 - `PixelBuffer.write(to:as:quality:)` encodes existing pixels with ImageIO at default quality 0.95 and atomically replaces the destination after finalizing a sibling temporary file. It preserves profiles, keeps PNG alpha, and composites JPEG alpha over black; callers own scheduling and must not mutate pixels during the synchronous write.
+- `ImageSource.makeTexture(fitting:pixelFormat:using:)` decodes to a codec-native reduced size, then a shared `TextureScaler` (MPS Lanczos with clamped edges) finishes the fit on the GPU. JPEG routing is per platform: ImageIO subsampling on iOS; TurboJPEG up to a provisional 12 MP on Mac and Catalyst, decoding gray pages to one channel even for `.rgba8` requests. Only `.rgba8` (`rgba8Unorm`) and `.gray8` (`r8Unorm`) are supported. Inside it, `PixelBuffer.withMetalStorage(on:_:)` backs every allocating `PixelBuffer` initializer with zero-filled shared `MTLBuffer` memory, rows padded to the linear texture alignment, so the upload is a texture view rather than a copy. Pixel code must always index rows with `bytesPerRow`, never `width * bytesPerPixel`.
 - `SoftwareScaler` centralizes aspect fitting and crop validation.
 
 
@@ -50,6 +51,7 @@
 - Scale and color-convert directly into the final output allocation where supported.
 
 ## Testing
+- `swift test` runs the package tests natively on macOS.
 - `bash scripts/test-package.sh` tests the actual package in Swift 6 Release mode on an available iPhone simulator. Pass an Xcode destination as the first argument to select a device.
 - The script isolates the package scheme from the example project using temporary source symlinks; source files remain in the working tree.
 - The Xcode `ImageIOKitTests` scheme runs the same tests against the example target.

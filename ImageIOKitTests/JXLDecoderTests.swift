@@ -331,39 +331,46 @@ extension JXLDecoderTests {
         try XCTUnwrap(ImageSource(data: data))
     }
 
-    func testRawThumbnailRetainsRoundedThumbnailSampling() throws {
+    func testRawThumbnailMatchesDecodeAtSameBounds() throws {
         let pixels: [UInt8] = (0..<35 * 25).flatMap { index in
             index % 7 < 3 ? [UInt8(255), 0, 0, 255] : [0, 0, 255, 255]
         }
         let source = try thumbnailTestSource(SyntheticImage.jxl(width: 35, height: 25, rgba: pixels))
-        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 16, height: 11))?.cgImage)
+        // 16x11 bounds round the aspect fit to 15x11. A decode given the same bounds
+        // shares the thumbnail's rounding and resampling, producing identical pixels.
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 16, height: 11))?.bitmap)
         XCTAssertEqual(thumbnail.width, 15)
         XCTAssertEqual(thumbnail.height, 11)
-        let expected = PixelBuffer(width: 16, height: 11, pixelFormat: .rgba8)
-        let context = try XCTUnwrap(CGContext(data: expected.data, width: 16, height: 11,
+        let expected = PixelBuffer(width: 15, height: 11, pixelFormat: .rgba8)
+        let context = try XCTUnwrap(CGContext(data: expected.data, width: 15, height: 11,
             bitsPerComponent: 8, bytesPerRow: expected.bytesPerRow, space: expected.colorSpace,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
         context.interpolationQuality = .high
-        context.draw(thumbnail, in: CGRect(x: 0, y: 0, width: 16, height: 11))
-        let actual = try source.decode(targetSize: CGSize(width: 16, height: 16))
-        XCTAssertEqual(actual.width, 16)
+        context.draw(thumbnail, in: CGRect(x: 0, y: 0, width: 15, height: 11))
+        let actual = try source.decode(targetSize: CGSize(width: 16, height: 11))
+        XCTAssertEqual(actual.width, 15)
         XCTAssertEqual(actual.height, 11)
         XCTAssertEqual(memcmp(actual.data, expected.data, expected.dataSize), 0)
     }
 
-    func testRawGrayscaleThumbnailRetainsSRGBConversionBeforeGray() throws {
+    func testRawGrayscaleThumbnailColorManagesWideGamutSource() throws {
         let p3 = try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
         let icc = try XCTUnwrap(p3.copyICCData()) as Data
         let pixels: [UInt8] = Array(repeating: [255, 0, 0, 255], count: 32 * 16).flatMap { $0 }
-        let source = try thumbnailTestSource(SyntheticImage.jxl(width: 32, height: 16, rgba: pixels, icc: icc))
-        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 8, height: 4))?.cgImage)
+        let data = SyntheticImage.jxl(width: 32, height: 16, rgba: pixels, icc: icc)
+        let source = try thumbnailTestSource(data)
+        // Display thumbnails normalize to sRGB, while gray output is converted once,
+        // straight from the native thumbnail pixels in their retained wide-gamut profile.
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 8, height: 4))?.bitmap)
         XCTAssertEqual(thumbnail.colorSpace?.name, CGColorSpace.sRGB)
+        let raw = try XCTUnwrap(JXLDecoder(data: data)).decodeThumbnail(fittingSize: CGSize(width: 8, height: 4))
+        XCTAssertNotEqual(raw.colorSpace.name, CGColorSpace.sRGB)
         let expected = PixelBuffer(width: 8, height: 4, pixelFormat: .gray8)
         let context = try XCTUnwrap(CGContext(data: expected.data, width: 8, height: 4,
             bitsPerComponent: 8, bytesPerRow: expected.bytesPerRow, space: expected.colorSpace,
             bitmapInfo: CGImageAlphaInfo.none.rawValue))
         context.interpolationQuality = .high
-        context.draw(thumbnail, in: CGRect(x: 0, y: 0, width: 8, height: 4))
+        context.draw(try XCTUnwrap(raw.makeCGImage()), in: CGRect(x: 0, y: 0, width: 8, height: 4))
         let actual = try source.decode(targetSize: CGSize(width: 8, height: 8), pixelFormat: .gray8)
         XCTAssertEqual(actual.width, 8)
         XCTAssertEqual(actual.height, 4)
@@ -522,8 +529,8 @@ extension JXLDecoderTests {
         let delivery = Delivery()
         DispatchQueue.concurrentPerform(iterations: 7) { index in
             let y = 6 - index
-            let row: [UInt8] = (0..<9).flatMap { x in
-                x % 2 == 0 ? [UInt8(255), 0, 0, 255] : [0, 0, 255, 0]
+            let row: [UInt8] = (0..<9).flatMap { (x: Int) -> [UInt8] in
+                x % 2 == 0 ? [255, 0, 0, 255] : [0, 0, 255, 0]
             }
             row.withUnsafeBytes { pixels in
                 delivery.filter.consume(x: 3, y: y, count: 6, pixels: pixels.baseAddress!.advanced(by: 12))
@@ -547,8 +554,9 @@ extension JXLDecoderTests {
     func testIntermediateThumbnailPreservesAlphaAndOrientation() throws {
         for orientation in UInt32(1)...8 {
             for associated in [false, true] {
-                let pixels: [UInt8] = (0..<32 * 16).flatMap { i in
-                    i % 32 < 16 ? [UInt8(associated ? 128 : 255), 0, 0, 128] : [0, 255, 0, 255]
+                let red: UInt8 = associated ? 128 : 255
+                let pixels: [UInt8] = (0..<32 * 16).flatMap { (i: Int) -> [UInt8] in
+                    i % 32 < 16 ? [red, 0, 0, 128] : [0, 255, 0, 255]
                 }
                 let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(premultiplied: associated,
                     width: 32, height: 16, orientation: orientation, rgba: pixels)))
@@ -567,5 +575,88 @@ extension JXLDecoderTests {
                 }
             }
         }
+    }
+}
+
+extension JXLDecoderTests {
+    // Grayscale requests keep grayscale sources in one or two channels at every decode scale.
+    func testGrayscaleSourceDecodesToSingleChannelWhenPreferred() throws {
+        let pixels: [UInt8] = (0..<16 * 16).map { (i: Int) -> UInt8 in UInt8((i % 16) * 16) }
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.grayJXL(width: 16, height: 16, pixels: pixels)))
+        let full = try decoder.decode(prefersGrayscale: true)
+        XCTAssertEqual(full.pixelFormat, .gray8)
+        XCTAssertEqual(full.dataSize, 16 * 16)
+        XCTAssertEqual(full.colorSpace.model, .monochrome)
+        for x in 0..<16 { XCTAssertEqual(full.pixel(at: x, y: 3).r, UInt8(x * 16)) }
+
+        // 4x4 box filter and DC paths.
+        for bound in [4, 2] {
+            let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: bound, height: bound),
+                                                        prefersGrayscale: true)
+            XCTAssertEqual(thumbnail.pixelFormat, .gray8)
+            XCTAssertEqual(thumbnail.width, bound)
+            XCTAssertEqual(thumbnail.dataSize, bound * bound)
+        }
+        let boxed = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
+        // Columns 0...3 hold 0, 16, 32, 48: their mean is 24.
+        XCTAssertEqual(Int(boxed.pixel(at: 0, y: 0).r), 24, accuracy: 1)
+
+        // Without the preference, output stays RGBA.
+        let rgba = try decoder.decode()
+        XCTAssertEqual(rgba.pixelFormat, .rgba8)
+        XCTAssertEqual(rgba.pixel(at: 5, y: 0).r, rgba.pixel(at: 5, y: 0).g)
+    }
+
+    func testGrayAlphaSourceDecodesPremultipliedTwoChannelOutput() throws {
+        let pixels: [UInt8] = (0..<8 * 8).flatMap { _ -> [UInt8] in [200, 128] }
+        let data = SyntheticImage.grayJXL(width: 8, height: 8, hasAlpha: true, pixels: pixels)
+        let decoder = try XCTUnwrap(JXLDecoder(data: data))
+        let full = try decoder.decode(prefersGrayscale: true)
+        let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
+        for buffer in [full, thumbnail] {
+            XCTAssertEqual(buffer.pixelFormat, PixelBuffer.PixelFormat.grayAlpha8)
+            let pixel = buffer.pixel(at: 0, y: 0)
+            XCTAssertEqual(Int(pixel.r), 100, accuracy: 1)
+            XCTAssertEqual(pixel.a, 128)
+        }
+    }
+
+    func testRGBSourceIgnoresGrayscalePreference() throws {
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl()))
+        XCTAssertEqual(try decoder.decode(prefersGrayscale: true).pixelFormat, .rgba8)
+        let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
+        XCTAssertEqual(thumbnail.pixelFormat, .rgba8)
+    }
+
+    // ImageSource requests gray decoding natively and still returns the contracted formats.
+    func testImageSourceGrayscaleJXLDecodeMatchesRGBADecode() throws {
+        let pixels: [UInt8] = (0..<32 * 32).map { (i: Int) -> UInt8 in UInt8((i % 32) * 8) }
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.grayJXL(width: 32, height: 32, pixels: pixels)))
+        let target = CGSize(width: 16, height: 16)
+        let gray = try source.decode(targetSize: target, pixelFormat: .gray8)
+        let rgba = try source.decode(targetSize: target, pixelFormat: .rgba8)
+        XCTAssertEqual(gray.pixelFormat, .gray8)
+        XCTAssertEqual(gray.width, 16)
+        XCTAssertEqual(rgba.pixelFormat, .rgba8)
+        for x in stride(from: 0, to: 16, by: 3) {
+            XCTAssertEqual(Int(gray.pixel(at: x, y: 8).r), Int(rgba.pixel(at: x, y: 8).r), accuracy: 3)
+        }
+    }
+}
+
+extension JXLDecoderTests {
+    // libjxl reports nominal sRGB through a generated ICC profile; CoreGraphics only skips
+    // color matching for the named space, so RGBA output must carry kCGColorSpaceSRGB.
+    func testNominalSRGBOutputUsesNamedColorSpace() throws {
+        let sRGB = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl()))
+        XCTAssertEqual(try decoder.decode().colorSpace, sRGB)
+        XCTAssertEqual(try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4)).colorSpace, sRGB)
+        XCTAssertEqual(try decoder.decodeThumbnail(fittingSize: CGSize(width: 2, height: 2)).colorSpace, sRGB)
+
+        let gray = try XCTUnwrap(JXLDecoder(data: SyntheticImage.grayJXL(width: 8, height: 8,
+            pixels: [UInt8](repeating: 128, count: 64))))
+        XCTAssertEqual(try gray.decode().colorSpace, sRGB)
+        XCTAssertEqual(try gray.decode(prefersGrayscale: true).colorSpace.model, .monochrome)
     }
 }
