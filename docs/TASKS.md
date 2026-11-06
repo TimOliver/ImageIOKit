@@ -57,6 +57,8 @@ Zooming into oversized pages still uses `decode(cropRect:)` on the CPU. A `cropR
 
 At manga size, the JXL 2×/4× box-filtered thumbnail is slower than a full decode plus GPU resample: 46.7 vs 31.9 ms on iPhone Air, and about 24 vs 18 ms on the Mac. The box filter exists to avoid a full-resolution bitmap. Switch to full decode when the full-size bitmap fits a memory budget, for example using `estimatedDecodeMemory`.
 
+Confirmed on the A10X (2026-11-07, [write-up](benchmarks/2026-11-07-gpu-scale-a10x.md)): 207 vs 141–159 ms at manga size with a 2.4 dB quality gap, and every downsampled libjxl decode measured there cost more than decoding in full. Only oversized sources still need the filter, for memory (180 MB boxed vs 484 MB full on the 121 MP fixture), which is the budget boundary.
+
 ## 7. Dependency upgrades
 
 These were reviewed on 2026-11-06 and deferred.

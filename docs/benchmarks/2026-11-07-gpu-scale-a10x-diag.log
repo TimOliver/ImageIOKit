@@ -1,0 +1,14 @@
+ENV device=Apple A10X GPU model=iPad7,4 os=Version 17.7.11 (Build 21H461) cores=3 memory=4193959936 thermal=1 jxl=11002 iterations=7
+LAYOUT fixture=photo-11000x11000.jpeg bound=2048 factor=4 image=2750x2750 bpp=32 alpha=5 order=0 space=kCGColorSpaceSRGB bpr=11000 dataLen=30250000 ptrPageAligned=true bprMod64=56 linearAlign=64 alphaNot255=0 maxDiffVsCG=0
+STAGES fixture=photo-11000x11000.jpeg bound=2048 decode=102.8 dataAccess=15.5 cgRender=32.4 uploadRendered=10.3 uploadDirect=8.9
+LAYOUT fixture=photo-11000x11000.jpeg bound=1024 factor=8 image=1375x1375 bpp=32 alpha=5 order=0 space=kCGColorSpaceSRGB bpr=5500 dataLen=7562500 ptrPageAligned=true bprMod64=60 linearAlign=64 alphaNot255=0 maxDiffVsCG=0
+STAGES fixture=photo-11000x11000.jpeg bound=1024 decode=88.5 dataAccess=4.0 cgRender=8.2 uploadRendered=2.8 uploadDirect=2.6
+LAYOUT fixture=page-5000x10000.jpeg bound=2048 factor=4 image=1250x2500 bpp=32 alpha=5 order=0 space=kCGColorSpaceSRGB bpr=5000 dataLen=12500000 ptrPageAligned=true bprMod64=8 linearAlign=64 alphaNot255=0 maxDiffVsCG=0
+STAGES fixture=page-5000x10000.jpeg bound=2048 decode=48.6 dataAccess=6.1 cgRender=12.7 uploadRendered=4.4 uploadDirect=3.6
+LAYOUT fixture=page-5000x10000.jpeg bound=1024 factor=8 image=625x1250 bpp=32 alpha=5 order=0 space=kCGColorSpaceSRGB bpr=2500 dataLen=3125000 ptrPageAligned=true bprMod64=4 linearAlign=64 alphaNot255=0 maxDiffVsCG=0
+STAGES fixture=page-5000x10000.jpeg bound=1024 decode=43.5 dataAccess=2.1 cgRender=4.7 uploadRendered=1.3 uploadDirect=1.1
+LAYOUT fixture=manga-2160x3072-gray.jpeg bound=2048 factor=1 image=2160x3072 bpp=8 alpha=0 order=0 space=kCGColorSpaceGenericGrayGamma2_2 bpr=2160 dataLen=6635520 ptrPageAligned=true bprMod64=48 linearAlign=64 alphaNot255=0 maxDiffVsCG=0
+STAGES fixture=manga-2160x3072-gray.jpeg bound=2048 decode=19.3 dataAccess=1.6 cgRender=2.3 uploadRendered=2.3 uploadDirect=2.1
+LAYOUT fixture=manga-2160x3072-gray.jpeg bound=1024 factor=2 image=1080x1536 bpp=8 alpha=0 order=0 space=kCGColorSpaceGenericGrayGamma2_2 bpr=1080 dataLen=1658880 ptrPageAligned=true bprMod64=56 linearAlign=64 alphaNot255=0 maxDiffVsCG=0
+STAGES fixture=manga-2160x3072-gray.jpeg bound=1024 decode=15.0 dataAccess=0.4 cgRender=0.9 uploadRendered=0.7 uploadDirect=0.6
+BENCH-DONE
