@@ -385,7 +385,9 @@ extension ImageSourceDecodeTests {
             XCTAssertEqual(source.imageSize, size)
             let full = try XCTUnwrap(source.decodeFullImage())
             XCTAssertEqual(full.size, size)
+            #if canImport(UIKit)
             XCTAssertEqual(full.imageOrientation, .up)
+            #endif
             let raw = try source.decode()
             let points = [(10, 10), (raw.width - 10, 10), (10, raw.height - 10), (raw.width - 10, raw.height - 10)]
             for (index, point) in points.enumerated() {

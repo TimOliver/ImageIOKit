@@ -60,7 +60,7 @@ final class WebPImageDecoderTests: XCTestCase {
         let expected = try XCTUnwrap(WebPImageDecoder(data: data)).decode(targetSize: target)
         let actual = try source.decode(targetSize: target)
         XCTAssertEqual(bytes(actual), bytes(expected))
-        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: target)?.cgImage)
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: target)?.bitmap)
         XCTAssertEqual(thumbnail.width, expected.width)
         XCTAssertEqual(thumbnail.height, expected.height)
         XCTAssertEqual(thumbnail.alphaInfo, .premultipliedLast)
@@ -154,7 +154,7 @@ final class WebPImageDecoderTests: XCTestCase {
         XCTAssertEqual(result.colorSpace.name, CGColorSpace.sRGB)
         XCTAssertEqual(bytes(result), bytes(expected))
         XCTAssertNotEqual(bytes(result), bytes(native))
-        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: source.imageSize)?.cgImage)
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: source.imageSize)?.bitmap)
         XCTAssertEqual(thumbnail.colorSpace?.name, CGColorSpace.sRGB)
         XCTAssertEqual(bytes(try render(thumbnail)), bytes(expected))
     }
@@ -180,7 +180,9 @@ final class WebPImageDecoderTests: XCTestCase {
                            bytes(try XCTUnwrap(SoftwareScaler.crop(expected, to: crop))))
             let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: CGSize(width: 16, height: 16)))
             XCTAssertEqual(thumbnail.size, orientation >= 5 ? CGSize(width: 8, height: 16) : CGSize(width: 16, height: 8))
+            #if canImport(UIKit)
             XCTAssertEqual(thumbnail.imageOrientation, .up)
+            #endif
         }
     }
 
@@ -268,5 +270,16 @@ final class WebPImageDecoderTests: XCTestCase {
             chunks += chunk("EXIF", exif)
         }
         return Data("RIFF".utf8) + littleEndian(chunks.count + 4, count: 4) + Data("WEBP".utf8) + chunks
+    }
+}
+
+extension PlatformImage {
+    /// The backing bitmap on both UIKit and AppKit.
+    var bitmap: CGImage? {
+        #if canImport(UIKit)
+        cgImage
+        #else
+        cgImage(forProposedRect: nil, context: nil, hints: nil)
+        #endif
     }
 }

@@ -10,7 +10,28 @@
 import Foundation
 import CoreGraphics
 import ImageIO
+#if canImport(UIKit)
 import UIKit
+
+/// The platform image type: `UIImage` on iOS and Mac Catalyst, `NSImage` on macOS.
+public typealias PlatformImage = UIImage
+#elseif canImport(AppKit)
+import AppKit
+
+/// The platform image type: `UIImage` on iOS and Mac Catalyst, `NSImage` on macOS.
+public typealias PlatformImage = NSImage
+#endif
+
+extension PlatformImage {
+    /// Wraps a bitmap; on macOS the image's point size equals its pixel size.
+    static func wrapping(_ image: CGImage) -> PlatformImage {
+        #if canImport(UIKit)
+        UIImage(cgImage: image)
+        #else
+        NSImage(cgImage: image, size: .zero)
+        #endif
+    }
+}
 
 /// The types of color modes in which an image may be encoded.
 public enum ImageColorModel: Sendable {

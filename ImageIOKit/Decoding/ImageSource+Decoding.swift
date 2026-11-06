@@ -6,29 +6,28 @@
 import Foundation
 import CoreGraphics
 import ImageIO
-import UIKit
 
 extension ImageSource {
 
     /// Returns an upright thumbnail fitting both bounds, without upscaling.
-    public func makeThumbnail(fittingSize size: CGSize) -> UIImage? {
+    public func makeThumbnail(fittingSize size: CGSize) -> PlatformImage? {
         guard let image = try? thumbnailCGImage(fitting: size) else { return nil }
-        return UIImage(cgImage: image)
+        return PlatformImage.wrapping(image)
     }
 
     /// Decodes a region in upright display-pixel coordinates (origin at top left).
     /// The crop is rounded outward to whole pixels and clamped to `imageSize`.
     /// `targetSize` is an optional bounding box; results are never upscaled.
-    public func decodeRegion(_ rect: CGRect, targetSize: CGSize? = nil) -> UIImage? {
+    public func decodeRegion(_ rect: CGRect, targetSize: CGSize? = nil) -> PlatformImage? {
         guard let buffer = try? decode(targetSize: targetSize, cropRect: rect),
               let image = buffer.makeCGImage() else { return nil }
-        return UIImage(cgImage: image)
+        return PlatformImage.wrapping(image)
     }
 
     /// Decodes the full image with its orientation applied to the pixels.
-    public func decodeFullImage() -> UIImage? {
+    public func decodeFullImage() -> PlatformImage? {
         guard let image = decodeFullCGImage() else { return nil }
-        return UIImage(cgImage: image)
+        return PlatformImage.wrapping(image)
     }
 
     /// Returns an upright full-resolution image. The result is cached and purgeable.

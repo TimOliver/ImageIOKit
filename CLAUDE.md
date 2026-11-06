@@ -1,7 +1,7 @@
 # ImageIOKit
 
 ## Target
-- iOS 16+, Swift 6 package; an Xcode example app also compiles the sources. libjpeg-turbo and libjxl currently require iOS 16; lowering to iOS 15 also requires compatible dependency builds.
+- iOS 16+ and macOS 13+, Swift 6 package; an Xcode example app (iOS) also compiles the sources. `UIImage`-returning APIs use `PlatformImage` (`NSImage` on macOS). libjpeg-turbo and libjxl currently require iOS 16; lowering to iOS 15 also requires compatible dependency builds.
 - Image decoding and conversion building blocks for a comic reader.
 - Callers manage scheduling and page caching externally.
 
@@ -50,6 +50,7 @@
 - Scale and color-convert directly into the final output allocation where supported.
 
 ## Testing
+- `swift test` runs the package tests natively on macOS.
 - `bash scripts/test-package.sh` tests the actual package in Swift 6 Release mode on an available iPhone simulator. Pass an Xcode destination as the first argument to select a device.
 - The script isolates the package scheme from the example project using temporary source symlinks; source files remain in the working tree.
 - The Xcode `ImageIOKitTests` scheme runs the same tests against the example target.
