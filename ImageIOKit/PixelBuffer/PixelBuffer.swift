@@ -134,7 +134,13 @@ public final class PixelBuffer {
     /// Runs `body` with every allocating `PixelBuffer` initializer backed by `device` memory.
     /// Rows may be padded, so code must index with `bytesPerRow`, never `width * bytesPerPixel`.
     static func withMetalStorage<T>(on device: MTLDevice, _ body: () throws -> T) rethrows -> T {
-        try $metalAllocator.withValue(MetalAllocator(device: device), operation: body)
+        #if targetEnvironment(simulator)
+        // The simulator only allows linear textures on private buffers, which the CPU cannot write,
+        // so simulator builds keep ordinary memory and the copy-based upload.
+        return try body()
+        #else
+        return try $metalAllocator.withValue(MetalAllocator(device: device), operation: body)
+        #endif
     }
 
     static func defaultColorSpace(for format: PixelFormat) -> CGColorSpace {

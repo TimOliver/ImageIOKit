@@ -108,6 +108,9 @@ final class TextureTests: XCTestCase {
     // Buffers allocated for the texture path live in zero-filled shared GPU memory, with rows
     // padded for linear textures, and a texture wraps them without copying.
     func testMetalBackedAllocationIsPaddedZeroedAndShared() throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip("The simulator cannot create linear textures on shared buffers")
+        #endif
         let scaler = try makeScaler()
         XCTAssertNil(PixelBuffer(width: 7, height: 3, pixelFormat: .gray8).metalStorage)
         let buffer = PixelBuffer.withMetalStorage(on: scaler.device) {
