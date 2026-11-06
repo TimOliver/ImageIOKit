@@ -7,6 +7,7 @@
 
 import XCTest
 import Darwin.Mach
+import jxl
 #if SWIFT_PACKAGE
 @testable import ImageIOKit
 #else
@@ -255,13 +256,79 @@ final class JXLDecoderTests: XCTestCase {
 }
 
 extension JXLDecoderTests {
-    private func thumbnailTestSource(_ data: Data) throws -> ImageSource {
-        let source = ImageSource(data: data)
-        if #unavailable(iOS 18.0) {
-            try XCTSkipIf(source == nil,
-                          "Older ImageIO cannot read this synthetic JXL's metadata; native alpha/orientation tests cover its pixels")
+    func testICCProfileDescriptionReadsLegacyNamesAndRejectsIncompleteTags() {
+        // Minimal ICC tag table with a legacy ASCII description, including its NUL.
+        var profile = Data(repeating: 0, count: 144)
+        let name = Array("Reader Profile".utf8) + [0]
+        let tag = Array("desc".utf8) + [0, 0, 0, 0, 0, 0, 0, UInt8(name.count)] + name
+        profile.append(contentsOf: tag)
+        profile.replaceSubrange(0..<4, with: [0, 0, 0, UInt8(profile.count)])
+        profile.replaceSubrange(128..<144, with: [0, 0, 0, 1, 0x64, 0x65, 0x73, 0x63,
+                                                0, 0, 0, 144, 0, 0, 0, UInt8(tag.count)])
+        XCTAssertEqual(JXLDecoder.profileName(in: profile), "Reader Profile")
+        XCTAssertNil(JXLDecoder.profileName(in: Data()))
+        XCTAssertNil(JXLDecoder.profileName(in: profile.dropLast()))
+        profile[profile.count - 1] = 1 // The legacy count includes a mandatory terminator.
+        XCTAssertNil(JXLDecoder.profileName(in: profile))
+    }
+
+    func testICCProfileDescriptionReadsUnicodeAndSlicedData() throws {
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+        let original = try XCTUnwrap(space.copyICCData()) as Data
+        let profile = SyntheticImage.namedICC(original, name: "読書用 Profile")
+        var prefixed = Data([1, 2, 3])
+        prefixed.append(profile)
+        XCTAssertEqual(JXLDecoder.profileName(in: prefixed.dropFirst(3)), "読書用 Profile")
+        XCTAssertNil(JXLDecoder.profileName(in: profile.dropLast(4)))
+    }
+
+    func testNativeMetadataRetainsOriginalProfileAndOrientation() throws {
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.displayP3))
+        let icc = try XCTUnwrap(space.copyICCData()) as Data
+        for container in [false, true] {
+            let data = SyntheticImage.jxl(width: 12, height: 8, orientation: 6, icc: icc, container: container)
+            let metadata = try XCTUnwrap(JXLDecoder(data: data)?.metadata)
+            XCTAssertEqual(metadata.imageSize, CGSize(width: 8, height: 12))
+            XCTAssertEqual(metadata.orientation.rawValue, 6)
+            XCTAssertTrue(metadata.hasAlpha)
+            XCTAssertEqual(metadata.colorModel, .rgb)
+            XCTAssertEqual(metadata.colorProfile, "Display P3")
         }
-        return try XCTUnwrap(source)
+    }
+
+    func testNativeMetadataDistinguishesGrayscaleAndOpaqueImages() throws {
+        let gray = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(grayscale: true))?.metadata)
+        XCTAssertEqual(gray.colorModel, .grayscale)
+        XCTAssertFalse(try XCTUnwrap(gray.colorProfile).isEmpty)
+        XCTAssertTrue(gray.hasAlpha)
+        let opaque = try XCTUnwrap(JXLDecoder(url: jxlURL())?.metadata)
+        XCTAssertEqual(opaque.colorModel, .rgb)
+        XCTAssertFalse(opaque.hasAlpha)
+    }
+
+    func testNativeMetadataNeedsNoFramePixels() throws {
+        let data = SyntheticImage.jxl(width: 12, height: 8, orientation: 6)
+        let header: Data = try data.withUnsafeBytes { bytes in
+            let parser = try XCTUnwrap(JxlDecoderCreate(nil))
+            defer { JxlDecoderDestroy(parser) }
+            XCTAssertEqual(JxlDecoderSubscribeEvents(parser, Int32(JXL_DEC_COLOR_ENCODING.rawValue)), JXL_DEC_SUCCESS)
+            XCTAssertEqual(JxlDecoderSetInput(parser, bytes.baseAddress!.assumingMemoryBound(to: UInt8.self), bytes.count), JXL_DEC_SUCCESS)
+            JxlDecoderCloseInput(parser)
+            XCTAssertEqual(JxlDecoderProcessInput(parser), JXL_DEC_COLOR_ENCODING)
+            let consumed = bytes.count - JxlDecoderReleaseInput(parser)
+            return Data(bytes: bytes.baseAddress!, count: consumed)
+        }
+        XCTAssertLessThan(header.count, data.count)
+        let decoder = try XCTUnwrap(JXLDecoder(data: header))
+        let metadata = try XCTUnwrap(decoder.metadata)
+        XCTAssertEqual(metadata.imageSize, CGSize(width: 8, height: 12))
+        XCTAssertEqual(metadata.orientation.rawValue, 6)
+        XCTAssertTrue(metadata.hasAlpha)
+        XCTAssertThrowsError(try decoder.decode())
+    }
+
+    private func thumbnailTestSource(_ data: Data) throws -> ImageSource {
+        try XCTUnwrap(ImageSource(data: data))
     }
 
     func testRawThumbnailRetainsRoundedThumbnailSampling() throws {

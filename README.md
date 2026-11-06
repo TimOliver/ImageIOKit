@@ -79,6 +79,8 @@ source.colorModel     // ImageColorModel — .rgb, .grayscale, .cmyk, .lab
 source.colorProfile   // String — ICC profile name
 ```
 
+If ImageIO cannot read a JPEG XL header (including raw codestreams on iOS 17), ImageIOKit reads dimensions, orientation, alpha, and colour metadata through libjxl. This stops at the colour header without decoding frame pixels. ICC profile names use the stored description, preferring English when available. These sources also support full decoding, cropping, and re-encoding through the existing APIs.
+
 ### Decoding
 
 ```swift
@@ -214,7 +216,7 @@ While ImageIO handles most decode/encode operations, three C libraries provide a
 | Library | Purpose | Import |
 |---------|---------|--------|
 | [libjpeg-turbo](https://github.com/TimOliver/libjpeg-turbo-cocoa) | JPEG sub-region decode (`tj3SetCroppingRegion`) | `import turbojpeg` |
-| [libjxl](https://github.com/TimOliver/libjxl-cocoa) | JXL → JPEG lossless reconstruction, DC and filtered thumbnail decode | `import jxl` |
+| [libjxl](https://github.com/TimOliver/libjxl-cocoa) | JXL → JPEG lossless reconstruction, DC and filtered thumbnails, metadata/full-decode fallback | `import jxl` |
 | [libwebp](https://github.com/TimOliver/WebP-Cocoa) | Still-image scaling/cropping, premultiplied output, ICC extraction; decoder-only `WebPDecoding` product | `import WebPDecoder`, `import WebPDemux` |
 
 ## Testing
@@ -222,6 +224,8 @@ While ImageIO handles most decode/encode operations, three C libraries provide a
 Run `bash scripts/test-package.sh` to build and test the actual Swift 6 package in Release mode using an installed iPhone simulator. An explicit Xcode destination can be supplied as the first argument. The same tests also run through the `ImageIOKitTests` Xcode scheme.
 
 Tests include small generated fixtures for all EXIF orientations, rectangular bounds, wide-gamut JPEG regions, associated and unassociated JXL alpha, format signatures, and conditioned-file writes, alongside the existing photo and memory tests. CI runs the package suite independently of the example app.
+
+JXL coverage includes raw codestreams and containers, header-only metadata, custom ICC descriptions, sliced input data, and decoding/encoding without an ImageIO source. The alpha/orientation regressions run on iOS 17 without skips.
 
 WebP fixtures cover lossy/lossless pixels, transparency, animation fallbacks, ICC profiles, and exact crop coordinates. Regenerate the synthetic files with `bash scripts/generate-webp-fixtures.sh` using libwebp 1.6.0 command-line tools; test executables do not link the encoder.
 

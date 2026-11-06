@@ -155,16 +155,15 @@ public final class ImageSource {
             fatalError("ImageSource: A load was attempted without a valid image data or URL object.")
         }
 
-        guard let source else { return false }
-
         // Read properties from the image header
-        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
-            return false
+        guard let source,
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return loadJXLMetadata()
         }
 
         let width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
         let height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
-        guard width > 0, height > 0 else { return false }
+        guard width > 0, height > 0 else { return loadJXLMetadata() }
 
         // ImageIO's parsed source type is authoritative, regardless of filename.
         if let uti = CGImageSourceGetType(source) as String? {
@@ -188,6 +187,23 @@ public final class ImageSource {
         }
 
         self.isLoaded = true
+        return true
+    }
+
+    /// Older ImageIO versions reject some valid JXL headers. Native metadata
+    /// loading does not allocate an output bitmap or depend on the filename.
+    private func loadJXLMetadata() -> Bool {
+        let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
+        guard let metadata = decoder?.metadata else { return false }
+        // Do not pass a source with unreadable metadata to ImageIO's decode/encode paths.
+        cgImageSource = nil
+        fileFormat = .jpegXL
+        imageSize = metadata.imageSize
+        orientation = metadata.orientation
+        hasAlpha = metadata.hasAlpha
+        colorModel = metadata.colorModel
+        colorProfile = metadata.colorProfile
+        isLoaded = true
         return true
     }
 }

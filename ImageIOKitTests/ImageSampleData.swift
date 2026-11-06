@@ -61,6 +61,31 @@ public final class ImageSampleData {
 
 /// Small deterministic fixtures that exercise metadata and transparency, not just photographs.
 enum SyntheticImage {
+    /// Retains a valid profile's colour transform while replacing only its display name.
+    static func namedICC(_ profile: Data, name: String) -> Data {
+        var output = Array(profile)
+        func word(_ offset: Int) -> Int {
+            output[offset..<offset + 4].reduce(0) { ($0 << 8) | Int($1) }
+        }
+        func bytes(_ value: Int) -> [UInt8] {
+            [24, 16, 8, 0].map { UInt8(truncatingIfNeeded: value >> $0) }
+        }
+        let count = word(128)
+        let record = (0..<count).map { 132 + $0 * 12 }.first { word($0) == 0x64657363 }!
+        let text = Array(name.data(using: .utf16BigEndian)!)
+        let tag = Array("mluc".utf8) + [0, 0, 0, 0] + bytes(1) + bytes(12)
+            + Array("enUS".utf8) + bytes(text.count) + bytes(28) + text
+        while output.count % 4 != 0 { output.append(0) }
+        let offset = output.count
+        output += tag
+        while output.count % 4 != 0 { output.append(0) }
+        output.replaceSubrange(record + 4..<record + 8, with: bytes(offset))
+        output.replaceSubrange(record + 8..<record + 12, with: bytes(tag.count))
+        output.replaceSubrange(0..<4, with: bytes(output.count))
+        output.replaceSubrange(84..<100, with: Array(repeating: 0, count: 16)) // Profile ID is now unset.
+        return Data(output)
+    }
+
     static func data(width: Int = 400, height: Int = 200, jpeg: Bool = false,
                      orientation: UInt32 = 1, displayP3: Bool = false,
                      alpha: CGFloat = 1, quadrants: Bool = false) -> Data {
@@ -88,14 +113,16 @@ enum SyntheticImage {
     }
 
     static func jxl(premultiplied: Bool = false, width: Int = 16, height: Int = 16,
-                    orientation: UInt32 = 1, rgba: [UInt8]? = nil, icc: Data? = nil) -> Data {
+                    orientation: UInt32 = 1, rgba: [UInt8]? = nil, icc: Data? = nil,
+                    container: Bool = false, grayscale: Bool = false) -> Data {
         let encoder = JxlEncoderCreate(nil)!
         defer { JxlEncoderDestroy(encoder) }
+        if container { precondition(JxlEncoderUseContainer(encoder, 1) == JXL_ENC_SUCCESS) }
         var info = JxlBasicInfo()
         JxlEncoderInitBasicInfo(&info)
         info.xsize = UInt32(width); info.ysize = UInt32(height)
         info.orientation = JxlOrientation(rawValue: orientation)
-        info.bits_per_sample = 8; info.num_color_channels = 3
+        info.bits_per_sample = 8; info.num_color_channels = grayscale ? 1 : 3
         info.num_extra_channels = 1; info.alpha_bits = 8
         info.alpha_premultiplied = premultiplied ? 1 : 0
         info.uses_original_profile = 1
@@ -111,16 +138,17 @@ enum SyntheticImage {
             precondition(status == JXL_ENC_SUCCESS)
         } else {
             var color = JxlColorEncoding()
-            JxlColorEncodingSetToSRGB(&color, 0)
+            JxlColorEncodingSetToSRGB(&color, grayscale ? 1 : 0)
             precondition(JxlEncoderSetColorEncoding(encoder, &color) == JXL_ENC_SUCCESS)
         }
         let settings = JxlEncoderFrameSettingsCreate(encoder, nil)!
         precondition(JxlEncoderSetFrameLossless(settings, 1) == JXL_ENC_SUCCESS)
-        var format = JxlPixelFormat(num_channels: 4, data_type: JXL_TYPE_UINT8, endianness: JXL_NATIVE_ENDIAN, align: 0)
+        var format = JxlPixelFormat(num_channels: grayscale ? 2 : 4, data_type: JXL_TYPE_UINT8, endianness: JXL_NATIVE_ENDIAN, align: 0)
         let pixel: [UInt8] = [premultiplied ? 128 : 255, 0, 0, 128]
         let pixels = rgba ?? Array(repeating: pixel, count: width * height).flatMap { $0 }
         precondition(pixels.count == width * height * 4)
-        let status = pixels.withUnsafeBytes { JxlEncoderAddImageFrame(settings, &format, $0.baseAddress, $0.count) }
+        let samples = grayscale ? stride(from: 0, to: pixels.count, by: 4).flatMap { [pixels[$0], pixels[$0 + 3]] } : pixels
+        let status = samples.withUnsafeBytes { JxlEncoderAddImageFrame(settings, &format, $0.baseAddress, $0.count) }
         precondition(status == JXL_ENC_SUCCESS)
         JxlEncoderCloseInput(encoder)
         let output = UnsafeMutablePointer<UInt8>.allocate(capacity: 65536)

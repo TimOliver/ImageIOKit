@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreGraphics
+import ImageIO
 import jxl
 
 struct JXLDecoder {
@@ -20,6 +21,103 @@ struct JXLDecoder {
     init?(url: URL) {
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         self.init(data: data)
+    }
+
+    struct Metadata {
+        let imageSize: CGSize
+        let orientation: CGImagePropertyOrientation
+        let hasAlpha: Bool
+        let colorModel: ImageColorModel
+        let colorProfile: String?
+    }
+
+    /// Reads through the colour header, stopping before frame/pixel decoding.
+    /// The original orientation is retained separately from the display dimensions.
+    var metadata: Metadata? {
+        imageData.withUnsafeBytes { bytes in
+            guard let base = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return nil }
+            let signature = JxlSignatureCheck(base, bytes.count)
+            guard signature == JXL_SIG_CODESTREAM || signature == JXL_SIG_CONTAINER,
+                  let decoder = JxlDecoderCreate(nil) else { return nil }
+            defer { JxlDecoderDestroy(decoder) }
+            let events = JXL_DEC_BASIC_INFO.rawValue | JXL_DEC_COLOR_ENCODING.rawValue
+            guard JxlDecoderSetKeepOrientation(decoder, 1) == JXL_DEC_SUCCESS,
+                  JxlDecoderSubscribeEvents(decoder, Int32(events)) == JXL_DEC_SUCCESS,
+                  JxlDecoderSetInput(decoder, base, bytes.count) == JXL_DEC_SUCCESS else { return nil }
+            JxlDecoderCloseInput(decoder)
+            guard JxlDecoderProcessInput(decoder) == JXL_DEC_BASIC_INFO else { return nil }
+            var info = JxlBasicInfo()
+            guard JxlDecoderGetBasicInfo(decoder, &info) == JXL_DEC_SUCCESS,
+                  info.xsize > 0, info.ysize > 0,
+                  info.num_color_channels == 1 || info.num_color_channels == 3,
+                  let orientation = CGImagePropertyOrientation(rawValue: info.orientation.rawValue),
+                  JxlDecoderProcessInput(decoder) == JXL_DEC_COLOR_ENCODING else { return nil }
+
+            var colorProfile: String?
+            var count = 0
+            if JxlDecoderGetICCProfileSize(decoder, JXL_COLOR_PROFILE_TARGET_ORIGINAL, &count) == JXL_DEC_SUCCESS,
+               count > 0 {
+                var profile = Data(count: count)
+                let status = profile.withUnsafeMutableBytes {
+                    JxlDecoderGetColorAsICCProfile(decoder, JXL_COLOR_PROFILE_TARGET_ORIGINAL,
+                        $0.baseAddress!.assumingMemoryBound(to: UInt8.self), count)
+                }
+                if status == JXL_DEC_SUCCESS { colorProfile = Self.profileName(in: profile) }
+            }
+            let swapsAxes = orientation.rawValue >= 5
+            return Metadata(imageSize: CGSize(width: Int(swapsAxes ? info.ysize : info.xsize),
+                                               height: Int(swapsAxes ? info.xsize : info.ysize)),
+                            orientation: orientation, hasAlpha: info.alpha_bits > 0,
+                            colorModel: info.num_color_channels == 1 ? .grayscale : .rgb,
+                            colorProfile: colorProfile)
+        }
+    }
+
+    /// ICC profileDescriptionTag: v2 ASCII `desc` or v4 UTF-16BE `mluc`.
+    /// See https://www.color.org/ICC1-V41.pdf and https://www.color.org/icc34.pdf.
+    /// Prefer English when present, otherwise use the first available description.
+    static func profileName(in profile: Data) -> String? {
+        profile.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            guard bytes.count >= 132 else { return nil }
+            // Every word read below is guarded by its containing header/table/tag size.
+            func word(_ offset: Int) -> Int {
+                bytes[offset..<offset + 4].reduce(0) { ($0 << 8) | Int($1) }
+            }
+            let length = word(0), tags = word(128)
+            guard length >= 132, length <= bytes.count, tags <= (length - 132) / 12 else { return nil }
+            for index in 0..<tags {
+                let entry = 132 + index * 12
+                guard word(entry) == 0x64657363 else { continue } // profileDescriptionTag
+                let start = word(entry + 4), size = word(entry + 8)
+                guard start >= 132 + tags * 12, start <= length, size <= length - start, size >= 12 else { return nil }
+                switch word(start) {
+                case 0x64657363: // textDescriptionType; count includes the terminating NUL.
+                    let count = word(start + 8)
+                    guard count > 1, count <= size - 12, bytes[start + 12 + count - 1] == 0 else { return nil }
+                    return String(bytes: bytes[start + 12..<start + 12 + count - 1], encoding: .ascii)
+                case 0x6d6c7563: // multiLocalizedUnicodeType
+                    guard size >= 16 else { return nil }
+                    let records = word(start + 8), recordSize = word(start + 12)
+                    guard recordSize >= 12, records <= (size - 16) / recordSize else { return nil }
+                    let stringsStart = 16 + records * recordSize
+                    var first: String?
+                    for record in 0..<records {
+                        let entry = start + 16 + record * recordSize
+                        let count = word(entry + 4), offset = word(entry + 8)
+                        guard offset >= stringsStart, offset <= size,
+                              count > 0, count % 2 == 0, count <= size - offset,
+                              let name = String(bytes: bytes[start + offset..<start + offset + count],
+                                                encoding: .utf16BigEndian) else { continue }
+                        if bytes[entry] == 0x65, bytes[entry + 1] == 0x6e { return name } // en
+                        if first == nil { first = name }
+                    }
+                    return first
+                default:
+                    return nil
+                }
+            }
+            return nil
+        }
     }
 
     var imageSize: (width: Int, height: Int) {

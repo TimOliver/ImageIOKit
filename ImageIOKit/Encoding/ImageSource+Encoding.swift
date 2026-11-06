@@ -149,6 +149,16 @@ public extension ImageSource {
             return conditioned
         }
 
+        // Native-only JXL sources still support conditioning without a full output bitmap.
+        if fileFormat == .jpegXL, cgImageSource == nil {
+            let buffer = try decode(targetSize: CGSize(width: maxDim, height: maxDim))
+            try buffer.write(to: url, as: .jpeg, quality: quality)
+            guard let conditioned = ImageSource(url: url) else {
+                throw ImageEncoderError.encodeFailed("Failed to load conditioned JPEG")
+            }
+            return conditioned
+        }
+
         // General path: thumbnail via ImageIO (capped to maxDimension), encode as JPEG
         guard let cgSource = cgImageSource else {
             throw ImageEncoderError.encodeFailed("Failed to obtain CGImageSource for conditioning")
@@ -246,11 +256,12 @@ private extension ImageSource {
             return
         }
 
-        // Fallback: decode and strip alpha
+        // Native fallback preserves transparency for formats that support it.
         guard let cgImage = decodeFullCGImage() else {
             throw ImageEncoderError.encodeFailed("Failed to decode source image for encoding")
         }
-        CGImageDestinationAddImage(dest, cgImage.strippingAlpha(), properties as CFDictionary)
+        CGImageDestinationAddImage(dest, format.isOpaque ? cgImage.strippingAlpha() : cgImage,
+                                  properties as CFDictionary)
     }
 }
 

@@ -35,15 +35,21 @@ extension ImageSource {
     public func decodeFullCGImage() -> CGImage? {
         let key = Self.fullDecodeCacheKey as NSString
         if let cached = fullDecodeCache.object(forKey: key) { return cached }
-        guard isLoaded, let cgImageSource else { return nil }
+        guard isLoaded else { return nil }
 
-        let image: CGImage?
-        if orientation == .up {
-            image = CGImageSourceCreateImageAtIndex(cgImageSource, 0,
-                [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
-        } else {
-            // A full-size ImageIO thumbnail applies all eight EXIF transforms.
-            image = try? imageIOThumbnail(fitting: imageSize)
+        var image: CGImage?
+        if let cgImageSource {
+            if orientation == .up {
+                image = CGImageSourceCreateImageAtIndex(cgImageSource, 0,
+                    [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
+            } else {
+                // A full-size ImageIO thumbnail applies all eight EXIF transforms.
+                image = try? imageIOThumbnail(fitting: imageSize)
+            }
+        }
+        if image == nil, fileFormat == .jpegXL {
+            let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
+            image = try? decoder?.decode().makeCGImage()
         }
         guard let image else { return nil }
         fullDecodeCache.setObject(image, forKey: key)
