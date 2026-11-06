@@ -89,3 +89,17 @@ What ImageIO returns on iOS: RGB JPEGs come back as 32-bit RGBX (`noneSkipLast`)
 | 5000×10000 → 512×1024 | 24.6 ms, 22.8 dB | 29.2 ms, 17.6 dB | 32.9 ms |
 
 Neither alternative was adopted. Direct upload saves 2–5 ms in isolation, which is within run-to-run noise end to end, because reading ImageIO's bytes is a copy of its own. Core Image saves 12 ms only on the largest page and is roughly even elsewhere. It also loses 5 dB at 5000×10000 → 512×1024, for unknown reasons, and would add a second resampler and colour pipeline. On the largest page, `makeTexture` is within about 25 ms of ImageIO's subsampled hardware decode alone (46 ms); on the other pages it is within a few milliseconds.
+
+## Follow-up: decoding into shared GPU memory (adopted)
+
+`makeTexture` now allocates decoder output in zero-filled shared `MTLBuffer` memory, with rows padded to the linear texture alignment, and wraps it in a texture rather than uploading it with `replace(region:)`. When no resize is needed, a GPU blit copies the texture into private storage. Copy upload and shared storage were alternated call by call in one process, with seven samples each ([log](2026-11-06-gpu-scale-iphone-shared-storage.log)).
+
+| Page | Copy upload | Shared storage |
+|---|---:|---:|
+| JPEG 11000² → 2047² | 78.2 ms | 73.5 ms |
+| JPEG 11000² → 1023² | 58.3 ms | 56.1 ms |
+| Gray JPEG → 1440×2048, RGBA | 23.5 ms | 18.6 ms |
+| Gray JXL → 1440×2048, RGBA | 45.2 ms | 38.2 ms |
+| Gray outputs, 5000×10000 JPEG, 11000² JXL | within ±1 ms | within ±1 ms |
+
+RGBA paths with large native buffers save 2–7 ms (6–21%). Peak memory footprint did not change, because the peak occurs while ImageIO's subsampled bitmap and the CoreGraphics copy of it coexist, before the upload. Shared storage only removes the second plateau during the upload. Peak readings vary by several MB between runs, because the allocator reuses memory from earlier iterations.
