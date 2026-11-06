@@ -118,6 +118,18 @@ struct JXLDecoder {
                     context.pointee.channels = pixelFormat.bytesPerPixel
 
                 case JXL_DEC_COLOR_ENCODING:
+                    // libjxl describes sRGB output with a generated ICC profile that CoreGraphics
+                    // does not equate with kCGColorSpaceSRGB, forcing color matching on every draw.
+                    // Keep the named space for nominal sRGB RGBA output (including gray expanded to RGB).
+                    var encoding = JxlColorEncoding()
+                    if pixelFormat == .rgba8,
+                       JxlDecoderGetColorAsEncodedProfile(decoder, JXL_COLOR_PROFILE_TARGET_DATA, &encoding) == JXL_DEC_SUCCESS,
+                       encoding.color_space == JXL_COLOR_SPACE_GRAY
+                        || (encoding.color_space == JXL_COLOR_SPACE_RGB && encoding.primaries == JXL_PRIMARIES_SRGB),
+                       encoding.white_point == JXL_WHITE_POINT_D65,
+                       encoding.transfer_function == JXL_TRANSFER_FUNCTION_SRGB {
+                        break
+                    }
                     var count = 0
                     if JxlDecoderGetICCProfileSize(decoder, JXL_COLOR_PROFILE_TARGET_DATA, &count) == JXL_DEC_SUCCESS, count > 0 {
                         var profile = Data(count: count)

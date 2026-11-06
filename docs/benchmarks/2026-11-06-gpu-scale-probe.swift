@@ -391,8 +391,11 @@ final class Bench {
     func imageIOSubsampleGPU(_ fixture: Fixture, _ target: CGSize) throws -> (MTLTexture, Stages) {
         var stages = Stages()
         let size = try outputSize(fixture, target)
-        let factor = [8, 4, 2].first {
-            (fixture.width + $0 - 1) / $0 >= Int(size.width) && (fixture.height + $0 - 1) / $0 >= Int(size.height)
+        let outWidth = Int(size.width), outHeight = Int(size.height)
+        let factor: Int = [8, 4, 2].first { (factor: Int) -> Bool in
+            let width: Int = (fixture.width + factor - 1) / factor
+            let height: Int = (fixture.height + factor - 1) / factor
+            return width >= outWidth && height >= outHeight
         } ?? 1
         let (image, decode) = timed { () -> CGImage in
             let source = CGImageSourceCreateWithData(fixture.data as CFData, nil)!

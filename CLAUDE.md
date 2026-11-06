@@ -8,7 +8,7 @@
 ## Architecture
 - `ImageSource` wraps ImageIO for metadata, full decode, thumbnails, and encoding.
 - `JPEGRegionDecoder` uses TurboJPEG cropped decode and DCT scaling. It retains embedded RGB ICC profiles; ImageIO handles unsupported profiles and rotated/mirrored source regions.
-- `JXLDecoder` uses libjxl callbacks for full, DC-resolution, and filtered thumbnail decoding, retains output color profiles, and normalizes alpha to premultiplied components. Grayscale sources decode to `gray8`/`grayAlpha8` when the caller requests a gray format.
+- `JXLDecoder` uses libjxl callbacks for full, DC-resolution, and filtered thumbnail decoding, retains output color profiles (tagging nominal sRGB output with the named sRGB space so CoreGraphics skips color matching), and normalizes alpha to premultiplied components. Grayscale sources decode to `gray8`/`grayAlpha8` when the caller requests a gray format.
 - `JXLReconstructor` reconstructs the original JPEG bitstream from JPEG-derived JXL.
 - `WebPImageDecoder` uses libwebp's decoder-only product for scaled still-image pixels, retaining RGB ICC profiles and emitting premultiplied RGBA directly into `PixelBuffer`. ImageIO handles animation, transformed images, unsupported profiles, and odd-origin lossy crops.
 - `PixelBuffer` owns pixel storage and its color space. `makeCGImage()` retains the buffer without copying; `makeTexture(device:)` copies its components to Metal.

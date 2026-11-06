@@ -484,3 +484,20 @@ extension JXLDecoderTests {
         }
     }
 }
+
+extension JXLDecoderTests {
+    // libjxl reports nominal sRGB through a generated ICC profile; CoreGraphics only skips
+    // color matching for the named space, so RGBA output must carry kCGColorSpaceSRGB.
+    func testNominalSRGBOutputUsesNamedColorSpace() throws {
+        let sRGB = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl()))
+        XCTAssertEqual(try decoder.decode().colorSpace, sRGB)
+        XCTAssertEqual(try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4)).colorSpace, sRGB)
+        XCTAssertEqual(try decoder.decodeThumbnail(fittingSize: CGSize(width: 2, height: 2)).colorSpace, sRGB)
+
+        let gray = try XCTUnwrap(JXLDecoder(data: SyntheticImage.grayJXL(width: 8, height: 8,
+            pixels: [UInt8](repeating: 128, count: 64))))
+        XCTAssertEqual(try gray.decode().colorSpace, sRGB)
+        XCTAssertEqual(try gray.decode(prefersGrayscale: true).colorSpace.model, .monochrome)
+    }
+}
