@@ -996,6 +996,67 @@ enum VTProbe {
 
 // MARK: - makeTexture memory probe
 
+/// Zoom-tile crops for TASKS item 5: the shipped TurboJPEG region decode against the
+/// full ImageIO decode it would replace — uncached, and with the full decode already cached.
+enum CropProbe {
+    static func run(fixtures: URL) throws {
+        let screen = CGSize(width: 2064, height: 2752)
+        var files = ["page-5000x10000.jpeg", "manga-2160x3072-gray.jpeg"].map(fixtures.appendingPathComponent)
+        let real = fixtures.appendingPathComponent("real")
+        if let page = (try? FileManager.default.contentsOfDirectory(at: real, includingPropertiesForKeys: nil))?
+            .filter({ $0.pathExtension == "jpg" }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent }).first {
+            files.append(page)
+        }
+        for url in files {
+            guard let data = try? Data(contentsOf: url), let probe = ImageSource(data: data) else { continue }
+            let size = probe.imageSize
+            print("CROP page=\(url.lastPathComponent) size=\(Int(size.width))x\(Int(size.height)) regionDecodable=\(probe.isRegionDecodable)")
+            let formats: [PixelBuffer.PixelFormat] = probe.colorModel == .grayscale ? [.rgba8, .gray8] : [.rgba8]
+            for fraction in [0.5, 0.25] {
+                let crop = CGRect(x: size.width * (1 - fraction) / 2, y: size.height * (1 - fraction) / 2,
+                                  width: size.width * fraction, height: size.height * fraction)
+                for format in formats {
+                    var region: [Double] = [], uncached: [Double] = [], cached: [Double] = []
+                    var output = ""
+                    for iteration in 0..<10 {
+                        try autoreleasepool {
+                            let clock = { Double(clock_gettime_nsec_np(CLOCK_UPTIME_RAW)) / 1e6 }
+                            // Shipped crop path on a fresh source: TurboJPEG region decode.
+                            let regionSource = ImageSource(data: data)!
+                            var start = clock()
+                            let tile = try regionSource.decode(targetSize: screen, cropRect: crop, pixelFormat: format)
+                            let r = clock() - start
+                            output = "\(tile.width)x\(tile.height)"
+                            // The fallback used for non-region sources: full ImageIO decode,
+                            // CGImage crop, one render to the target. Fresh source = cold cache.
+                            let fresh = ImageSource(data: data)!
+                            let clamped = try SoftwareScaler.clampedCrop(crop, in: fresh.imageSize)
+                            let outSize = try SoftwareScaler.outputSize(for: clamped.size, fitting: screen)
+                            start = clock()
+                            guard let full = fresh.decodeFullCGImage(), let croppedImage = full.cropping(to: clamped) else {
+                                throw ImageDecoderError.decodeFailed("Full decode failed")
+                            }
+                            _ = try fresh.render(croppedImage, size: outSize, pixelFormat: format)
+                            let u = clock() - start
+                            // Same source again: the full decode is now cached.
+                            start = clock()
+                            guard let hot = fresh.decodeFullCGImage(), let cropped2 = hot.cropping(to: clamped) else {
+                                throw ImageDecoderError.decodeFailed("Cached decode failed")
+                            }
+                            _ = try fresh.render(cropped2, size: outSize, pixelFormat: format)
+                            let c = clock() - start
+                            if iteration > 1 { region.append(r); uncached.append(u); cached.append(c) }
+                        }
+                    }
+                    let med = { (v: [Double]) in String(format: "%.2f", v.sorted()[v.count / 2]) }
+                    print("CROP   fraction=\(fraction) \(format) output=\(output) region=\(med(region))ms " +
+                          "fullUncached=\(med(uncached))ms fullCached=\(med(cached))ms")
+                }
+            }
+        }
+    }
+}
+
 enum MemoryProbe {
     static func footprint() -> Int64 {
         var info = task_vm_info_data_t()
@@ -1020,6 +1081,7 @@ enum MemoryProbe {
                     // Alternate old (copy upload) and new (shared storage) call by call: A, B, A, B...
                     for iteration in 0..<16 {
                         let copyUpload = iteration % 2 == 0
+                        ImageSource.benchmarkCopyUpload = copyUpload  // patched in by setup-ios.sh
                         try autoreleasepool {
                             let baseline = footprint()
                             let peak = Peak(); peak.value = baseline
@@ -1108,6 +1170,11 @@ class ViewController: UIViewController {
                 let fixtures = Bundle.main.resourceURL!.appendingPathComponent("ProbeFixtures")
                 if CommandLine.arguments.contains("--real") {
                     try RealPages.run(directory: fixtures.appendingPathComponent("real"), bench: bench)
+                    print("BENCH-DONE")
+                    exit(0)
+                }
+                if CommandLine.arguments.contains("--crop") {
+                    try CropProbe.run(fixtures: fixtures)
                     print("BENCH-DONE")
                     exit(0)
                 }

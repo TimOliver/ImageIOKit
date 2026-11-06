@@ -41,7 +41,8 @@ Keep the device unlocked, with Auto-Lock off, during builds and runs. The app in
 |---|---|
 | (none), `--only=<substring>` | The full GPU-scale benchmark, optionally limited to fixtures whose name contains the substring |
 | `--real` | Bundled real pages (from `setup-ios.sh`'s second argument) at iPhone SE, Pro Max and iPad sizes |
-| `--memory [--label=name]` | Peak footprint and median time of `makeTexture`, sampled every 1 ms. It alternates calls in pairs; the copy-upload vs shared-storage A/B needs the temporary `ImageSource.benchmarkCopyUpload` switch described in the 2026-11-06 write-up, which is not in the library |
+| `--memory [--label=name]` | Peak footprint and median time of `makeTexture`, sampled every 1 ms. Alternates copy upload and shared storage call by call through the `ImageSource.benchmarkCopyUpload` switch that `setup-ios.sh` patches into its library copy |
+| `--crop` | Zoom-tile crops (TASKS item 5): the shipped TurboJPEG region decode vs the full ImageIO decode fallback, cold and with the full decode cached, on the 50 MP page, the gray manga, and the first bundled real page |
 | `--diag` | ImageIO subsampled-JPEG bitmap layout, alignment, and per-stage timings |
 | `--experiments` | Swizzle check, direct ImageIO upload, Core Image Lanczos |
 | `--vt` | VideoToolbox Motion-JPEG hardware decode probe |

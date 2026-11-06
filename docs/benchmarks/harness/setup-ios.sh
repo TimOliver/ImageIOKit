@@ -39,5 +39,31 @@ guard = '''            guard !isGrayJPEG else { throw ImageDecoderError.unsuppor
 if guard in s:
     s = s.replace(guard, '            // Benchmark-only: time untagged gray through TurboJPEG as sRGB.\n')
     open(p, 'w').write(s)
+# Benchmark-only: the copy-upload switch so --memory can A/B shared storage against replace(region:).
+p = out + '/ImageIOKit/Decoding/ImageSource+Texture.swift'
+s = open(p).read()
+shared = '''        let buffer = try PixelBuffer.withMetalStorage(on: scaler.device) {
+            try nativeTextureSource(covering: size, targetSize: targetSize, pixelFormat: pixelFormat)
+                ?? decode(targetSize: targetSize, pixelFormat: pixelFormat)
+        }'''
+assert shared in s, 'shared-storage anchor'
+s = s.replace(shared, '''        let buffer: PixelBuffer
+        if Self.benchmarkCopyUpload {
+            buffer = try nativeTextureSource(covering: size, targetSize: targetSize, pixelFormat: pixelFormat)
+                ?? decode(targetSize: targetSize, pixelFormat: pixelFormat)
+        } else {
+            buffer = try PixelBuffer.withMetalStorage(on: scaler.device) {
+                try nativeTextureSource(covering: size, targetSize: targetSize, pixelFormat: pixelFormat)
+                    ?? decode(targetSize: targetSize, pixelFormat: pixelFormat)
+            }
+        }''')
+marker = 'extension ImageSource {'
+assert marker in s, 'extension anchor'
+s = s.replace(marker, marker + '''
+
+    /// Benchmark-only: forces plain allocations so makeTexture uploads by copy.
+    /// Patched in by setup-ios.sh; not part of the library.
+    nonisolated(unsafe) static var benchmarkCopyUpload = false''', 1)
+open(p, 'w').write(s)
 PY
 echo "Project ready in $OUT. Build and run it with the commands in README.md."

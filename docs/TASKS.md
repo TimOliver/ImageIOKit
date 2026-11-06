@@ -53,6 +53,8 @@ EXIF-rotated JPEGs skip both the subsampled decode for 4× or greater reductions
 
 Zooming into oversized pages still uses `decode(cropRect:)` on the CPU. A `cropRect` parameter could use TurboJPEG's cropped decode (`JPEGRegionDecoder`) and then the GPU resample. Note that iOS crops currently rely on TurboJPEG or a full ImageIO decode, so measure against the hardware full decode first.
 
+Measured on the A10X (2026-11-07, harness `--crop`, [write-up](benchmarks/2026-11-07-gpu-scale-a10x.md)): region decode beats a cold full decode 1.2–1.6×, but a cached full decode wins by up to 4.8× — the real tradeoff is holding the full bitmap (about 200 MB for the 50 MP page), which `estimatedDecodeMemory` should gate. The gray8 region decode was slower than rgba8 there (59.3 vs 38.2 ms); re-check gray tile routing before building this.
+
 ## 6. JXL box filter vs full decode
 
 At manga size, the JXL 2×/4× box-filtered thumbnail is slower than a full decode plus GPU resample: 46.7 vs 31.9 ms on iPhone Air, and about 24 vs 18 ms on the Mac. The box filter exists to avoid a full-resolution bitmap. Switch to full decode when the full-size bitmap fits a memory budget, for example using `estimatedDecodeMemory`.

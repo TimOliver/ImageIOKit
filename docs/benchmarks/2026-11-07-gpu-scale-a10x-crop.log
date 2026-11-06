@@ -1,0 +1,13 @@
+ENV device=Apple A10X GPU model=iPad7,4 os=Version 17.7.11 (Build 21H461) cores=3 memory=4193959936 thermal=1 jxl=11002 iterations=7
+CROP page=page-5000x10000.jpeg size=5000x10000 regionDecodable=true
+CROP   fraction=0.5 rgba8 output=1376x2752 region=316.94ms fullUncached=393.01ms fullCached=196.89ms
+CROP   fraction=0.25 rgba8 output=1250x2500 region=167.72ms fullUncached=249.02ms fullCached=34.71ms
+CROP page=manga-2160x3072-gray.jpeg size=2160x3072 regionDecodable=true
+CROP   fraction=0.5 rgba8 output=1080x1536 region=38.18ms fullUncached=47.78ms fullCached=20.34ms
+CROP   fraction=0.5 gray8 output=1080x1536 region=59.29ms fullUncached=42.46ms fullCached=14.91ms
+CROP   fraction=0.25 rgba8 output=540x768 region=24.83ms fullUncached=39.12ms fullCached=5.36ms
+CROP   fraction=0.25 gray8 output=540x768 region=32.36ms fullUncached=37.46ms fullCached=3.95ms
+CROP page=Scott Pilgrim 01-000.jpg size=1800x2700 regionDecodable=true
+CROP   fraction=0.5 rgba8 output=900x1350 region=12.45ms fullUncached=18.04ms fullCached=10.18ms
+CROP   fraction=0.25 rgba8 output=450x676 region=7.40ms fullUncached=12.94ms fullCached=3.04ms
+BENCH-DONE
