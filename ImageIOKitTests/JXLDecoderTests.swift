@@ -449,13 +449,13 @@ extension JXLDecoderTests {
     }
 
     func testGrayAlphaSourceDecodesPremultipliedTwoChannelOutput() throws {
-        let pixels = (0..<8 * 8).flatMap { _ in [UInt8(200), 128] }
+        let pixels: [UInt8] = (0..<8 * 8).flatMap { _ -> [UInt8] in [200, 128] }
         let data = SyntheticImage.grayJXL(width: 8, height: 8, hasAlpha: true, pixels: pixels)
         let decoder = try XCTUnwrap(JXLDecoder(data: data))
         let full = try decoder.decode(prefersGrayscale: true)
         let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
         for buffer in [full, thumbnail] {
-            XCTAssertEqual(buffer.pixelFormat, .grayAlpha8)
+            XCTAssertEqual(buffer.pixelFormat, PixelBuffer.PixelFormat.grayAlpha8)
             let pixel = buffer.pixel(at: 0, y: 0)
             XCTAssertEqual(Int(pixel.r), 100, accuracy: 1)
             XCTAssertEqual(pixel.a, 128)
