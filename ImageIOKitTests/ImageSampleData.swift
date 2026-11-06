@@ -130,4 +130,40 @@ enum SyntheticImage {
         precondition(JxlEncoderProcessOutput(encoder, &next, &available) == JXL_ENC_SUCCESS)
         return Data(bytes: output, count: 65536 - available)
     }
+
+    /// Lossless sRGB-gray JXL. `pixels` holds one (gray) or two (gray, unassociated alpha) bytes per pixel.
+    static func grayJXL(width: Int, height: Int, hasAlpha: Bool = false, pixels: [UInt8]) -> Data {
+        let channels = hasAlpha ? 2 : 1
+        precondition(pixels.count == width * height * channels)
+        let encoder = JxlEncoderCreate(nil)!
+        defer { JxlEncoderDestroy(encoder) }
+        var info = JxlBasicInfo()
+        JxlEncoderInitBasicInfo(&info)
+        info.xsize = UInt32(width); info.ysize = UInt32(height)
+        info.bits_per_sample = 8; info.num_color_channels = 1
+        info.num_extra_channels = hasAlpha ? 1 : 0; info.alpha_bits = hasAlpha ? 8 : 0
+        info.uses_original_profile = 1
+        precondition(JxlEncoderSetBasicInfo(encoder, &info) == JXL_ENC_SUCCESS)
+        if hasAlpha {
+            var alpha = JxlExtraChannelInfo()
+            JxlEncoderInitExtraChannelInfo(JXL_CHANNEL_ALPHA, &alpha)
+            precondition(JxlEncoderSetExtraChannelInfo(encoder, 0, &alpha) == JXL_ENC_SUCCESS)
+        }
+        var color = JxlColorEncoding()
+        JxlColorEncodingSetToSRGB(&color, 1)
+        precondition(JxlEncoderSetColorEncoding(encoder, &color) == JXL_ENC_SUCCESS)
+        let settings = JxlEncoderFrameSettingsCreate(encoder, nil)!
+        precondition(JxlEncoderSetFrameLossless(settings, 1) == JXL_ENC_SUCCESS)
+        var format = JxlPixelFormat(num_channels: UInt32(channels), data_type: JXL_TYPE_UINT8,
+                                    endianness: JXL_NATIVE_ENDIAN, align: 0)
+        let status = pixels.withUnsafeBytes { JxlEncoderAddImageFrame(settings, &format, $0.baseAddress, $0.count) }
+        precondition(status == JXL_ENC_SUCCESS)
+        JxlEncoderCloseInput(encoder)
+        let output = UnsafeMutablePointer<UInt8>.allocate(capacity: 65536)
+        defer { output.deallocate() }
+        var next: UnsafeMutablePointer<UInt8>? = output
+        var available = 65536
+        precondition(JxlEncoderProcessOutput(encoder, &next, &available) == JXL_ENC_SUCCESS)
+        return Data(bytes: output, count: 65536 - available)
+    }
 }

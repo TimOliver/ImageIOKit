@@ -418,3 +418,69 @@ extension JXLDecoderTests {
         }
     }
 }
+
+extension JXLDecoderTests {
+    // Grayscale requests keep grayscale sources in one or two channels at every decode scale.
+    func testGrayscaleSourceDecodesToSingleChannelWhenPreferred() throws {
+        let pixels = (0..<16 * 16).map { UInt8(($0 % 16) * 16) }
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.grayJXL(width: 16, height: 16, pixels: pixels)))
+        let full = try decoder.decode(prefersGrayscale: true)
+        XCTAssertEqual(full.pixelFormat, .gray8)
+        XCTAssertEqual(full.dataSize, 16 * 16)
+        XCTAssertEqual(full.colorSpace.model, .monochrome)
+        for x in 0..<16 { XCTAssertEqual(full.pixel(at: x, y: 3).r, UInt8(x * 16)) }
+
+        // 4x4 box filter and DC paths.
+        for bound in [4, 2] {
+            let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: bound, height: bound),
+                                                        prefersGrayscale: true)
+            XCTAssertEqual(thumbnail.pixelFormat, .gray8)
+            XCTAssertEqual(thumbnail.width, bound)
+            XCTAssertEqual(thumbnail.dataSize, bound * bound)
+        }
+        let boxed = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
+        // Columns 0...3 hold 0, 16, 32, 48: their mean is 24.
+        XCTAssertEqual(Int(boxed.pixel(at: 0, y: 0).r), 24, accuracy: 1)
+
+        // Without the preference, output stays RGBA.
+        let rgba = try decoder.decode()
+        XCTAssertEqual(rgba.pixelFormat, .rgba8)
+        XCTAssertEqual(rgba.pixel(at: 5, y: 0).r, rgba.pixel(at: 5, y: 0).g)
+    }
+
+    func testGrayAlphaSourceDecodesPremultipliedTwoChannelOutput() throws {
+        let pixels = (0..<8 * 8).flatMap { _ in [UInt8(200), 128] }
+        let data = SyntheticImage.grayJXL(width: 8, height: 8, hasAlpha: true, pixels: pixels)
+        let decoder = try XCTUnwrap(JXLDecoder(data: data))
+        let full = try decoder.decode(prefersGrayscale: true)
+        let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
+        for buffer in [full, thumbnail] {
+            XCTAssertEqual(buffer.pixelFormat, .grayAlpha8)
+            let pixel = buffer.pixel(at: 0, y: 0)
+            XCTAssertEqual(Int(pixel.r), 100, accuracy: 1)
+            XCTAssertEqual(pixel.a, 128)
+        }
+    }
+
+    func testRGBSourceIgnoresGrayscalePreference() throws {
+        let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl()))
+        XCTAssertEqual(try decoder.decode(prefersGrayscale: true).pixelFormat, .rgba8)
+        let thumbnail = try decoder.decodeThumbnail(fittingSize: CGSize(width: 4, height: 4), prefersGrayscale: true)
+        XCTAssertEqual(thumbnail.pixelFormat, .rgba8)
+    }
+
+    // ImageSource requests gray decoding natively and still returns the contracted formats.
+    func testImageSourceGrayscaleJXLDecodeMatchesRGBADecode() throws {
+        let pixels = (0..<32 * 32).map { UInt8(($0 % 32) * 8) }
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.grayJXL(width: 32, height: 32, pixels: pixels)))
+        let target = CGSize(width: 16, height: 16)
+        let gray = try source.decode(targetSize: target, pixelFormat: .gray8)
+        let rgba = try source.decode(targetSize: target, pixelFormat: .rgba8)
+        XCTAssertEqual(gray.pixelFormat, .gray8)
+        XCTAssertEqual(gray.width, 16)
+        XCTAssertEqual(rgba.pixelFormat, .rgba8)
+        for x in stride(from: 0, to: 16, by: 3) {
+            XCTAssertEqual(Int(gray.pixel(at: x, y: 8).r), Int(rgba.pixel(at: x, y: 8).r), accuracy: 3)
+        }
+    }
+}

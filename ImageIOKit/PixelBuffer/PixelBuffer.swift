@@ -88,11 +88,14 @@ public final class PixelBuffer {
     ///   - pixelFormat: The layout of pixel components.
     public convenience init(width: Int, height: Int, pixelFormat: PixelFormat, colorSpace: CGColorSpace? = nil) {
         let bytesPerRow = width * pixelFormat.bytesPerPixel
-        let size = bytesPerRow * height
-        let data = UnsafeMutableRawPointer.allocate(byteCount: size, alignment: 16)
-        data.initializeMemory(as: UInt8.self, repeating: 0, count: size)
+        // calloc maps large allocations to lazily zeroed pages, avoiding a full zero-fill
+        // pass before codecs or CGContext overwrite the pixels. Darwin aligns it to 16 bytes.
+        guard let data = calloc(max(1, bytesPerRow * height), 1) else {
+            fatalError("PixelBuffer: Failed to allocate \(bytesPerRow * height) bytes")
+        }
         self.init(width: width, height: height, bytesPerRow: bytesPerRow,
-                  pixelFormat: pixelFormat, data: data, colorSpace: colorSpace)
+                  pixelFormat: pixelFormat, data: data, colorSpace: colorSpace,
+                  deallocator: { free($0) })
     }
 
     static func defaultColorSpace(for format: PixelFormat) -> CGColorSpace {

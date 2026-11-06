@@ -82,7 +82,12 @@ extension ImageSource {
             }
             image = cropped
         } else if targetSize != nil {
-            image = try thumbnailCGImage(fitting: size)
+            // Native thumbnails are finished directly in the requested format; ImageIO
+            // thumbnails are fitted by the single render below rather than rendered twice.
+            if let buffer = nativeJXLThumbnail(size: size, pixelFormat: pixelFormat) {
+                return try finish(buffer, size: size, pixelFormat: pixelFormat)
+            }
+            image = try imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
         } else {
             guard let full = decodeFullCGImage() else {
                 throw ImageDecoderError.decodeFailed("Failed to decode full image")
@@ -102,14 +107,20 @@ private extension ImageSource {
            let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
             return image
         }
-        if fileFormat == .jpegXL {
-            let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
-            if let buffer = try? decoder?.decodeThumbnail(fittingSize: size),
-               let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
-                return image
-            }
+        if let buffer = nativeJXLThumbnail(size: size, pixelFormat: .rgba8),
+           let image = try finish(buffer, size: size, pixelFormat: .rgba8).makeCGImage() {
+            return image
         }
         return try imageIOThumbnail(fitting: size)
+    }
+
+    /// Decodes JXL thumbnails natively, or returns `nil` to fall back to ImageIO.
+    /// Grayscale requests keep grayscale sources in one or two channels.
+    func nativeJXLThumbnail(size: CGSize, pixelFormat: PixelBuffer.PixelFormat) -> PixelBuffer? {
+        guard fileFormat == .jpegXL else { return nil }
+        let decoder = url.flatMap { JXLDecoder(url: $0) } ?? data.flatMap { JXLDecoder(data: $0) }
+        let prefersGray = pixelFormat == .gray8 || pixelFormat == .grayAlpha8
+        return try? decoder?.decodeThumbnail(fittingSize: size, prefersGrayscale: prefersGray)
     }
 
     func nativeWebP(targetSize: CGSize?, cropRect: CGRect? = nil) throws -> PixelBuffer? {
@@ -123,21 +134,28 @@ private extension ImageSource {
         }
     }
 
+    /// Returns an upright ImageIO thumbnail fitted to `size`, rendering only if ImageIO overshoots.
     func imageIOThumbnail(fitting size: CGSize) throws -> CGImage {
+        let image = try imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
+        if image.width <= Int(size.width), image.height <= Int(size.height) { return image }
+        guard let result = try render(image, size: size, pixelFormat: .rgba8).makeCGImage() else {
+            throw ImageDecoderError.decodeFailed("Failed to create fitted thumbnail")
+        }
+        return result
+    }
+
+    /// Returns ImageIO's upright thumbnail, which may differ from the fitted size by a pixel.
+    func imageIOThumbnailImage(maxPixelSize: CGFloat) throws -> CGImage {
         guard let cgImageSource else { throw ImageDecoderError.invalidData }
         let options: [CFString: Any] = [
-            kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height),
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true
         ]
         guard let image = CGImageSourceCreateThumbnailAtIndex(cgImageSource, 0, options as CFDictionary) else {
             throw ImageDecoderError.decodeFailed("Failed to create ImageIO thumbnail")
         }
-        if image.width <= Int(size.width), image.height <= Int(size.height) { return image }
-        guard let result = try render(image, size: size, pixelFormat: .rgba8).makeCGImage() else {
-            throw ImageDecoderError.decodeFailed("Failed to create fitted thumbnail")
-        }
-        return result
+        return image
     }
 
     func finish(_ buffer: PixelBuffer, size: CGSize, pixelFormat: PixelBuffer.PixelFormat) throws -> PixelBuffer {
