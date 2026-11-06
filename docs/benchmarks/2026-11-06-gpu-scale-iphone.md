@@ -61,3 +61,16 @@ The 1024 bound, `current-gray8`, the native-gray JXL pipelines and per-run value
 | 11000² → 1023² | 55.0 / 27.3 | 50.1 / 27.3 |
 
 The aliasing at large reductions is mostly gone; TurboJPEG + CG still scores 23.5 dB on the first row. Every case got faster. At 2–4× reductions (gray manga → 720×1024), ImageIO's thumbnail scored the same quality and was about 1 ms faster, so those keep the thumbnail path. On the M4 Max, the same JPEG cases were 5–15% faster with identical quality.
+
+## Follow-up: the `makeTexture(fitting:pixelFormat:using:)` API
+
+This run timed the public API end to end, including the `await` ([log](2026-11-06-gpu-scale-iphone-texture-api-results.log)). `current` already includes the subsampled JPEG decoding above. All MPS kernels in this run, both the library's and the probe's, clamp at the edges. Earlier GPU rows used the default `.zero` edge mode, which blends transparent black into border pixels; that affects only borders, so the earlier conclusions stand. Thermal state was 1 (fair) from the 5000×10000 cases onward.
+
+| Fixture → bound 2048 / 1024 | `current` ms (truth dB) | `makeTexture` ms (truth dB) |
+|---|---|---|
+| JPEG 11000² | 71.3 (30.7) / 51.7 (27.3) | 74.5 (36.5) / 58.4 (31.3) |
+| JPEG 5000×10000 | 32.8 (26.2) / 24.2 (22.6) | 32.8 (28.1) / 24.8 (22.8) |
+| Gray JPEG, `.gray8` | 15.3 (27.8) / 7.9 (24.7) | 9.8 (30.1) / 6.2 (27.5) |
+| Gray JXL, `.gray8` | 48.7 (27.7) / 66.4 (24.7) | 44.6 (30.1) / 61.5 (27.4) |
+
+For RGBA output, the API now has about the same latency as the CPU path: within 0–13% (up to 7 ms), mostly because the subsampled-decode fix sped up the CPU path. Its gains are quality (+0.2 to +5.8 dB) and lower CPU time on JPEG. Grayscale output is faster, at 7–36% less latency with +2.4 to +2.8 dB. RGB JXL stays decode-bound.

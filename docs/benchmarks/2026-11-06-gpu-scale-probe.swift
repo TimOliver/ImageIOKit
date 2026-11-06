@@ -290,8 +290,17 @@ final class Bench {
     let device = MTLCreateSystemDefaultDevice()!
     lazy var queue = device.makeCommandQueue()!
     // Kernels are created once, as a reader would keep them for its lifetime.
-    lazy var lanczos = MPSImageLanczosScale(device: device)
-    lazy var bilinear = MPSImageBilinearScale(device: device)
+    lazy var lanczos: MPSImageLanczosScale = {
+        let kernel = MPSImageLanczosScale(device: device)
+        kernel.edgeMode = .clamp
+        return kernel
+    }()
+    lazy var bilinear: MPSImageBilinearScale = {
+        let kernel = MPSImageBilinearScale(device: device)
+        kernel.edgeMode = .clamp
+        return kernel
+    }()
+    lazy var scaler = TextureScaler(device: device)!
     let iterations = 7
     let outputDirectory: URL?
 
@@ -309,6 +318,10 @@ final class Bench {
             Pipeline(name: "native+lanczos") { f, target in try self.nativeGPU(f, target, self.lanczos, gray: false) },
             Pipeline(name: "native+bilinear") { f, target in try self.nativeGPU(f, target, self.bilinear, gray: false) },
         ]
+        list.append(Pipeline(name: "makeTexture") { f, target in try self.textureAPI(f, target, .rgba8) })
+        if fixture.isGray {
+            list.append(Pipeline(name: "makeTexture-gray8") { f, target in try self.textureAPI(f, target, .gray8) })
+        }
         if fixture.codec == .jpeg {
             list.append(Pipeline(name: "imageio-subsample+lanczos") { f, target in try self.imageIOSubsampleGPU(f, target) })
         }
@@ -334,6 +347,35 @@ final class Bench {
         let (texture, upload) = timed { buffer.makeTexture(device: device)! }
         stages.decode = decode; stages.upload = upload
         return (texture, stages)
+    }
+
+    /// The public API, `ImageSource.makeTexture(fitting:pixelFormat:using:)`, awaited synchronously.
+    /// Its whole cost (decode, upload, GPU resample and completion) is reported as decode.
+    func textureAPI(_ fixture: Fixture, _ target: CGSize,
+                    _ format: PixelBuffer.PixelFormat) throws -> (MTLTexture, Stages) {
+        final class Call: @unchecked Sendable {
+            let source: ImageSource, scaler: TextureScaler, target: CGSize, format: PixelBuffer.PixelFormat
+            var texture: MTLTexture?, error: Error?
+            init(_ source: ImageSource, _ scaler: TextureScaler, _ target: CGSize, _ format: PixelBuffer.PixelFormat) {
+                self.source = source; self.scaler = scaler; self.target = target; self.format = format
+            }
+        }
+        var stages = Stages()
+        let (call, total) = timed { () -> Call in
+            let call = Call(ImageSource(data: fixture.data)!, scaler, target, format)
+            let done = DispatchSemaphore(value: 0)
+            Task.detached {
+                do { call.texture = try await call.source.makeTexture(fitting: call.target, pixelFormat: call.format,
+                                                                     using: call.scaler) }
+                catch { call.error = error }
+                done.signal()
+            }
+            done.wait()
+            return call
+        }
+        if let error = call.error { throw error }
+        stages.decode = total
+        return (call.texture!, stages)
     }
 
     /// Codec-native reduced decode: TurboJPEG DCT scaling or JXL DC/box-filtered output.
