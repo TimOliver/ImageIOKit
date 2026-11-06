@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreGraphics
+import Metal
 
 public final class PixelBuffer {
 
@@ -60,6 +61,10 @@ public final class PixelBuffer {
     // Each codec library has its own free function (tjFree, WebPFree, etc.).
     private let deallocator: (UnsafeMutableRawPointer) -> Void
 
+    /// GPU-visible storage backing `data`, when allocated inside `withMetalStorage(on:_:)`.
+    /// Rows are padded to the device's linear texture alignment, so a texture can share it.
+    let metalStorage: MTLBuffer?
+
     /// Creates a pixel buffer wrapping existing C-allocated memory.
     /// - Parameters:
     ///   - width: Image width in pixels.
@@ -79,6 +84,19 @@ public final class PixelBuffer {
         self.colorSpace = colorSpace ?? Self.defaultColorSpace(for: pixelFormat)
         self.data = data
         self.deallocator = deallocator
+        self.metalStorage = nil
+    }
+
+    private init(width: Int, height: Int, bytesPerRow: Int, pixelFormat: PixelFormat,
+                 colorSpace: CGColorSpace?, metalStorage: MTLBuffer) {
+        self.width = width
+        self.height = height
+        self.bytesPerRow = bytesPerRow
+        self.pixelFormat = pixelFormat
+        self.colorSpace = colorSpace ?? Self.defaultColorSpace(for: pixelFormat)
+        self.data = metalStorage.contents()
+        self.deallocator = { _ in }
+        self.metalStorage = metalStorage
     }
 
     /// Creates a pixel buffer by allocating new zero-initialized memory.
@@ -87,6 +105,17 @@ public final class PixelBuffer {
     ///   - height: Image height in pixels.
     ///   - pixelFormat: The layout of pixel components.
     public convenience init(width: Int, height: Int, pixelFormat: PixelFormat, colorSpace: CGColorSpace? = nil) {
+        // Inside withMetalStorage(on:_:), allocate zero-filled shared GPU memory instead, so the
+        // texture path can wrap decoded pixels without an upload copy.
+        if let device = Self.metalAllocator?.device, let format = pixelFormat.metalPixelFormat {
+            let alignment = device.minimumLinearTextureAlignment(for: format)
+            let rowBytes = (width * pixelFormat.bytesPerPixel + alignment - 1) / alignment * alignment
+            if let storage = device.makeBuffer(length: max(1, rowBytes * height), options: .storageModeShared) {
+                self.init(width: width, height: height, bytesPerRow: rowBytes, pixelFormat: pixelFormat,
+                          colorSpace: colorSpace, metalStorage: storage)
+                return
+            }
+        }
         let bytesPerRow = width * pixelFormat.bytesPerPixel
         // calloc maps large allocations to lazily zeroed pages, avoiding a full zero-fill
         // pass before codecs or CGContext overwrite the pixels. Darwin aligns it to 16 bytes.
@@ -96,6 +125,16 @@ public final class PixelBuffer {
         self.init(width: width, height: height, bytesPerRow: bytesPerRow,
                   pixelFormat: pixelFormat, data: data, colorSpace: colorSpace,
                   deallocator: { free($0) })
+    }
+
+    /// Device whose shared memory backs buffers allocated on the current task.
+    struct MetalAllocator: @unchecked Sendable { let device: MTLDevice }
+    @TaskLocal static var metalAllocator: MetalAllocator?
+
+    /// Runs `body` with every allocating `PixelBuffer` initializer backed by `device` memory.
+    /// Rows may be padded, so code must index with `bytesPerRow`, never `width * bytesPerPixel`.
+    static func withMetalStorage<T>(on device: MTLDevice, _ body: () throws -> T) rethrows -> T {
+        try $metalAllocator.withValue(MetalAllocator(device: device), operation: body)
     }
 
     static func defaultColorSpace(for format: PixelFormat) -> CGColorSpace {

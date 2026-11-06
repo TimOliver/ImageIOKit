@@ -33,7 +33,7 @@ enum SoftwareScaler {
 
         for row in 0..<cropHeight {
             let srcOffset = (y + row) * source.bytesPerRow + x * bpp
-            let dstOffset = row * destBytesPerRow
+            let dstOffset = row * dest.bytesPerRow
             memcpy(dest.data.advanced(by: dstOffset),
                    source.data.advanced(by: srcOffset),
                    destBytesPerRow)

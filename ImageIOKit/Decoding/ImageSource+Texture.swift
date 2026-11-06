@@ -37,17 +37,42 @@ public final class TextureScaler: @unchecked Sendable {
 
     /// Lanczos-resamples `source` into a new private texture of `size` and waits for the GPU.
     func scale(_ source: MTLTexture, to size: CGSize) async throws -> MTLTexture {
+        let (destination, commandBuffer) = try makeDestination(like: source, size: size, usage: [.shaderRead, .shaderWrite])
+        lock.withLock {
+            lanczos.encode(commandBuffer: commandBuffer, sourceTexture: source, destinationTexture: destination)
+        }
+        try await complete(commandBuffer)
+        return destination
+    }
+
+    /// Copies an already-fitted texture into private storage, the GPU's preferred layout.
+    func copyToPrivate(_ source: MTLTexture) async throws -> MTLTexture {
+        let size = CGSize(width: source.width, height: source.height)
+        let (destination, commandBuffer) = try makeDestination(like: source, size: size, usage: .shaderRead)
+        guard let blit = commandBuffer.makeBlitCommandEncoder() else {
+            throw ImageDecoderError.decodeFailed("Failed to encode texture copy")
+        }
+        blit.copy(from: source, to: destination)
+        blit.endEncoding()
+        try await complete(commandBuffer)
+        return destination
+    }
+
+    private func makeDestination(like source: MTLTexture, size: CGSize,
+                                 usage: MTLTextureUsage) throws -> (MTLTexture, MTLCommandBuffer) {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(
             pixelFormat: source.pixelFormat, width: Int(size.width), height: Int(size.height), mipmapped: false)
-        descriptor.usage = [.shaderRead, .shaderWrite]
+        descriptor.usage = usage
         descriptor.storageMode = .private
         guard let destination = device.makeTexture(descriptor: descriptor),
               let commandBuffer = queue.makeCommandBuffer() else {
             throw ImageDecoderError.decodeFailed("Failed to allocate GPU resampling resources")
         }
-        lock.withLock {
-            lanczos.encode(commandBuffer: commandBuffer, sourceTexture: source, destinationTexture: destination)
-        }
+        return (destination, commandBuffer)
+    }
+
+    /// Commits `commandBuffer` and waits for the GPU without blocking a thread.
+    private func complete(_ commandBuffer: MTLCommandBuffer) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             commandBuffer.addCompletedHandler { buffer in
                 if buffer.status == .completed {
@@ -59,7 +84,6 @@ public final class TextureScaler: @unchecked Sendable {
             }
             commandBuffer.commit()
         }
-        return destination
     }
 }
 
@@ -77,8 +101,7 @@ extension ImageSource {
     ///   - pixelFormat: `.rgba8` produces `rgba8Unorm` with premultiplied sRGB components;
     ///     `.gray8` produces `r8Unorm`. Other formats throw `invalidOptions`.
     ///   - scaler: Shared GPU state; textures are created on its device.
-    /// - Returns: A texture readable by shaders once this returns. Textures resampled on the GPU
-    ///   use private storage.
+    /// - Returns: A private-storage texture readable by shaders once this returns.
     public func makeTexture(fitting targetSize: CGSize, pixelFormat: PixelBuffer.PixelFormat = .rgba8,
                             using scaler: TextureScaler) async throws -> MTLTexture {
         guard isLoaded else { throw ImageDecoderError.invalidData }
@@ -86,12 +109,19 @@ extension ImageSource {
             throw ImageDecoderError.invalidOptions("Textures support rgba8 and gray8 output")
         }
         let size = try SoftwareScaler.outputSize(for: imageSize, fitting: targetSize)
-        let buffer = try nativeTextureSource(covering: size, targetSize: targetSize, pixelFormat: pixelFormat)
-            ?? decode(targetSize: targetSize, pixelFormat: pixelFormat)
-        guard let source = buffer.makeTexture(device: scaler.device) else {
+        // Decoders write straight into shared GPU memory, which a linear texture then wraps,
+        // so pixels are never copied for upload.
+        let buffer = try PixelBuffer.withMetalStorage(on: scaler.device) {
+            try nativeTextureSource(covering: size, targetSize: targetSize, pixelFormat: pixelFormat)
+                ?? decode(targetSize: targetSize, pixelFormat: pixelFormat)
+        }
+        guard let source = buffer.makeTextureSharingStorage(device: scaler.device)
+                ?? buffer.makeTexture(device: scaler.device) else {
             throw ImageDecoderError.decodeFailed("Failed to create texture")
         }
-        if source.width == Int(size.width), source.height == Int(size.height) { return source }
+        if source.width == Int(size.width), source.height == Int(size.height) {
+            return try await scaler.copyToPrivate(source)
+        }
         return try await scaler.scale(source, to: size)
     }
 }

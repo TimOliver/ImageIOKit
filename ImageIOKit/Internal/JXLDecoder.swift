@@ -314,8 +314,9 @@ final class JXLBoxDownsampler {
             for x in 0..<width {
                 let samples = min(factor, sourceWidth - x * factor) * min(factor, sourceHeight - y * factor)
                 let offset = (y * width + x) * channels
+                let outputOffset = y * output.bytesPerRow + x * channels
                 for channel in 0..<channels {
-                    destination[offset + channel] = UInt8((Int(sums[offset + channel]) + samples / 2) / samples)
+                    destination[outputOffset + channel] = UInt8((Int(sums[offset + channel]) + samples / 2) / samples)
                 }
             }
         }

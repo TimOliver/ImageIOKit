@@ -105,6 +105,66 @@ final class TextureTests: XCTestCase {
                        [pixel.r, pixel.g, pixel.b, pixel.a])
     }
 
+    // Buffers allocated for the texture path live in zero-filled shared GPU memory, with rows
+    // padded for linear textures, and a texture wraps them without copying.
+    func testMetalBackedAllocationIsPaddedZeroedAndShared() throws {
+        let scaler = try makeScaler()
+        XCTAssertNil(PixelBuffer(width: 7, height: 3, pixelFormat: .gray8).metalStorage)
+        let buffer = PixelBuffer.withMetalStorage(on: scaler.device) {
+            PixelBuffer(width: 7, height: 3, pixelFormat: .gray8)
+        }
+        let alignment = scaler.device.minimumLinearTextureAlignment(for: .r8Unorm)
+        XCTAssertNotNil(buffer.metalStorage)
+        XCTAssertEqual(buffer.bytesPerRow % alignment, 0)
+        XCTAssertGreaterThanOrEqual(buffer.bytesPerRow, 7)
+        let bytes = buffer.data.assumingMemoryBound(to: UInt8.self)
+        XCTAssertTrue((0..<buffer.dataSize).allSatisfy { bytes[$0] == 0 })
+        bytes[buffer.bytesPerRow + 3] = 200
+        let texture = try XCTUnwrap(buffer.makeTextureSharingStorage(device: scaler.device))
+        XCTAssertTrue(texture.buffer === buffer.metalStorage)
+        XCTAssertEqual(try readBack(texture, scaler: scaler)[7 + 3], 200)
+        // rgb8 has no Metal format, so it keeps ordinary memory.
+        let rgb = PixelBuffer.withMetalStorage(on: scaler.device) { PixelBuffer(width: 7, height: 3, pixelFormat: .rgb8) }
+        XCTAssertNil(rgb.metalStorage)
+    }
+
+    // Odd widths pad Metal-backed rows; every path must index by bytesPerRow.
+    func testPaddedRowsMatchCPUDecodeAcrossPaths() async throws {
+        let scaler = try makeScaler()
+        var pixels: [UInt8] = []
+        for y in 0..<16 {
+            for x in 0..<28 { pixels += [UInt8(x * 9), UInt8(y * 16), 90, 255] }
+        }
+        let jxl = try XCTUnwrap(ImageSource(data: SyntheticImage.jxl(width: 28, height: 16, rgba: pixels)))
+        let png = try XCTUnwrap(ImageSource(data: SyntheticImage.data(width: 41, height: 21, quadrants: true)))
+        // 28x16 fitted to 7x4 is exactly the JXL 4x box output (blit path, so exact); a 5-pixel bound
+        // resamples that 7x4 to 5x2 on the GPU, compared with CoreGraphics' resample of the same pixels.
+        // The PNG uses the CPU path and must match exactly.
+        let cases: [(ImageSource, CGSize, Int)] = [(jxl, CGSize(width: 7, height: 4), 0),
+                                                   (jxl, CGSize(width: 5, height: 5), 24),
+                                                   (png, CGSize(width: 400, height: 400), 0)]
+        for (source, target, tolerance) in cases {
+            for format in [PixelBuffer.PixelFormat.rgba8, .gray8] {
+                let texture = try await source.makeTexture(fitting: target, pixelFormat: format, using: scaler)
+                let expected = try source.decode(targetSize: target, pixelFormat: format)
+                XCTAssertEqual(texture.width, expected.width)
+                XCTAssertEqual(texture.height, expected.height)
+                XCTAssertEqual(texture.storageMode, .private)
+                let bytes = try readBack(texture, scaler: scaler)
+                let stride = format.bytesPerPixel
+                for y in 0..<texture.height {
+                    for x in 0..<texture.width {
+                        let pixel = expected.pixel(at: x, y: y)
+                        let offset = (y * texture.width + x) * stride
+                        XCTAssertEqual(Int(bytes[offset]), Int(pixel.r), accuracy: tolerance,
+                                       "\(format) \(target) at \(x),\(y)")
+                        if format == .rgba8 { XCTAssertEqual(bytes[offset + 3], pixel.a) }
+                    }
+                }
+            }
+        }
+    }
+
     func testUnsupportedPixelFormatsThrow() async throws {
         let scaler = try makeScaler()
         let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data()))
