@@ -53,14 +53,18 @@ struct JXLDecoder {
         guard size.width > 0, size.height > 0 else { throw ImageDecoderError.invalidData }
         let output = try SoftwareScaler.outputSize(for: CGSize(width: size.width, height: size.height), fitting: fittingSize)
         let dcWidth = (size.width + 7) / 8, dcHeight = (size.height + 7) / 8
+        let outputWidth = Int(output.width), outputHeight = Int(output.height)
+        // Explicit types: older compilers time out type-checking this as one expression.
+        let covers: (Int) -> Bool = { (factor: Int) -> Bool in
+            let width: Int = (size.width + factor - 1) / factor
+            let height: Int = (size.height + factor - 1) / factor
+            return width >= outputWidth && height >= outputHeight
+        }
         let factor: Int
-        if CGFloat(dcWidth) >= output.width && CGFloat(dcHeight) >= output.height {
+        if dcWidth >= outputWidth && dcHeight >= outputHeight {
             factor = 8
         } else {
-            factor = [4, 2].first {
-                CGFloat((size.width + $0 - 1) / $0) >= output.width &&
-                CGFloat((size.height + $0 - 1) / $0) >= output.height
-            } ?? 1
+            factor = [4, 2].first(where: covers) ?? 1
         }
         return try decode(downsampleFactor: factor, prefersGrayscale: prefersGrayscale)
     }

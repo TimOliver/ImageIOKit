@@ -371,8 +371,8 @@ extension JXLDecoderTests {
         let delivery = Delivery()
         DispatchQueue.concurrentPerform(iterations: 7) { index in
             let y = 6 - index
-            let row: [UInt8] = (0..<9).flatMap { x in
-                x % 2 == 0 ? [UInt8(255), 0, 0, 255] : [0, 0, 255, 0]
+            let row: [UInt8] = (0..<9).flatMap { (x: Int) -> [UInt8] in
+                x % 2 == 0 ? [255, 0, 0, 255] : [0, 0, 255, 0]
             }
             row.withUnsafeBytes { pixels in
                 delivery.filter.consume(x: 3, y: y, count: 6, pixels: pixels.baseAddress!.advanced(by: 12))
@@ -396,8 +396,9 @@ extension JXLDecoderTests {
     func testIntermediateThumbnailPreservesAlphaAndOrientation() throws {
         for orientation in UInt32(1)...8 {
             for associated in [false, true] {
-                let pixels: [UInt8] = (0..<32 * 16).flatMap { i in
-                    i % 32 < 16 ? [UInt8(associated ? 128 : 255), 0, 0, 128] : [0, 255, 0, 255]
+                let red: UInt8 = associated ? 128 : 255
+                let pixels: [UInt8] = (0..<32 * 16).flatMap { (i: Int) -> [UInt8] in
+                    i % 32 < 16 ? [red, 0, 0, 128] : [0, 255, 0, 255]
                 }
                 let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.jxl(premultiplied: associated,
                     width: 32, height: 16, orientation: orientation, rgba: pixels)))
@@ -422,7 +423,7 @@ extension JXLDecoderTests {
 extension JXLDecoderTests {
     // Grayscale requests keep grayscale sources in one or two channels at every decode scale.
     func testGrayscaleSourceDecodesToSingleChannelWhenPreferred() throws {
-        let pixels = (0..<16 * 16).map { UInt8(($0 % 16) * 16) }
+        let pixels: [UInt8] = (0..<16 * 16).map { (i: Int) -> UInt8 in UInt8((i % 16) * 16) }
         let decoder = try XCTUnwrap(JXLDecoder(data: SyntheticImage.grayJXL(width: 16, height: 16, pixels: pixels)))
         let full = try decoder.decode(prefersGrayscale: true)
         XCTAssertEqual(full.pixelFormat, .gray8)
@@ -471,7 +472,7 @@ extension JXLDecoderTests {
 
     // ImageSource requests gray decoding natively and still returns the contracted formats.
     func testImageSourceGrayscaleJXLDecodeMatchesRGBADecode() throws {
-        let pixels = (0..<32 * 32).map { UInt8(($0 % 32) * 8) }
+        let pixels: [UInt8] = (0..<32 * 32).map { (i: Int) -> UInt8 in UInt8((i % 32) * 8) }
         let source = try XCTUnwrap(ImageSource(data: SyntheticImage.grayJXL(width: 32, height: 32, pixels: pixels)))
         let target = CGSize(width: 16, height: 16)
         let gray = try source.decode(targetSize: target, pixelFormat: .gray8)
