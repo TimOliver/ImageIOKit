@@ -98,7 +98,8 @@ extension ImageSource {
     }
 }
 
-private extension ImageSource {
+// Internal helpers, shared with the GPU texture path.
+extension ImageSource {
 
     func thumbnailCGImage(fitting bounds: CGSize) throws -> CGImage {
         guard isLoaded else { throw ImageDecoderError.invalidData }
@@ -156,11 +157,12 @@ private extension ImageSource {
     /// Other formats return `nil`: ImageIO cannot subsample them, so a full decode would replace
     /// the thumbnail path's low-memory streaming. Oriented sources also return `nil`, since a
     /// plain image decode does not apply EXIF transforms.
-    func imageIOSubsampledImage(covering size: CGSize) -> CGImage? {
+    /// `factors` lists the subsample factors to try, largest first; include 1 to allow a full decode.
+    func imageIOSubsampledImage(covering size: CGSize, factors: [Int] = [8, 4]) -> CGImage? {
         guard fileFormat == .jpeg, orientation == .up, let cgImageSource else { return nil }
         let width = Int(imageSize.width), height = Int(imageSize.height)
         let target = (width: Int(size.width), height: Int(size.height))
-        guard let factor = [8, 4].first(where: { width / $0 >= target.width && height / $0 >= target.height }) else {
+        guard let factor = factors.first(where: { width / $0 >= target.width && height / $0 >= target.height }) else {
             return nil
         }
         let options: [CFString: Any] = [

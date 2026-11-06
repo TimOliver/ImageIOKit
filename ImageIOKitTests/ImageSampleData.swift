@@ -87,6 +87,23 @@ enum SyntheticImage {
         return data as Data
     }
 
+    /// sRGB JPEG of alternating 1 px black and white columns, for resampling and aliasing checks.
+    static func stripedJPEG(width: Int = 1600, height: Int = 800) -> Data {
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.setFillColor(gray: 0, alpha: 1)
+        for x in stride(from: 0, to: width, by: 2) { context.fill(CGRect(x: x, y: 0, width: 1, height: height)) }
+        let data = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, context.makeImage()!,
+                                   [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary)
+        precondition(CGImageDestinationFinalize(destination))
+        return data as Data
+    }
+
     static func jxl(premultiplied: Bool = false, width: Int = 16, height: Int = 16,
                     orientation: UInt32 = 1, rgba: [UInt8]? = nil, icc: Data? = nil) -> Data {
         let encoder = JxlEncoderCreate(nil)!

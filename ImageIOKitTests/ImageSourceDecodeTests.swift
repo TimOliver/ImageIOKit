@@ -461,20 +461,7 @@ extension ImageSourceDecodeTests {
     // Large reductions must filter rather than skip samples. 1 px stripes reduced 16x should
     // average to an even mid-gray; aliasing shows up as large swings between output pixels.
     func testLargeJPEGReductionsDoNotAlias() throws {
-        let width = 1600, height = 800
-        let context = try XCTUnwrap(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-            space: try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB)),
-            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
-        context.setFillColor(gray: 1, alpha: 1)
-        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        context.setFillColor(gray: 0, alpha: 1)
-        for x in stride(from: 0, to: width, by: 2) { context.fill(CGRect(x: x, y: 0, width: 1, height: height)) }
-        let data = NSMutableData()
-        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil))
-        CGImageDestinationAddImage(destination, try XCTUnwrap(context.makeImage()),
-                                   [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary)
-        XCTAssertTrue(CGImageDestinationFinalize(destination))
-        let source = try XCTUnwrap(ImageSource(data: data as Data))
+        let source = try XCTUnwrap(ImageSource(data: SyntheticImage.stripedJPEG()))
 
         let target = CGSize(width: 100, height: 50)
         for format in [PixelBuffer.PixelFormat.rgba8, .gray8] {
