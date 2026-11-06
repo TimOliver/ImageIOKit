@@ -69,6 +69,15 @@ let deferredSource = ImageSource(url: imageURL, loadImmediately: false)
 deferredSource?.loadImageData()
 ```
 
+`ImageSource(data:)` never copies the compressed bytes: ImageIO and the native decoders read the `Data` in place, including slices. For archive entries stored without compression (common in CBZ files, since JPEGs gain almost nothing from deflate), memory-map the archive and pass the entry's sub-range. The compressed page then costs no memory footprint at all:
+
+```swift
+let archive = try Data(contentsOf: archiveURL, options: .alwaysMapped)
+let page = ImageSource(data: archive[entryOffset..<(entryOffset + entryLength)])
+```
+
+Deflated entries must be inflated into memory first; inflating a typical page takes about 1 ms.
+
 ### Reading Image Metadata
 
 ```swift
