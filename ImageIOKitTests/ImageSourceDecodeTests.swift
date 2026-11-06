@@ -458,6 +458,38 @@ extension ImageSourceDecodeTests {
         XCTAssertEqual(Int(region.pixel(at: 4, y: 4).r), Int(full.pixel(at: 12, y: 12).r), accuracy: 1)
     }
 
+    // Large reductions must filter rather than skip samples. 1 px stripes reduced 16x should
+    // average to an even mid-gray; aliasing shows up as large swings between output pixels.
+    func testLargeJPEGReductionsDoNotAlias() throws {
+        let width = 1600, height = 800
+        let context = try XCTUnwrap(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB)),
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        context.setFillColor(gray: 1, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.setFillColor(gray: 0, alpha: 1)
+        for x in stride(from: 0, to: width, by: 2) { context.fill(CGRect(x: x, y: 0, width: 1, height: height)) }
+        let data = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, try XCTUnwrap(context.makeImage()),
+                                   [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let source = try XCTUnwrap(ImageSource(data: data as Data))
+
+        let target = CGSize(width: 100, height: 50)
+        for format in [PixelBuffer.PixelFormat.rgba8, .gray8] {
+            let output = try source.decode(targetSize: target, pixelFormat: format)
+            XCTAssertEqual(output.width, 100)
+            XCTAssertEqual(output.height, 50)
+            let values = (0..<output.width).map { Int(output.pixel(at: $0, y: 25).r) }
+            let spread = (values.max() ?? 0) - (values.min() ?? 0)
+            XCTAssertLessThanOrEqual(spread, 24, "\(format) output aliases: \(values)")
+            XCTAssertEqual(Double(values.reduce(0, +)) / Double(values.count), 128, accuracy: 24)
+        }
+        let thumbnail = try XCTUnwrap(source.makeThumbnail(fittingSize: target))
+        XCTAssertEqual(thumbnail.size, target)
+    }
+
     func testNoDecodePathUpscalesSmallImages() throws {
         let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data(width: 40, height: 20, jpeg: true)))
         let bounds = CGSize(width: 400, height: 400)

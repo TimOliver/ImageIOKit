@@ -86,7 +86,8 @@ extension ImageSource {
             if let buffer = nativeJXLThumbnail(size: size, pixelFormat: pixelFormat) {
                 return try finish(buffer, size: size, pixelFormat: pixelFormat)
             }
-            image = try imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
+            image = try imageIOSubsampledImage(covering: size)
+                ?? imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
         } else {
             guard let full = decodeFullCGImage() else {
                 throw ImageDecoderError.decodeFailed("Failed to decode full image")
@@ -135,12 +136,40 @@ private extension ImageSource {
 
     /// Returns an upright ImageIO thumbnail fitted to `size`, rendering only if ImageIO overshoots.
     func imageIOThumbnail(fitting size: CGSize) throws -> CGImage {
+        if let subsampled = imageIOSubsampledImage(covering: size),
+           let result = try render(subsampled, size: size, pixelFormat: .rgba8).makeCGImage() {
+            return result
+        }
         let image = try imageIOThumbnailImage(maxPixelSize: max(size.width, size.height))
         if image.width <= Int(size.width), image.height <= Int(size.height) { return image }
         guard let result = try render(image, size: size, pixelFormat: .rgba8).makeCGImage() else {
             throw ImageDecoderError.decodeFailed("Failed to create fitted thumbnail")
         }
         return result
+    }
+
+    /// For reductions of 4x or more, decodes upright JPEGs at the largest ImageIO subsample factor
+    /// (1/4 or 1/8) that still covers `size`, leaving the final resample to CoreGraphics. On iOS,
+    /// ImageIO's own thumbnail resampling aliases at large reductions; subsampled decoding still
+    /// uses the fast decoder. Smaller reductions keep the thumbnail path, which measured as good
+    /// and slightly faster there.
+    /// Other formats return `nil`: ImageIO cannot subsample them, so a full decode would replace
+    /// the thumbnail path's low-memory streaming. Oriented sources also return `nil`, since a
+    /// plain image decode does not apply EXIF transforms.
+    func imageIOSubsampledImage(covering size: CGSize) -> CGImage? {
+        guard fileFormat == .jpeg, orientation == .up, let cgImageSource else { return nil }
+        let width = Int(imageSize.width), height = Int(imageSize.height)
+        let target = (width: Int(size.width), height: Int(size.height))
+        guard let factor = [8, 4].first(where: { width / $0 >= target.width && height / $0 >= target.height }) else {
+            return nil
+        }
+        let options: [CFString: Any] = [
+            kCGImageSourceSubsampleFactor: factor,
+            kCGImageSourceShouldCacheImmediately: true
+        ]
+        guard let image = CGImageSourceCreateImageAtIndex(cgImageSource, 0, options as CFDictionary),
+              image.width >= target.width, image.height >= target.height else { return nil }
+        return image
     }
 
     /// Returns ImageIO's upright thumbnail, which may differ from the fitted size by a pixel.

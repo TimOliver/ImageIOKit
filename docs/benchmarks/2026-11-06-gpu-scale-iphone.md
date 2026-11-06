@@ -48,3 +48,16 @@ The 1024 bound, `current-gray8`, the native-gray JXL pipelines and per-run value
 - Crops and region decodes. TurboJPEG's cropped decode avoids the full decode that ImageIO's crop path needs, and remains the expected choice for zooming into oversized pages.
 - Lossless JXL, PNG, WebP and AVIF.
 - Older devices. Re-run on the 10.5-inch iPad Pro (A10X) before making routing decisions that depend on hardware decode behaviour.
+
+## Follow-up: subsampled JPEG decoding for large reductions
+
+`decode(targetSize:)` and `makeThumbnail(fittingSize:)` now handle upright JPEGs reduced by 4× or more differently. Instead of using ImageIO's thumbnail resampling, they decode at ImageIO's 1/4 or 1/8 subsample factor and resample once with CoreGraphics. A rerun of the JPEG fixtures with this change ([log](2026-11-06-gpu-scale-iphone-subsample-results.log)) shows that the `current` pipeline now uses this path:
+
+| JPEG case | Before: ms / truth dB | After: ms / truth dB |
+|---|---|---|
+| 5000×10000 → 512×1024 | 27.3 / 18.2 | 24.6 / 22.6 |
+| 5000×10000 → 1024×2048 | 41.6 / 26.2 | 32.8 / 26.2 |
+| 11000² → 2047² | 91.0 / 30.7 | 73.3 / 30.7 |
+| 11000² → 1023² | 55.0 / 27.3 | 50.1 / 27.3 |
+
+The aliasing at large reductions is mostly gone; TurboJPEG + CG still scores 23.5 dB on the first row. Every case got faster. At 2–4× reductions (gray manga → 720×1024), ImageIO's thumbnail scored the same quality and was about 1 ms faster, so those keep the thumbnail path. On the M4 Max, the same JPEG cases were 5–15% faster with identical quality.

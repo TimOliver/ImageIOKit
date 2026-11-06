@@ -6,7 +6,7 @@
 - Callers manage scheduling and page caching externally.
 
 ## Architecture
-- `ImageSource` wraps ImageIO for metadata, full decode, thumbnails, and encoding.
+- `ImageSource` wraps ImageIO for metadata, full decode, thumbnails, and encoding. Upright JPEGs reduced 4× or more decode at an ImageIO 1/4 or 1/8 subsample factor and resample once with CoreGraphics, because iOS ImageIO thumbnails alias at large reductions.
 - `JPEGRegionDecoder` uses TurboJPEG cropped decode and DCT scaling. It retains embedded RGB ICC profiles; ImageIO handles unsupported profiles and rotated/mirrored source regions.
 - `JXLDecoder` uses libjxl callbacks for full, DC-resolution, and filtered thumbnail decoding, retains output color profiles (tagging nominal sRGB output with the named sRGB space so CoreGraphics skips color matching), and normalizes alpha to premultiplied components. Grayscale sources decode to `gray8`/`grayAlpha8` when the caller requests a gray format.
 - `JXLReconstructor` reconstructs the original JPEG bitstream from JPEG-derived JXL.
