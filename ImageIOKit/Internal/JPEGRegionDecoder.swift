@@ -71,7 +71,8 @@ struct JPEGRegionDecoder {
     /// - Returns: A pixel buffer containing the decoded region.
     func decodeRegion(cropRect: CGRect, targetSize: CGSize? = nil,
                              pixelFormat: PixelBuffer.PixelFormat = .rgba8) throws -> PixelBuffer {
-        guard pixelFormat == .rgba8 else {
+        // Grayscale output is only offered for grayscale JPEGs, decoded straight to one channel.
+        guard pixelFormat == .rgba8 || pixelFormat == .gray8 else {
             throw ImageDecoderError.unsupportedOperation
         }
 
@@ -96,7 +97,7 @@ struct JPEGRegionDecoder {
             throw ImageDecoderError.invalidData
         }
 
-        let colorSpace = try Self.readColorSpace(handle)
+        let colorSpace = try Self.readColorSpace(handle, gray: pixelFormat == .gray8)
 
         let scaleFactor = JPEGRegionDecoder.bestScaleFactor(
             imageWidth: Int(clampedRect.width),
@@ -157,7 +158,7 @@ struct JPEGRegionDecoder {
         let decodeBuffer = PixelBuffer(
             width: decodeRect.width,
             height: decodeRect.height,
-            pixelFormat: .rgba8, colorSpace: colorSpace
+            pixelFormat: pixelFormat, colorSpace: colorSpace
         )
         let decodeStatus: Int32 = imageData.withUnsafeBytes { bufferPtr in
             guard let baseAddress = bufferPtr.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return -1 }
@@ -167,7 +168,7 @@ struct JPEGRegionDecoder {
                 imageData.count,
                 decodeBuffer.data.assumingMemoryBound(to: UInt8.self),
                 Int32(decodeBuffer.bytesPerRow),
-                Int32(TJPF_RGBA.rawValue)
+                Int32((pixelFormat == .gray8 ? TJPF_GRAY : TJPF_RGBA).rawValue)
             )
         }
         guard decodeStatus == 0 else {
@@ -184,9 +185,9 @@ struct JPEGRegionDecoder {
         let finalBuffer = PixelBuffer(
             width: postCropOffset.width,
             height: postCropOffset.height,
-            pixelFormat: .rgba8, colorSpace: colorSpace
+            pixelFormat: pixelFormat, colorSpace: colorSpace
         )
-        let bytesPerPixel = 4
+        let bytesPerPixel = pixelFormat.bytesPerPixel
 
         for row in 0..<postCropOffset.height {
             let srcOffset = (row + postCropOffset.y) * decodeBuffer.bytesPerRow + postCropOffset.x * bytesPerPixel
@@ -288,7 +289,11 @@ struct JPEGRegionDecoder {
         return String(cString: message)
     }
 
-    private static func readColorSpace(_ handle: tjhandle) throws -> CGColorSpace {
+    /// RGB output keeps RGB profiles and treats untagged RGB as sRGB. Gray output requires a gray
+    /// JPEG and keeps a gray profile, treating untagged gray as gray gamma 2.2, as ImageIO does.
+    private static func readColorSpace(_ handle: tjhandle, gray: Bool) throws -> CGColorSpace {
+        let isGrayJPEG = tj3Get(handle, Int32(TJPARAM_COLORSPACE.rawValue)) == Int32(TJCS_GRAY.rawValue)
+        guard isGrayJPEG || !gray else { throw ImageDecoderError.unsupportedOperation }
         var bytes: UnsafeMutablePointer<UInt8>?
         var count = 0
         let status = tj3GetICCProfile(handle, &bytes, &count)
@@ -299,16 +304,15 @@ struct JPEGRegionDecoder {
             throw ImageDecoderError.decodeFailed(lastTurboJPEGError(handle))
         }
         guard status == 0, let bytes else {
+            if gray { return CGColorSpace(name: CGColorSpace.genericGrayGamma2_2)! }
             // ImageIO treats untagged grayscale as gray gamma 2.2, which TurboJPEG's RGB
             // output cannot carry; keep those on ImageIO so crops match full decodes.
-            guard tj3Get(handle, Int32(TJPARAM_COLORSPACE.rawValue)) != Int32(TJCS_GRAY.rawValue) else {
-                throw ImageDecoderError.unsupportedOperation
-            }
+            guard !isGrayJPEG else { throw ImageDecoderError.unsupportedOperation }
             return PixelBuffer.defaultColorSpace(for: .rgba8)
         }
         guard let space = CGColorSpace(iccData: Data(bytes: bytes, count: count) as CFData),
-              space.model == .rgb else {
-            // Let ImageIO handle profiles that do not describe TurboJPEG's RGB output.
+              space.model == (gray ? .monochrome : .rgb) else {
+            // Let ImageIO handle profiles that do not describe TurboJPEG's output.
             throw ImageDecoderError.unsupportedOperation
         }
         return space

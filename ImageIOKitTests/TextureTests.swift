@@ -168,6 +168,27 @@ final class TextureTests: XCTestCase {
         }
     }
 
+    // Gray JPEGs take the native gray route on Mac and ImageIO on iOS; both must match the CPU decode.
+    func testGrayJPEGTextureMatchesCPUDecode() async throws {
+        let scaler = try makeScaler()
+        for data in [SyntheticImage.grayJPEG(width: 61, height: 40),
+                     SyntheticImage.grayJPEG(width: 61, height: 40, space: try XCTUnwrap(CGColorSpace(name: CGColorSpace.linearGray)))] {
+            let source = try XCTUnwrap(ImageSource(data: data))
+            XCTAssertEqual(source.colorModel, .grayscale)
+            for format in [PixelBuffer.PixelFormat.gray8, .rgba8] {
+                let texture = try await source.makeTexture(fitting: CGSize(width: 100, height: 100), pixelFormat: format, using: scaler)
+                let expected = try source.decode(pixelFormat: format)
+                XCTAssertEqual(texture.width, 61)
+                let bytes = try readBack(texture, scaler: scaler)
+                for (x, y) in [(0, 0), (30, 20), (60, 39)] {
+                    let offset = (y * 61 + x) * format.bytesPerPixel
+                    XCTAssertEqual(Int(bytes[offset]), Int(expected.pixel(at: x, y: y).r), accuracy: 1, "\(format) at \(x),\(y)")
+                    if format == .rgba8 { XCTAssertEqual(bytes[offset + 3], 255) }
+                }
+            }
+        }
+    }
+
     func testUnsupportedPixelFormatsThrow() async throws {
         let scaler = try makeScaler()
         let source = try XCTUnwrap(ImageSource(data: SyntheticImage.data()))

@@ -87,6 +87,22 @@ enum SyntheticImage {
         return data as Data
     }
 
+    /// Grayscale JPEG with a horizontal gradient. A non-nil `space` other than device gray embeds its profile.
+    static func grayJPEG(width: Int = 64, height: Int = 48, space: CGColorSpace = CGColorSpaceCreateDeviceGray()) -> Data {
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: space, bitmapInfo: CGImageAlphaInfo.none.rawValue)!
+        for x in 0..<width {
+            context.setFillColor(gray: CGFloat(x) / CGFloat(max(1, width - 1)), alpha: 1)
+            context.fill(CGRect(x: x, y: 0, width: 1, height: height))
+        }
+        let data = NSMutableData()
+        let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil)!
+        CGImageDestinationAddImage(destination, context.makeImage()!,
+                                   [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary)
+        precondition(CGImageDestinationFinalize(destination))
+        return data as Data
+    }
+
     /// sRGB JPEG of alternating 1 px black and white columns, for resampling and aliasing checks.
     static func stripedJPEG(width: Int = 1600, height: Int = 800) -> Data {
         let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,

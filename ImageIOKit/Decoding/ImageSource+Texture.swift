@@ -169,10 +169,15 @@ extension ImageSource {
     /// iOS always uses ImageIO. The 12 MP cutoff is provisional: the crossover was not narrowed down.
     func turboJPEGTextureSource(covering size: CGSize, pixelFormat: PixelBuffer.PixelFormat) -> PixelBuffer? {
         #if os(macOS) || targetEnvironment(macCatalyst)
-        guard pixelFormat == .rgba8, imageSize.width * imageSize.height <= 12_000_000 else { return nil }
+        guard imageSize.width * imageSize.height <= 12_000_000 else { return nil }
         let decoder = url.flatMap { JPEGRegionDecoder(url: $0) } ?? data.flatMap { JPEGRegionDecoder(data: $0) }
-        // Untagged grayscale and unsupported profiles throw here and fall back to ImageIO.
-        return try? decoder?.decodeRegion(cropRect: CGRect(origin: .zero, size: imageSize), targetSize: size)
+        // Gray pages decode straight to one channel; RGBA requests expand them during conversion.
+        // Unsupported profiles and color JPEGs requested as gray throw here and fall back to ImageIO.
+        let decodeFormat: PixelBuffer.PixelFormat = colorModel == .grayscale ? .gray8 : .rgba8
+        guard decodeFormat == pixelFormat || decodeFormat == .gray8,
+              let buffer = try? decoder?.decodeRegion(cropRect: CGRect(origin: .zero, size: imageSize),
+                                                      targetSize: size, pixelFormat: decodeFormat) else { return nil }
+        return try? converted(buffer, to: pixelFormat)
         #else
         return nil
         #endif
