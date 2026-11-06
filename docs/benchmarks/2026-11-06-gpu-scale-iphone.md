@@ -74,3 +74,18 @@ This run timed the public API end to end, including the `await` ([log](2026-11-0
 | Gray JXL, `.gray8` | 48.7 (27.7) / 66.4 (24.7) | 44.6 (30.1) / 61.5 (27.4) |
 
 For RGBA output, the API now has about the same latency as the CPU path: within 0–13% (up to 7 ms), mostly because the subsampled-decode fix sped up the CPU path. Its gains are quality (+0.2 to +5.8 dB) and lower CPU time on JPEG. Grayscale output is faster, at 7–36% less latency with +2.4 to +2.8 dB. RGB JXL stays decode-bound.
+
+## Follow-up: avoiding the CPU copies in `makeTexture` (not adopted)
+
+The JPEG path in `makeTexture` copies ImageIO's subsampled bitmap through CoreGraphics and then uploads it with `replace(region:)`. Three alternatives were measured on the iPhone ([log](2026-11-06-gpu-scale-iphone-copy-avoidance.log)).
+
+What ImageIO returns on iOS: RGB JPEGs come back as 32-bit RGBX (`noneSkipLast`) tagged sRGB, with every sampled skip byte set to 255. Gray JPEGs come back as 8-bit Generic Gray Gamma 2.2. The CoreGraphics copy changed no values (maximum difference 0 for RGB, gray8 and gray-to-RGBA). Reading the bitmap through `dataProvider.data` is itself a copy (7.6 ms for 30 MB). Row strides such as 11000 bytes are not 16-byte aligned, so ImageIO's buffer cannot back a linear texture. MPS does honour texture-view swizzles, so a view can force the skip byte to opaque alpha.
+
+| Page | `makeTexture` | Core Image (edge-clamped Lanczos) | Direct upload |
+|---|---|---|---|
+| 11000² → 2047² | 72.7 ms, 36.5 dB | 60.5 ms, 36.6 dB | 73.8 ms |
+| 11000² → 1023² | 55.4 ms, 31.3 dB | 50.5 ms, 31.3 dB | 56.3 ms |
+| 5000×10000 → 1024×2048 | 32.1 ms, 28.1 dB | 31.5 ms, 28.2 dB | 40.9 ms |
+| 5000×10000 → 512×1024 | 24.6 ms, 22.8 dB | 29.2 ms, 17.6 dB | 32.9 ms |
+
+Neither alternative was adopted. Direct upload saves 2–5 ms in isolation, which is within run-to-run noise end to end, because reading ImageIO's bytes is a copy of its own. Core Image saves 12 ms only on the largest page and is roughly even elsewhere. It also loses 5 dB at 5000×10000 → 512×1024, for unknown reasons, and would add a second resampler and colour pipeline. On the largest page, `makeTexture` is within about 25 ms of ImageIO's subsampled hardware decode alone (46 ms); on the other pages it is within a few milliseconds.
