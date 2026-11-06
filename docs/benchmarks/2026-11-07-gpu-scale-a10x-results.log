@@ -1,0 +1,123 @@
+ENV device=Apple A10X GPU model=iPad7,4 os=Version 17.7.11 (Build 21H461) cores=3 memory=4193959936 thermal=1 jxl=11002 iterations=7
+
+CASE fixture=photo-11000x11000.jpeg bytes=35933213 target=2048 output=2047x2047 native=2750x2750 thermal=1
+| Pipeline | Wall ms | CPU ms | Decode | Scale | Upload | GPU | PSNR vs current | PSNR vs truth |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| current | 205.9 | 120.2 | 200.4 | 0.0 | 4.6 | 0.0 | ref | 30.7 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=current wall=[227.33,202.03,210.47,205.89,203.06,201.92,208.05] cpu=[119.72,117.34,125.64,120.15,119.83,120.15,121.07]
+| native+CG | 800.1 | 777.4 | 700.0 | 88.9 | 4.6 | 0.0 | 53.9 | 30.8 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=native+CG wall=[804.48,808.60,800.13,787.11,793.57,791.10,814.81] cpu=[784.59,780.79,776.00,774.58,781.43,774.78,777.40]
+| native+lanczos | 741.4 | 697.3 | 709.1 | 21.1 | 8.2 | 18.3 | 32.0 | 36.6 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=native+lanczos wall=[723.17,742.01,730.46,733.52,760.34,755.19,741.37] cpu=[693.18,697.88,696.19,695.88,698.86,697.66,697.32]
+| native+bilinear | 715.8 | 692.8 | 700.4 | 4.9 | 8.2 | 2.1 | 19.5 | 19.7 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=native+bilinear wall=[715.75,718.78,699.81,722.31,714.94,720.07,715.49] cpu=[692.79,695.45,685.02,690.98,694.29,692.78,690.73]
+| makeTexture | 143.9 | 44.0 | 142.8 | 0.0 | 0.0 | 0.0 | 32.1 | 36.5 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=makeTexture wall=[142.96,147.60,144.87,143.49,143.34,143.91,144.68] cpu=[42.83,44.03,46.29,44.30,43.55,43.66,44.84]
+| coreimage | 124.1 | 18.5 | 124.1 | 0.0 | 0.0 | 0.0 | 32.1 | 36.6 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=coreimage wall=[121.86,119.92,124.18,121.81,125.23,124.38,124.14] cpu=[17.29,12.18,18.86,18.97,18.47,19.00,18.19]
+| imageio-subsample+lanczos | 138.6 | 39.4 | 94.5 | 19.2 | 22.4 | 16.6 | 32.1 | 36.5 |
+RAW fixture=photo-11000x11000.jpeg target=2048 pipeline=imageio-subsample+lanczos wall=[138.48,141.37,138.37,138.64,139.72,143.46,138.19] cpu=[37.23,39.91,40.09,38.18,39.85,39.38,39.17]
+
+CASE fixture=photo-11000x11000.jpeg bytes=35933213 target=1024 output=1023x1023 native=1375x1375 thermal=1
+| Pipeline | Wall ms | CPU ms | Decode | Scale | Upload | GPU | PSNR vs current | PSNR vs truth |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| current | 115.9 | 34.2 | 114.3 | 0.0 | 1.4 | 0.0 | ref | 27.3 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=current wall=[115.86,117.37,114.89,115.32,118.82,115.91,116.44] cpu=[35.57,33.76,34.17,36.28,34.83,29.83,31.38]
+| native+CG | 627.7 | 607.8 | 603.6 | 22.3 | 1.2 | 0.0 | 54.8 | 27.3 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=native+CG wall=[680.33,627.67,632.60,618.23,622.45,636.41,622.68] cpu=[603.77,614.29,604.05,609.13,604.98,607.96,607.78]
+| native+lanczos | 610.2 | 589.3 | 598.0 | 7.6 | 2.3 | 5.7 | 28.4 | 31.3 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=native+lanczos wall=[610.17,643.14,618.17,606.47,613.86,603.55,598.77] cpu=[592.03,586.21,590.50,589.34,592.64,584.71,580.90]
+| native+bilinear | 597.9 | 576.1 | 592.9 | 2.3 | 2.2 | 0.5 | 17.1 | 16.9 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=native+bilinear wall=[606.97,597.86,610.98,602.56,583.81,569.09,570.96] cpu=[587.09,584.84,585.24,576.07,573.44,560.74,563.58]
+| makeTexture | 101.3 | 13.5 | 100.9 | 0.0 | 0.0 | 0.0 | 28.4 | 31.3 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=makeTexture wall=[105.10,106.50,101.13,101.28,101.35,101.06,101.18] cpu=[17.38,18.29,13.40,13.49,13.59,13.32,13.47]
+| coreimage | 100.1 | 8.1 | 100.1 | 0.0 | 0.0 | 0.0 | 28.5 | 31.3 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=coreimage wall=[100.11,99.81,100.28,98.41,100.44,99.68,102.34] cpu=[6.29,8.38,6.32,5.86,8.06,8.94,10.21]
+| imageio-subsample+lanczos | 100.1 | 12.2 | 86.2 | 7.4 | 5.7 | 5.7 | 28.4 | 31.3 |
+RAW fixture=photo-11000x11000.jpeg target=1024 pipeline=imageio-subsample+lanczos wall=[99.96,100.87,99.87,100.11,99.91,101.65,102.14] cpu=[13.73,13.07,12.19,11.94,12.17,12.13,12.33]
+
+CASE fixture=page-5000x10000.jpeg bytes=20445503 target=2048 output=1024x2048 native=1250x2500 thermal=1
+| Pipeline | Wall ms | CPU ms | Decode | Scale | Upload | GPU | PSNR vs current | PSNR vs truth |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| current | 97.4 | 58.9 | 94.5 | 0.0 | 2.5 | 0.0 | ref | 26.2 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=current wall=[97.12,99.26,103.74,96.88,98.52,97.41,92.94] cpu=[58.85,60.76,56.30,59.66,59.60,56.32,49.99]
+| native+CG | 379.7 | 372.4 | 336.2 | 38.8 | 2.5 | 0.0 | 51.4 | 26.3 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=native+CG wall=[383.11,385.53,377.07,379.66,380.83,378.11,376.86] cpu=[371.92,377.45,372.37,376.50,367.50,372.35,376.11]
+| native+lanczos | 348.1 | 337.0 | 334.4 | 9.3 | 3.4 | 7.3 | 29.9 | 28.2 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=native+lanczos wall=[344.54,357.24,348.05,342.89,345.77,359.44,365.80] cpu=[332.28,341.39,336.98,332.77,334.19,343.66,340.04]
+| native+bilinear | 343.1 | 337.1 | 335.8 | 3.0 | 3.4 | 1.0 | 17.4 | 16.4 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=native+bilinear wall=[342.60,343.01,348.54,344.58,343.09,342.23,347.73] cpu=[340.88,335.01,337.92,337.07,336.83,336.84,338.57]
+| makeTexture | 69.7 | 22.5 | 69.3 | 0.0 | 0.0 | 0.0 | 29.9 | 28.1 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=makeTexture wall=[68.77,71.63,69.87,69.69,69.15,71.83,67.62] cpu=[22.39,24.32,22.82,22.52,20.28,24.78,20.19]
+| coreimage | 71.4 | 18.2 | 71.4 | 0.0 | 0.0 | 0.0 | 29.9 | 28.2 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=coreimage wall=[68.71,71.80,72.28,75.99,68.38,71.11,71.44] cpu=[12.31,18.22,19.28,20.84,13.86,17.89,19.08]
+| imageio-subsample+lanczos | 67.8 | 21.6 | 47.5 | 9.3 | 9.4 | 7.3 | 29.9 | 28.1 |
+RAW fixture=page-5000x10000.jpeg target=2048 pipeline=imageio-subsample+lanczos wall=[68.42,71.57,67.80,69.29,65.30,65.78,65.55] cpu=[24.70,24.09,21.85,21.65,17.09,18.68,18.64]
+
+CASE fixture=page-5000x10000.jpeg bytes=20445503 target=1024 output=512x1024 native=625x1250 thermal=1
+| Pipeline | Wall ms | CPU ms | Decode | Scale | Upload | GPU | PSNR vs current | PSNR vs truth |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| current | 58.4 | 18.1 | 57.7 | 0.0 | 0.6 | 0.0 | ref | 23.5 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=current wall=[54.59,57.98,58.44,59.63,59.55,57.14,58.54] cpu=[17.02,18.10,22.80,19.80,17.77,19.10,14.58]
+| native+CG | 306.3 | 303.0 | 295.7 | 9.7 | 0.6 | 0.0 | 50.8 | 23.5 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=native+CG wall=[301.81,311.02,308.91,302.83,309.30,306.26,302.07] cpu=[296.87,307.08,303.03,295.84,307.51,302.40,303.83]
+| native+lanczos | 299.7 | 294.8 | 294.9 | 3.4 | 1.0 | 1.9 | 31.5 | 23.7 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=native+lanczos wall=[299.06,303.67,299.72,297.24,296.30,301.68,301.68] cpu=[298.91,294.81,292.62,292.03,290.93,295.31,295.28]
+| native+bilinear | 300.6 | 294.8 | 297.5 | 1.8 | 1.0 | 0.3 | 20.2 | 17.4 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=native+bilinear wall=[313.14,298.61,293.38,308.16,292.32,300.59,301.36] cpu=[297.23,294.56,290.33,295.52,290.34,294.78,295.58]
+| makeTexture | 52.8 | 11.0 | 52.6 | 0.0 | 0.0 | 0.0 | 31.5 | 23.7 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=makeTexture wall=[56.10,51.10,54.99,49.40,52.46,52.82,56.74] cpu=[13.68,9.55,13.56,7.88,10.99,9.73,15.26]
+| coreimage | 52.3 | 7.6 | 52.3 | 0.0 | 0.0 | 0.0 | 31.5 | 23.7 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=coreimage wall=[53.62,52.50,52.26,50.41,53.89,50.01,50.08] cpu=[8.83,8.19,7.58,6.04,9.85,5.63,5.61]
+| imageio-subsample+lanczos | 48.7 | 7.2 | 42.3 | 3.5 | 2.5 | 1.9 | 31.5 | 23.7 |
+RAW fixture=page-5000x10000.jpeg target=1024 pipeline=imageio-subsample+lanczos wall=[49.41,48.71,48.65,48.66,48.67,48.35,48.30] cpu=[11.41,7.25,7.19,7.22,7.23,6.96,6.85]
+
+CASE fixture=manga-2160x3072-gray.jpeg bytes=3607829 target=2048 output=1440x2048 native=1620x2304 thermal=1
+| Pipeline | Wall ms | CPU ms | Decode | Scale | Upload | GPU | PSNR vs current | PSNR vs truth |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| current | 69.0 | 59.9 | 65.3 | 0.0 | 3.2 | 0.0 | ref | 27.8 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=current wall=[68.41,67.57,67.52,69.32,72.89,68.98,70.42] cpu=[58.84,58.75,60.96,60.24,58.31,61.52,59.90]
+| native+CG | 113.6 | 112.2 | 61.6 | 47.7 | 3.2 | 0.0 | 28.0 | 28.2 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=native+CG wall=[113.12,113.58,114.10,112.97,115.41,116.17,113.32] cpu=[113.92,112.20,113.64,111.25,119.15,111.78,111.78]
+| native+lanczos | 80.6 | 69.4 | 63.1 | 12.2 | 4.0 | 9.9 | 27.5 | 28.3 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=native+lanczos wall=[79.40,80.58,81.28,80.52,79.23,85.89,83.27] cpu=[69.41,69.82,68.44,68.45,68.45,74.22,70.89]
+| native+bilinear | 70.1 | 67.8 | 61.3 | 3.6 | 4.0 | 1.4 | 16.5 | 16.9 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=native+bilinear wall=[70.13,74.20,71.46,70.10,69.87,70.07,73.66] cpu=[67.78,69.69,66.53,67.77,67.61,67.69,68.21]
+| makeTexture | 53.0 | 32.8 | 52.4 | 0.0 | 0.0 | 0.0 | 28.4 | 30.1 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=makeTexture wall=[52.33,52.85,53.00,56.41,53.71,52.66,54.23] cpu=[30.85,33.97,30.62,30.90,32.80,33.38,33.84]
+| makeTexture-gray8 | 32.8 | 14.9 | 32.5 | 0.0 | 0.0 | 0.0 | nan | 30.1 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=makeTexture-gray8 wall=[33.88,36.25,35.34,32.77,31.91,32.80,32.42] cpu=[18.34,17.72,14.88,15.65,14.59,14.56,13.56]
+| coreimage | 40.5 | 23.5 | 40.5 | 0.0 | 0.0 | 0.0 | 28.4 | 30.1 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=coreimage wall=[36.91,39.48,40.61,40.46,39.52,42.75,41.52] cpu=[14.80,23.08,24.13,23.48,23.28,24.32,24.56]
+| coreimage-r8 | 38.4 | 19.4 | 38.4 | 0.0 | 0.0 | 0.0 | nan | 30.1 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=coreimage-r8 wall=[35.88,38.44,38.80,36.11,35.36,39.14,41.92] cpu=[14.89,22.38,19.40,18.60,16.57,22.32,24.90]
+| imageio-subsample+lanczos | 36.6 | 16.8 | 18.7 | 12.7 | 3.9 | 10.9 | nan | 30.1 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=imageio-subsample+lanczos wall=[30.52,36.64,37.34,35.97,37.44,37.08,34.01] cpu=[19.35,15.43,15.37,16.84,16.89,16.84,16.89]
+| current-gray8 | 59.0 | 50.3 | 58.0 | 0.0 | 0.9 | 0.0 | ref | 27.8 |
+RAW fixture=manga-2160x3072-gray.jpeg target=2048 pipeline=current-gray8 wall=[60.40,57.46,58.19,58.50,59.84,61.05,59.03] cpu=[45.30,50.32,52.47,48.53,51.48,51.29,50.08]
+
+CASE fixture=manga-2160x3072-gray.jpeg bytes=3607829 target=1024 output=720x1024 native=810x1152 thermal=1
+| Pipeline | Wall ms | CPU ms | Decode | Scale | Upload | GPU | PSNR vs current | PSNR vs truth |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| current | 29.4 | 21.9 | 28.3 | 0.0 | 0.9 | 0.0 | ref | 24.7 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=current wall=[27.71,29.20,29.37,29.86,28.70,29.63,30.35] cpu=[17.45,20.89,21.89,24.22,17.94,22.76,22.50]
+| native+CG | 65.2 | 63.7 | 51.6 | 12.3 | 0.9 | 0.0 | 25.5 | 23.1 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=native+CG wall=[64.08,64.31,69.55,64.67,65.22,65.23,67.49] cpu=[60.96,68.76,63.65,63.26,67.13,63.05,68.03]
+| native+lanczos | 57.2 | 53.3 | 51.4 | 4.2 | 1.2 | 2.6 | 25.2 | 24.7 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=native+lanczos wall=[57.00,57.23,56.97,58.41,56.64,57.39,57.20] cpu=[53.29,53.73,53.54,53.64,53.08,53.04,53.21]
+| native+bilinear | 54.7 | 53.3 | 51.2 | 1.9 | 1.1 | 0.4 | 16.3 | 15.2 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=native+bilinear wall=[61.40,54.65,54.50,54.44,54.00,56.25,57.03] cpu=[53.53,53.29,53.04,53.15,52.77,53.61,53.55]
+| makeTexture | 25.4 | 13.3 | 25.2 | 0.0 | 0.0 | 0.0 | 27.3 | 27.4 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=makeTexture wall=[25.43,25.37,25.38,25.66,25.57,25.36,25.27] cpu=[19.09,13.34,13.29,13.37,13.41,13.29,13.18]
+| makeTexture-gray8 | 19.5 | 8.3 | 19.4 | 0.0 | 0.0 | 0.0 | nan | 27.4 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=makeTexture-gray8 wall=[20.03,20.27,19.49,19.51,19.39,19.49,19.57] cpu=[9.62,8.44,8.29,8.24,8.21,8.24,8.29]
+| coreimage | 24.2 | 10.0 | 24.2 | 0.0 | 0.0 | 0.0 | 27.3 | 27.4 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=coreimage wall=[25.65,26.05,25.69,24.17,22.52,23.97,23.49] cpu=[9.04,10.00,9.83,10.08,10.19,10.37,8.82]
+| coreimage-r8 | 25.4 | 9.9 | 25.4 | 0.0 | 0.0 | 0.0 | nan | 27.4 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=coreimage-r8 wall=[25.29,25.43,25.55,25.46,25.56,22.37,22.91] cpu=[10.07,9.88,9.83,9.68,9.89,10.01,9.97]
+| imageio-subsample+lanczos | 20.3 | 9.2 | 14.5 | 4.7 | 0.9 | 3.4 | nan | 27.4 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=imageio-subsample+lanczos wall=[21.52,20.49,19.56,20.00,20.41,20.34,19.54] cpu=[10.69,9.27,8.30,8.28,9.27,9.18,8.34]
+| current-gray8 | 25.9 | 18.8 | 25.5 | 0.0 | 0.3 | 0.0 | ref | 24.7 |
+RAW fixture=manga-2160x3072-gray.jpeg target=1024 pipeline=current-gray8 wall=[24.40,24.18,25.86,24.22,26.32,25.93,25.88] cpu=[20.56,11.16,23.04,18.78,18.38,15.54,20.27]
+ENV-END thermal=1
+BENCH-DONE

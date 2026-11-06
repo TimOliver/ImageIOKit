@@ -37,15 +37,9 @@ Repeat views and thumbnail grids could skip decoding entirely: decode once, stor
   - `MTLIOCommandQueue` load time against today's 5–15 ms decodes.
 - **Scope:** the library would provide encode and load building blocks. Callers own cache policy, per CLAUDE.md.
 
-## 2. Weakest-device run: 10.5-inch iPad Pro (A10X)
+## 2. Weakest-device run: 10.5-inch iPad Pro (A10X) — done 2026-11-07
 
-Every iPhone conclusion depends on the hardware JPEG decoder: ImageIO beat TurboJPEG at every JPEG size on the iPhone Air, the reverse of the M4 Max. Run the full harness (`--only=.jpeg`, `--real`, `--memory`) on the A10X. Before treating routing as settled, check:
-
-- whether ImageIO is still faster than TurboJPEG at manga size;
-- whether `makeTexture` still beats `decode(targetSize:)`;
-- the cost of MPS Lanczos on an older GPU.
-
-Also see the September A10X baselines in [benchmarks/2026-09-26-ipad-pro.md](benchmarks/2026-09-26-ipad-pro.md).
+Measured in [benchmarks/2026-11-07-gpu-scale-a10x.md](benchmarks/2026-11-07-gpu-scale-a10x.md). ImageIO stayed 3–7× faster than TurboJPEG at every JPEG size (manga-size decode 18.7 ms vs ~62 ms), `makeTexture` beat `decode(targetSize:)` in every case (up to 2.2× on real pages at small reductions), and MPS Lanczos cost 2–17 ms of GPU time. The iOS routing needs no device-floor exception. `.gray8` halves time and peak memory there, prefetching matters most on that class of device, and the JXL box-filter inversion from task 6 is worse on the A10X.
 
 ## 3. Mac TurboJPEG cutoff sweep
 
