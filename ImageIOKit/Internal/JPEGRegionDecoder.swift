@@ -291,11 +291,21 @@ struct JPEGRegionDecoder {
     private static func readColorSpace(_ handle: tjhandle) throws -> CGColorSpace {
         var bytes: UnsafeMutablePointer<UInt8>?
         var count = 0
-        guard tj3GetICCProfile(handle, &bytes, &count) == 0 else {
+        let status = tj3GetICCProfile(handle, &bytes, &count)
+        defer { if let bytes { tj3Free(bytes) } }
+        // libjpeg-turbo 3.1 reports a JPEG without a profile as a warning-level failure,
+        // not the documented NULL buffer. Fatal errors still fall back to ImageIO.
+        guard status == 0 || tj3GetErrorCode(handle) == Int32(TJERR_WARNING.rawValue) else {
             throw ImageDecoderError.decodeFailed(lastTurboJPEGError(handle))
         }
-        guard let bytes else { return PixelBuffer.defaultColorSpace(for: .rgba8) }
-        defer { tj3Free(bytes) }
+        guard status == 0, let bytes else {
+            // ImageIO treats untagged grayscale as gray gamma 2.2, which TurboJPEG's RGB
+            // output cannot carry; keep those on ImageIO so crops match full decodes.
+            guard tj3Get(handle, Int32(TJPARAM_COLORSPACE.rawValue)) != Int32(TJCS_GRAY.rawValue) else {
+                throw ImageDecoderError.unsupportedOperation
+            }
+            return PixelBuffer.defaultColorSpace(for: .rgba8)
+        }
         guard let space = CGColorSpace(iccData: Data(bytes: bytes, count: count) as CFData),
               space.model == .rgb else {
             // Let ImageIO handle profiles that do not describe TurboJPEG's RGB output.
