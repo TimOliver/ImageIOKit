@@ -164,11 +164,15 @@ extension ImageSource {
         return try render(image, size: CGSize(width: buffer.width, height: buffer.height), pixelFormat: pixelFormat)
     }
 
-    /// On Mac, TurboJPEG's DCT-scaled decode beat ImageIO for pages up to manga size, while ImageIO
-    /// won from about 50 MP (M4 Max, 2026-11-06). iPhone ImageIO won at every size measured, so
-    /// iOS always uses ImageIO. The 12 MP cutoff is provisional: the crossover was not narrowed down.
+    /// On Apple Silicon, ImageIO's hardware JPEG decode beat TurboJPEG's DCT-scaled decode in
+    /// every cell of the M1 Air sweep (6.6-50 MP, colour and gray, 1.5-9x), idle and under full
+    /// CPU contention, which the fixed-function decoder barely notices. That matches every iOS
+    /// device, so arm64 always uses ImageIO; the M4 Max's small win below 7 MP (2026-11-06) is
+    /// forgone for robustness on the floor. Intel Macs have no hardware decoder and keep the
+    /// provisional 12 MP cutoff, unmeasured on real hardware
+    /// (docs/benchmarks/2026-11-07-turbojpeg-cutoff-m1.md).
     func turboJPEGTextureSource(covering size: CGSize, pixelFormat: PixelBuffer.PixelFormat) -> PixelBuffer? {
-        #if os(macOS) || targetEnvironment(macCatalyst)
+        #if (os(macOS) || targetEnvironment(macCatalyst)) && arch(x86_64)
         guard imageSize.width * imageSize.height <= 12_000_000 else { return nil }
         let decoder = url.flatMap { JPEGRegionDecoder(url: $0) } ?? data.flatMap { JPEGRegionDecoder(data: $0) }
         // Gray pages decode straight to one channel; RGBA requests expand them during conversion.

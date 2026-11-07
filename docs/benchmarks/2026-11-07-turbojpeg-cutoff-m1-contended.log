@@ -1,0 +1,72 @@
+ENV mac=Apple M1 thermal=fair calib=264.47ms targets=[2752, 1664] iterations=12
+
+FIXTURE manga-2160x3072-gray mp=6.64 bytes=3607829 calib=231.23ms
+SWEEP fixture=manga-2160x3072-gray mp=6.64 target=2752 format=gray8 turbo=181.55ms imageio=58.22ms ratio=3.12 turboMin=126.34ms imageioMin=42.56ms minRatio=2.97 turboSrc=2160x3072 imageioSrc=2160x3072 thermal=fair
+SWEEP fixture=manga-2160x3072-gray mp=6.64 target=2752 format=rgba8 turbo=198.03ms imageio=96.59ms ratio=2.05 turboMin=140.56ms imageioMin=72.45ms minRatio=1.94 turboSrc=2160x3072 imageioSrc=2160x3072 thermal=fair
+SWEEP fixture=manga-2160x3072-gray mp=6.64 target=1664 format=gray8 turbo=129.10ms imageio=61.61ms ratio=2.10 turboMin=87.77ms imageioMin=32.54ms minRatio=2.70 turboSrc=1350x1920 imageioSrc=2160x3072 thermal=fair
+SWEEP fixture=manga-2160x3072-gray mp=6.64 target=1664 format=rgba8 turbo=127.31ms imageio=83.40ms ratio=1.53 turboMin=95.14ms imageioMin=62.90ms minRatio=1.51 turboSrc=1350x1920 imageioSrc=2160x3072 thermal=fair
+
+FIXTURE sweep-2160x3072 mp=6.64 bytes=3647314 calib=110.30ms
+SWEEP fixture=sweep-2160x3072 mp=6.64 target=2752 format=rgba8 turbo=215.65ms imageio=125.23ms ratio=1.72 turboMin=132.95ms imageioMin=84.19ms minRatio=1.58 turboSrc=2160x3072 imageioSrc=2160x3072 thermal=fair
+SWEEP fixture=sweep-2160x3072 mp=6.64 target=1664 format=rgba8 turbo=121.17ms imageio=76.31ms ratio=1.59 turboMin=104.83ms imageioMin=59.43ms minRatio=1.76 turboSrc=1350x1920 imageioSrc=2160x3072 thermal=fair
+
+FIXTURE sweep-2310x3464-gray mp=8.00 bytes=4218212 calib=120.40ms
+SWEEP fixture=sweep-2310x3464-gray mp=8.00 target=2752 format=gray8 turbo=241.20ms imageio=71.25ms ratio=3.39 turboMin=146.44ms imageioMin=49.39ms minRatio=2.96 turboSrc=2022x3031 imageioSrc=2310x3464 thermal=fair
+SWEEP fixture=sweep-2310x3464-gray mp=8.00 target=2752 format=rgba8 turbo=223.52ms imageio=108.77ms ratio=2.05 turboMin=171.75ms imageioMin=73.86ms minRatio=2.33 turboSrc=2022x3031 imageioSrc=2310x3464 thermal=fair
+SWEEP fixture=sweep-2310x3464-gray mp=8.00 target=1664 format=gray8 turbo=155.25ms imageio=38.47ms ratio=4.04 turboMin=102.15ms imageioMin=20.81ms minRatio=4.91 turboSrc=1155x1732 imageioSrc=1155x1732 thermal=fair
+SWEEP fixture=sweep-2310x3464-gray mp=8.00 target=1664 format=rgba8 turbo=184.04ms imageio=56.05ms ratio=3.28 turboMin=136.73ms imageioMin=48.11ms minRatio=2.84 turboSrc=1155x1732 imageioSrc=1155x1732 thermal=fair
+
+FIXTURE sweep-2310x3464 mp=8.00 bytes=4277942 calib=164.31ms
+SWEEP fixture=sweep-2310x3464 mp=8.00 target=2752 format=rgba8 turbo=272.11ms imageio=131.72ms ratio=2.07 turboMin=186.65ms imageioMin=89.72ms minRatio=2.08 turboSrc=2022x3031 imageioSrc=2310x3464 thermal=fair
+SWEEP fixture=sweep-2310x3464 mp=8.00 target=1664 format=rgba8 turbo=143.79ms imageio=93.76ms ratio=1.53 turboMin=114.80ms imageioMin=75.45ms minRatio=1.52 turboSrc=1155x1732 imageioSrc=1155x1732 thermal=fair
+
+FIXTURE sweep-2828x4242-gray mp=12.00 bytes=6031299 calib=165.92ms
+SWEEP fixture=sweep-2828x4242-gray mp=12.00 target=2752 format=gray8 turbo=216.00ms imageio=59.23ms ratio=3.65 turboMin=176.37ms imageioMin=44.39ms minRatio=3.97 turboSrc=2121x3182 imageioSrc=2828x4242 thermal=fair
+SWEEP fixture=sweep-2828x4242-gray mp=12.00 target=2752 format=rgba8 turbo=243.79ms imageio=103.97ms ratio=2.34 turboMin=188.26ms imageioMin=89.94ms minRatio=2.09 turboSrc=2121x3182 imageioSrc=2828x4242 thermal=fair
+SWEEP fixture=sweep-2828x4242-gray mp=12.00 target=1664 format=gray8 turbo=175.46ms imageio=29.73ms ratio=5.90 turboMin=151.66ms imageioMin=22.01ms minRatio=6.89 turboSrc=1414x2121 imageioSrc=1414x2121 thermal=fair
+SWEEP fixture=sweep-2828x4242-gray mp=12.00 target=1664 format=rgba8 turbo=183.69ms imageio=48.95ms ratio=3.75 turboMin=164.86ms imageioMin=39.10ms minRatio=4.22 turboSrc=1414x2121 imageioSrc=1414x2121 thermal=fair
+
+FIXTURE sweep-2828x4242 mp=12.00 bytes=6104031 calib=112.74ms
+SWEEP fixture=sweep-2828x4242 mp=12.00 target=2752 format=rgba8 turbo=429.27ms imageio=149.91ms ratio=2.86 turboMin=242.39ms imageioMin=126.21ms minRatio=1.92 turboSrc=2121x3182 imageioSrc=2828x4242 thermal=fair
+SWEEP fixture=sweep-2828x4242 mp=12.00 target=1664 format=rgba8 turbo=164.98ms imageio=44.31ms ratio=3.72 turboMin=151.41ms imageioMin=36.92ms minRatio=4.10 turboSrc=1414x2121 imageioSrc=1414x2121 thermal=fair
+
+FIXTURE sweep-3266x4898-gray mp=16.00 bytes=7686363 calib=138.07ms
+SWEEP fixture=sweep-3266x4898-gray mp=16.00 target=2752 format=gray8 turbo=185.41ms imageio=55.59ms ratio=3.34 turboMin=177.19ms imageioMin=49.13ms minRatio=3.61 turboSrc=2042x3062 imageioSrc=3266x4898 thermal=fair
+SWEEP fixture=sweep-3266x4898-gray mp=16.00 target=2752 format=rgba8 turbo=202.81ms imageio=114.02ms ratio=1.78 turboMin=191.93ms imageioMin=97.48ms minRatio=1.97 turboSrc=2042x3062 imageioSrc=3266x4898 thermal=fair
+SWEEP fixture=sweep-3266x4898-gray mp=16.00 target=1664 format=gray8 turbo=242.88ms imageio=49.39ms ratio=4.92 turboMin=159.29ms imageioMin=30.09ms minRatio=5.29 turboSrc=1225x1837 imageioSrc=1633x2449 thermal=fair
+SWEEP fixture=sweep-3266x4898-gray mp=16.00 target=1664 format=rgba8 turbo=297.56ms imageio=87.85ms ratio=3.39 turboMin=168.29ms imageioMin=63.27ms minRatio=2.66 turboSrc=1225x1837 imageioSrc=1633x2449 thermal=fair
+
+FIXTURE sweep-3266x4898 mp=16.00 bytes=7787748 calib=102.52ms
+SWEEP fixture=sweep-3266x4898 mp=16.00 target=2752 format=rgba8 turbo=167.86ms imageio=84.31ms ratio=1.99 turboMin=100.90ms imageioMin=69.41ms minRatio=1.45 turboSrc=2042x3062 imageioSrc=3266x4898 thermal=fair
+SWEEP fixture=sweep-3266x4898 mp=16.00 target=1664 format=rgba8 turbo=74.84ms imageio=30.19ms ratio=2.48 turboMin=71.59ms imageioMin=29.25ms minRatio=2.45 turboSrc=1225x1837 imageioSrc=1633x2449 thermal=fair
+
+FIXTURE sweep-4000x6000-gray mp=24.00 bytes=10636463 calib=45.79ms
+SWEEP fixture=sweep-4000x6000-gray mp=24.00 target=2752 format=gray8 turbo=108.95ms imageio=34.12ms ratio=3.19 turboMin=103.90ms imageioMin=28.10ms minRatio=3.70 turboSrc=2000x3000 imageioSrc=2000x3000 thermal=fair
+SWEEP fixture=sweep-4000x6000-gray mp=24.00 target=2752 format=rgba8 turbo=105.59ms imageio=37.55ms ratio=2.81 turboMin=102.28ms imageioMin=36.04ms minRatio=2.84 turboSrc=2000x3000 imageioSrc=2000x3000 thermal=fair
+SWEEP fixture=sweep-4000x6000-gray mp=24.00 target=1664 format=gray8 turbo=96.52ms imageio=29.92ms ratio=3.23 turboMin=91.10ms imageioMin=28.54ms minRatio=3.19 turboSrc=1500x2250 imageioSrc=2000x3000 thermal=fair
+SWEEP fixture=sweep-4000x6000-gray mp=24.00 target=1664 format=rgba8 turbo=109.11ms imageio=37.06ms ratio=2.94 turboMin=99.54ms imageioMin=34.96ms minRatio=2.85 turboSrc=1500x2250 imageioSrc=2000x3000 thermal=fair
+
+FIXTURE sweep-4000x6000 mp=24.00 bytes=10756993 calib=60.85ms
+SWEEP fixture=sweep-4000x6000 mp=24.00 target=2752 format=rgba8 turbo=139.26ms imageio=46.38ms ratio=3.00 turboMin=114.34ms imageioMin=42.08ms minRatio=2.72 turboSrc=2000x3000 imageioSrc=2000x3000 thermal=fair
+SWEEP fixture=sweep-4000x6000 mp=24.00 target=1664 format=rgba8 turbo=911.80ms imageio=96.09ms ratio=9.49 turboMin=242.89ms imageioMin=66.45ms minRatio=3.66 turboSrc=1500x2250 imageioSrc=2000x3000 thermal=fair
+
+FIXTURE sweep-4900x7348-gray mp=36.01 bytes=14735549 calib=93.87ms
+SWEEP fixture=sweep-4900x7348-gray mp=36.01 target=2752 format=gray8 turbo=440.45ms imageio=74.82ms ratio=5.89 turboMin=387.51ms imageioMin=55.85ms minRatio=6.94 turboSrc=1838x2756 imageioSrc=2450x3674 thermal=fair
+SWEEP fixture=sweep-4900x7348-gray mp=36.01 target=2752 format=rgba8 turbo=194.64ms imageio=61.19ms ratio=3.18 turboMin=178.49ms imageioMin=56.15ms minRatio=3.18 turboSrc=1838x2756 imageioSrc=2450x3674 thermal=fair
+SWEEP fixture=sweep-4900x7348-gray mp=36.01 target=1664 format=gray8 turbo=201.37ms imageio=34.03ms ratio=5.92 turboMin=165.10ms imageioMin=29.77ms minRatio=5.55 turboSrc=1225x1837 imageioSrc=1225x1837 thermal=fair
+SWEEP fixture=sweep-4900x7348-gray mp=36.01 target=1664 format=rgba8 turbo=309.45ms imageio=43.92ms ratio=7.05 turboMin=241.74ms imageioMin=38.37ms minRatio=6.30 turboSrc=1225x1837 imageioSrc=1225x1837 thermal=fair
+
+FIXTURE sweep-4900x7348 mp=36.01 bytes=14937837 calib=91.62ms
+SWEEP fixture=sweep-4900x7348 mp=36.01 target=2752 format=rgba8 turbo=480.15ms imageio=130.31ms ratio=3.68 turboMin=346.10ms imageioMin=92.74ms minRatio=3.73 turboSrc=1838x2756 imageioSrc=2450x3674 thermal=fair
+SWEEP fixture=sweep-4900x7348 mp=36.01 target=1664 format=rgba8 turbo=653.49ms imageio=78.39ms ratio=8.34 turboMin=415.44ms imageioMin=60.66ms minRatio=6.85 turboSrc=1225x1837 imageioSrc=1225x1837 thermal=fair
+
+FIXTURE sweep-5000x10000-gray mp=50.00 bytes=20181428 calib=373.10ms
+SWEEP fixture=sweep-5000x10000-gray mp=50.00 target=2752 format=gray8 turbo=815.70ms imageio=86.42ms ratio=9.44 turboMin=598.67ms imageioMin=67.86ms minRatio=8.82 turboSrc=1875x3750 imageioSrc=2500x5000 thermal=fair
+SWEEP fixture=sweep-5000x10000-gray mp=50.00 target=2752 format=rgba8 turbo=632.85ms imageio=154.02ms ratio=4.11 turboMin=562.81ms imageioMin=117.67ms minRatio=4.78 turboSrc=1875x3750 imageioSrc=2500x5000 thermal=fair
+SWEEP fixture=sweep-5000x10000-gray mp=50.00 target=1664 format=gray8 turbo=545.75ms imageio=54.46ms ratio=10.02 turboMin=454.94ms imageioMin=49.36ms minRatio=9.22 turboSrc=1250x2500 imageioSrc=1250x2500 thermal=fair
+SWEEP fixture=sweep-5000x10000-gray mp=50.00 target=1664 format=rgba8 turbo=2302.64ms imageio=291.17ms ratio=7.91 turboMin=795.69ms imageioMin=125.33ms minRatio=6.35 turboSrc=1250x2500 imageioSrc=1250x2500 thermal=fair
+
+FIXTURE page-5000x10000 mp=50.00 bytes=20445503 calib=267.67ms
+SWEEP fixture=page-5000x10000 mp=50.00 target=2752 format=rgba8 turbo=513.64ms imageio=154.75ms ratio=3.32 turboMin=393.35ms imageioMin=129.15ms minRatio=3.05 turboSrc=1875x3750 imageioSrc=2500x5000 thermal=fair
+SWEEP fixture=page-5000x10000 mp=50.00 target=1664 format=rgba8 turbo=433.20ms imageio=64.24ms ratio=6.74 turboMin=319.45ms imageioMin=58.37ms minRatio=5.47 turboSrc=1250x2500 imageioSrc=1250x2500 thermal=fair
+BENCH-DONE

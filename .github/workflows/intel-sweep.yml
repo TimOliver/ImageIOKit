@@ -1,0 +1,39 @@
+name: Intel Cutoff Sweep
+
+# Manual benchmark for TASKS item 3's open Intel question: TurboJPEG vs ImageIO makeTexture
+# routing on a Mac with no hardware JPEG decoder (docs/benchmarks/2026-11-07-turbojpeg-cutoff-m1.md).
+# GitHub's macos-15-intel image is available until about August 2027 (macos-26-intel after that).
+# Runner numbers are indicative, not clean-room: the VM shares a host and may expose no Metal
+# device (the probe then times the CPU half and says so in its ENV line). Judge cells by the
+# calib= canary and the *Min statistics, per the harness README.
+on:
+  workflow_dispatch:
+    inputs:
+      arguments:
+        description: Extra CutoffSweep arguments, e.g. --iterations=8 --only=sweep-2828
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    name: Intel Mac sweep
+    runs-on: macos-15-intel
+    timeout-minutes: 90
+    steps:
+      # The sweep generates its own fixtures, so LFS objects are not needed.
+      - uses: actions/checkout@v4
+      - name: Build harness
+        run: bash docs/benchmarks/harness/setup-mac.sh
+      - name: Run sweep
+        run: |
+          sysctl -n machdep.cpu.brand_string hw.ncpu
+          taskpolicy -B -p $$ 2>/dev/null || true
+          /tmp/ImageIOKit-gpu-bench/.build/release/CutoffSweep /tmp/ImageIOKit-gpu-bench/fixtures ${{ inputs.arguments }} | tee cutoff-sweep-intel.log
+      - name: Upload log
+        uses: actions/upload-artifact@v4
+        with:
+          name: cutoff-sweep-intel
+          path: cutoff-sweep-intel.log

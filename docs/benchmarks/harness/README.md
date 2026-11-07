@@ -19,7 +19,21 @@ $B/.build/release/RealPages /path/to/pages/*.jpg     # real pages: metadata, dec
 $B/.build/release/GrayCheck /path/to/gray/*.jpg      # TurboJPEG gray decode vs conversion vs ImageIO, stage by stage
 $B/.build/release/BoxCheck /path/to/*.jxl            # JXL 2x box filter vs full decode; native color space tagging
 $B/.build/release/ICCCheck                           # how tj3GetICCProfile reports missing, valid and corrupt profiles
+$B/.build/release/CutoffSweep $B/fixtures            # TurboJPEG vs ImageIO makeTexture routing, 6.6-50 MP colour and gray
 ```
+
+`CutoffSweep` (TASKS item 3) generates its sweep fixtures on first run and pins the full
+`makeTexture` pipeline to each JPEG route through an `ImageSource.benchmarkTurboJPEGCutoff`
+switch that `setup-mac.sh` patches into the harness's library copy (the patch also lifts the
+library's Apple Silicon gate so both routes stay measurable on arm64). Legs alternate within
+each iteration; run it plugged in and watch the printed thermal state on fanless machines.
+
+Shells spawned by coding agents can carry a background QoS role on macOS that schedules the
+whole process onto efficiency cores. Run `taskpolicy -B -p $$` before any Mac probe, and compare
+the `calib=` canary that `CutoffSweep` prints per fixture: cells whose calibration sits far
+above the machine's best are clamped, throttled or contended, and the `*Min` statistics are the
+ones to trust there (details in
+[2026-11-07-turbojpeg-cutoff-m1.md](../2026-11-07-turbojpeg-cutoff-m1.md)).
 
 `GPUScaleBench` is [2026-11-06-gpu-scale-probe.swift](../2026-11-06-gpu-scale-probe.swift). It compares the shipped pipeline with native-scale decodes resampled by CoreGraphics or MPS, against an exact area-average ground truth.
 

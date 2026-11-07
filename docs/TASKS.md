@@ -41,9 +41,9 @@ Repeat views and thumbnail grids could skip decoding entirely: decode once, stor
 
 Measured in [benchmarks/2026-11-07-gpu-scale-a10x.md](benchmarks/2026-11-07-gpu-scale-a10x.md). ImageIO stayed 3–7× faster than TurboJPEG at every JPEG size (manga-size decode 18.7 ms vs ~62 ms), `makeTexture` beat `decode(targetSize:)` in every case (up to 2.2× on real pages at small reductions), and MPS Lanczos cost 2–17 ms of GPU time. The iOS routing needs no device-floor exception. `.gray8` halves time and peak memory there, prefetching matters most on that class of device, and the JXL box-filter inversion from task 6 is worse on the A10X.
 
-## 3. Mac TurboJPEG cutoff sweep
+## 3. Mac TurboJPEG cutoff sweep — Apple Silicon done 2026-11-07
 
-`turboJPEGTextureSource` in `ImageSource+Texture.swift` routes JPEGs of 12 MP or less to TurboJPEG on Mac and Catalyst. The cutoff is a guess: TurboJPEG won at 6.6 MP and lost at 50 MP on the M4 Max. Use the macOS harness with generated pages at about 8, 12, 16, 24 and 36 MP, for colour and gray, then set the cutoff from the measured crossover. Also try an Intel Mac if one is available.
+Swept on the slowest Apple Silicon Mac, an M1 Air, with the new `CutoffSweep` probe ([write-up](benchmarks/2026-11-07-turbojpeg-cutoff-m1.md)): ImageIO's hardware decode won all 42 cells (6.6–50 MP, colour and gray, 2752/1664 px fits) by 1.5–9× on minimums — under a QoS clamp, near idle, and with the CPU fully contended, which the fixed-function decoder barely notices. There is no crossover to tune on arm64, so Apple Silicon Macs now always route `makeTexture` JPEGs to ImageIO; the M4 Max's small sub-7 MP TurboJPEG win is forgone for floor robustness. The 12 MP cutoff remains only for Intel Macs (`arch(x86_64)`), which have no hardware decoder. A manual workflow ([intel-sweep.yml](../.github/workflows/intel-sweep.yml), `workflow_dispatch` only) is ready to run the sweep on GitHub's `macos-15-intel` image (available until about August 2027) — parked on 2026-11-07 for the open-source release. Mind the agent-shell background-QoS clamp documented in the write-up (`taskpolicy -B -p $$`, `calib=` canary) before trusting any Mac numbers.
 
 ## 4. Rotated JPEGs
 

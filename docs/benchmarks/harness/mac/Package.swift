@@ -42,5 +42,9 @@ let package = Package(
             name: "GPUScaleBench",
             dependencies: ["ImageIOKit", .product(name: "jxl", package: "libjxl-cocoa")]
         ),
+        .executableTarget(
+            name: "CutoffSweep",
+            dependencies: ["ImageIOKit"]
+        ),
     ]
 )
