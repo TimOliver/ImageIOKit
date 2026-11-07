@@ -1,0 +1,16 @@
+ENV device=Apple A17 Pro GPU model=iPad16,2 os=Version 27.2 (Build 24B119) cores=6 memory=8292286464 thermal=0 jxl=11002 iterations=7
+AB fixture=photo-11000x11000.jpeg bound=2048 format=rgba8 copyMs=118.5 sharedMs=115.2 copyPeakMB=56.9 sharedPeakMB=57.0
+AB fixture=photo-11000x11000.jpeg bound=1024 format=rgba8 copyMs=102.7 sharedMs=99.7 copyPeakMB=14.2 sharedPeakMB=13.8
+AB fixture=photo-11000x11000.jxl bound=2048 format=rgba8 copyMs=734.4 sharedMs=738.5 copyPeakMB=22.0 sharedPeakMB=7.5
+AB fixture=photo-11000x11000.jxl bound=1024 format=rgba8 copyMs=704.7 sharedMs=690.9 copyPeakMB=7.5 sharedPeakMB=2.7
+AB fixture=page-5000x10000.jpeg bound=2048 format=rgba8 copyMs=55.3 sharedMs=56.0 copyPeakMB=23.3 sharedPeakMB=22.5
+AB fixture=page-5000x10000.jpeg bound=1024 format=rgba8 copyMs=53.6 sharedMs=54.0 copyPeakMB=5.9 sharedPeakMB=6.1
+AB fixture=manga-2160x3072-gray.jpeg bound=2048 format=rgba8 copyMs=31.1 sharedMs=27.5 copyPeakMB=15.3 sharedPeakMB=15.3
+AB fixture=manga-2160x3072-gray.jpeg bound=2048 format=gray8 copyMs=23.7 sharedMs=22.9 copyPeakMB=15.3 sharedPeakMB=15.3
+AB fixture=manga-2160x3072-gray.jpeg bound=1024 format=rgba8 copyMs=17.4 sharedMs=16.6 copyPeakMB=7.4 sharedPeakMB=7.4
+AB fixture=manga-2160x3072-gray.jpeg bound=1024 format=gray8 copyMs=16.2 sharedMs=15.6 copyPeakMB=7.4 sharedPeakMB=7.4
+AB fixture=manga-2160x3072-gray.jxl bound=2048 format=rgba8 copyMs=49.5 sharedMs=44.9 copyPeakMB=26.0 sharedPeakMB=25.4
+AB fixture=manga-2160x3072-gray.jxl bound=2048 format=gray8 copyMs=47.1 sharedMs=45.6 copyPeakMB=6.9 sharedPeakMB=9.3
+AB fixture=manga-2160x3072-gray.jxl bound=1024 format=rgba8 copyMs=64.5 sharedMs=63.7 copyPeakMB=3.6 sharedPeakMB=6.3
+AB fixture=manga-2160x3072-gray.jxl bound=1024 format=gray8 copyMs=55.6 sharedMs=56.1 copyPeakMB=0.2 sharedPeakMB=1.6
+BENCH-DONE

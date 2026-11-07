@@ -1,0 +1,18 @@
+ENV device=Apple A17 Pro GPU model=iPad16,2 os=Version 27.2 (Build 24B119) cores=6 memory=8292286464 thermal=0 jxl=11002 iterations=7
+REAL page=Scott Pilgrim 01-000.jpg size=1800x2700 model=rgb
+REAL   iPhoneSE rgba8 output=750x1125 decode=14.65ms makeTexture=11.24ms
+REAL   iPhoneProMax rgba8 output=1320x1979 decode=46.34ms makeTexture=27.46ms
+REAL   iPad13 rgba8 output=1800x2700 decode=23.16ms makeTexture=20.28ms
+REAL page=Scott Pilgrim 01-078_079.jpg size=3599x2700 model=rgb
+REAL   iPhoneSE rgba8 output=750x562 decode=19.49ms makeTexture=18.65ms
+REAL   iPhoneProMax rgba8 output=1320x990 decode=32.04ms makeTexture=22.97ms
+REAL   iPad13 rgba8 output=2064x1548 decode=63.40ms makeTexture=44.49ms
+REAL page=Scott Pilgrim 01-095.jpg size=1800x2700 model=rgb
+REAL   iPhoneSE rgba8 output=750x1125 decode=13.98ms makeTexture=9.87ms
+REAL   iPhoneProMax rgba8 output=1320x1979 decode=43.25ms makeTexture=23.63ms
+REAL   iPad13 rgba8 output=1800x2700 decode=22.97ms makeTexture=19.83ms
+REAL page=Scott Pilgrim 01-193.jpg size=1800x2700 model=rgb
+REAL   iPhoneSE rgba8 output=750x1125 decode=13.39ms makeTexture=9.42ms
+REAL   iPhoneProMax rgba8 output=1320x1979 decode=45.04ms makeTexture=24.95ms
+REAL   iPad13 rgba8 output=1800x2700 decode=21.56ms makeTexture=18.83ms
+BENCH-DONE

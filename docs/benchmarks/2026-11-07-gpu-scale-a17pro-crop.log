@@ -1,0 +1,13 @@
+ENV device=Apple A17 Pro GPU model=iPad16,2 os=Version 27.2 (Build 24B119) cores=6 memory=8292286464 thermal=0 jxl=11002 iterations=7
+CROP page=page-5000x10000.jpeg size=5000x10000 regionDecodable=true
+CROP   fraction=0.5 rgba8 output=1376x2752 region=136.61ms fullUncached=160.82ms fullCached=76.32ms
+CROP   fraction=0.25 rgba8 output=1250x2500 region=87.51ms fullUncached=129.05ms fullCached=15.36ms
+CROP page=manga-2160x3072-gray.jpeg size=2160x3072 regionDecodable=true
+CROP   fraction=0.5 rgba8 output=1080x1536 region=17.49ms fullUncached=21.85ms fullCached=7.71ms
+CROP   fraction=0.5 gray8 output=1080x1536 region=25.34ms fullUncached=20.78ms fullCached=6.70ms
+CROP   fraction=0.25 rgba8 output=540x768 region=12.73ms fullUncached=19.45ms fullCached=2.05ms
+CROP   fraction=0.25 gray8 output=540x768 region=14.80ms fullUncached=19.15ms fullCached=1.77ms
+CROP page=Scott Pilgrim 01-000.jpg size=1800x2700 regionDecodable=true
+CROP   fraction=0.5 rgba8 output=900x1350 region=5.47ms fullUncached=7.76ms fullCached=3.82ms
+CROP   fraction=0.25 rgba8 output=450x676 region=3.68ms fullUncached=5.96ms fullCached=1.08ms
+BENCH-DONE
